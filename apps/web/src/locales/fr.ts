@@ -1180,4 +1180,9 @@ export const fr: Record<string, string> = {
   "Cut line weight": "Épaisseur de la ligne de coupe",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Cliquez sur un raccourci, tapez une à trois lettres puis appuyez sur Espace. Retour arrière efface une lettre, Suppr efface le raccourci ; Échap le laisse tel quel.",
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Seuls les murs, lignes, lignes de construction, polylignes, courbes, rectangles, cercles et arcs peuvent être décalés",
+  "Click the first end of an axis": "Cliquez sur la première extrémité d’un axe",
+  "Click the other end of that axis": "Cliquez sur l’autre extrémité de cet axe",
+  "Click one end of the other axis": "Cliquez sur une extrémité de l’autre axe",
+  "Click its other end": "Cliquez sur son autre extrémité",
+  "Click the other end of the first axis": "Cliquez sur l’autre extrémité du premier axe",
 }

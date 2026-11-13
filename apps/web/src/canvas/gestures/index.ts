@@ -2,6 +2,7 @@ import type { Tool } from '../../tools'
 import type { Gesture } from '../gesture'
 import type { Move, Press, Release } from '../runtime'
 import { arcMove, columnDown, drawDown, drawMove, drawUp, lineDown, offsetMove, polyMove, polyUp, textDown } from './drawTools'
+import { ellipseDown, ellipseMove } from './ellipse'
 import { angleDown, angleMove, measureDown, measureMove } from './measure'
 import { offsetDown, parallelMove } from './offset'
 import { constructionDown, constructionMove } from './construction'
@@ -40,6 +41,7 @@ export const PRESSES: Partial<Record<Tool, Press>> = {
   calibrate: measureDown,
   line: lineDown,
   construction: constructionDown,
+  ellipse: ellipseDown,
   column: columnDown,
   radialDimension: radialDimensionDown,
   angleDimension: angleDimensionDown,
@@ -74,6 +76,7 @@ export const MOVES: { [K in Gesture['kind']]: Move<K> } = {
   anglePlace: anglePlaceMove,
   offset: offsetMove,
   arc: arcMove,
+  ellipse: ellipseMove,
   parallel: parallelMove,
   fillet: filletMove,
   measure: measureMove,

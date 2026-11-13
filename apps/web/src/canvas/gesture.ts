@@ -39,6 +39,8 @@ export type Gesture =
   | { kind: 'offset'; id: string; a: Vec2; b: Vec2 }
   /** An arc whose two ends are set; the pointer now chooses a point it goes through. */
   | { kind: 'arc'; id: string; a: Vec2; b: Vec2 }
+  /** An ellipse being set by its axes: the ends clicked so far, up to four. */
+  | { kind: 'ellipse'; id: string; points: Vec2[] }
   /** The fillet tool has taken its first stretch of line, and the side of it kept; the pointer now chooses the second. */
   | { kind: 'fillet'; first: FilletTarget }
   /** A radius dimension of the arc or circle at `centre`, waiting to be put down where the pointer points. */
@@ -91,7 +93,7 @@ export const TWO_POINT: Tool[] = ['line', 'curve', 'arc', 'wall', 'divider', 'di
 /** The tools that measure what is drawn: their points snap to it, never to the grid. A dimension's line is still placed by grid steps. */
 export const MEASURING: Tool[] = ['dimension', 'measure', 'angle']
 /** Tools whose two typed sizes are a width and a height. */
-export const BOXES: Tool[] = ['rect', 'ellipse', 'paper']
+export const BOXES: Tool[] = ['rect', 'paper']
 /** How close, in screen pixels, the pointer must come to a standard format's corner for a paper to take that format. */
 export const FORMAT_REACH = 14
 export const CHAINED: Tool[] = ['wall', 'divider']

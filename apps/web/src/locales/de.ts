@@ -1180,4 +1180,9 @@ export const de: Record<string, string> = {
   "Cut line weight": "Schnittlinienstärke",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Klicken Sie eine Tastenkombination an, tippen Sie ein bis drei Buchstaben und drücken Sie die Leertaste. Backspace löscht einen Buchstaben, Entf die Kombination; Esc lässt sie, wie sie ist.",
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Nur Wände, Linien, Konstruktionslinien, Polylinien, Kurven, Rechtecke, Kreise und Bögen können versetzt werden",
+  "Click the first end of an axis": "Klicken Sie das erste Ende einer Achse an",
+  "Click the other end of that axis": "Klicken Sie das andere Ende dieser Achse an",
+  "Click one end of the other axis": "Klicken Sie ein Ende der anderen Achse an",
+  "Click its other end": "Klicken Sie ihr anderes Ende an",
+  "Click the other end of the first axis": "Klicken Sie das andere Ende der ersten Achse an",
 }

@@ -1180,4 +1180,9 @@ export const tr: Record<string, string> = {
   "Cut line weight": "Kesit çizgisi kalınlığı",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Bir kısayola tıklayın, bir ile üç harf yazıp boşluk tuşuna basın. Backspace bir harfi, Delete kısayolu siler; Esc olduğu gibi bırakır.",
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Yalnızca duvarlar, çizgiler, inşaat çizgileri, çoklu çizgiler, eğriler, dikdörtgenler, daireler ve yaylar ötelenebilir",
+  "Click the first end of an axis": "Bir eksenin ilk ucunu tıklayın",
+  "Click the other end of that axis": "Bu eksenin diğer ucunu tıklayın",
+  "Click one end of the other axis": "Diğer eksenin bir ucunu tıklayın",
+  "Click its other end": "Diğer ucunu tıklayın",
+  "Click the other end of the first axis": "İlk eksenin diğer ucunu tıklayın",
 }

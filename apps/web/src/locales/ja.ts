@@ -1180,4 +1180,9 @@ export const ja: Record<string, string> = {
   "Cut line weight": "切断線の太さ",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "ショートカットをクリックし、1～3 文字入力してスペースキーを押します。Backspace で 1 文字削除、Delete でショートカット削除、Esc で変更しません。",
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "オフセットできるのは壁・線・作図線・ポリライン・曲線・長方形・円・円弧だけです",
+  "Click the first end of an axis": "軸の一方の端をクリック",
+  "Click the other end of that axis": "その軸のもう一方の端をクリック",
+  "Click one end of the other axis": "もう一方の軸の端をクリック",
+  "Click its other end": "そのもう一方の端をクリック",
+  "Click the other end of the first axis": "最初の軸のもう一方の端をクリック",
 }

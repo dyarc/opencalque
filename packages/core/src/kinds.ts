@@ -1076,12 +1076,19 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
       const arc = t.mirror && ends ? { from: turned(180 - ends.to), to: turned(180 - ends.from) } : {}
       return { cx: centre.x, cy: centre.y, rx: t.length(node.rx), ry: t.length(node.ry), rotation: t.angle(node.rotation), ...arc }
     },
-    // What runs parallel to a circle is a circle; to any other ellipse, no ellipse. A positive distance is outwards.
+    // A parallel copy of an ellipse is another ellipse with each radius grown or shrunk: the true
+    // offset curve is not an ellipse, but this is the copy CAD draws, and it keeps an arc's angles.
+    // A positive distance is outwards.
     parallel: (node, distance) => {
-      const radius = node.rx + distance
-      return Math.abs(node.rx - node.ry) < 1e-6 && radius > 0 ? { rx: radius, ry: radius } : null
+      const [rx, ry] = [node.rx + distance, node.ry + distance]
+      return rx > 0 && ry > 0 ? { rx, ry } : null
     },
-    beside: (node, p) => dist(p, { x: node.cx, y: node.cy }) - node.rx,
+    beside: (node, p) => {
+      // The signed distance is only needed for the side; on an ellipse it is measured to its curve.
+      const q = rotate(sub(p, { x: node.cx, y: node.cy }), -(node.rotation ?? 0))
+      const unit = Math.hypot(q.x / Math.max(node.rx, 1e-9), q.y / Math.max(node.ry, 1e-9))
+      return (unit - 1) * Math.min(node.rx, node.ry)
+    },
     centre: (node) => ({ x: node.cx, y: node.cy }),
   },
   text: {

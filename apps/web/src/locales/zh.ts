@@ -1180,4 +1180,9 @@ export const zh: Record<string, string> = {
   "Cut line weight": "剖切线宽",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "点击一个快捷键，输入 1–3 个字母后按空格确认。退格删除一个字母，Delete 删除整个快捷键；Esc 保持原样。",
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "只有墙、直线、构造线、多段线、曲线、矩形、圆和圆弧可以偏移",
+  "Click the first end of an axis": "点击一条轴的第一个端点",
+  "Click the other end of that axis": "点击这条轴的另一个端点",
+  "Click one end of the other axis": "点击另一条轴的一个端点",
+  "Click its other end": "点击它的另一个端点",
+  "Click the other end of the first axis": "点击第一条轴的另一个端点",
 }

@@ -1180,4 +1180,9 @@ export const ko: Record<string, string> = {
   "Cut line weight": "절단선 굵기",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "바로가기를 클릭한 뒤 1~3글자를 입력하고 스페이스를 누르십시오. Backspace는 한 글자 삭제, Delete는 바로가기 삭제, Esc는 그대로 둡니다.",
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "간격 띄우기는 벽, 선, 보조선, 폴리선, 곡선, 사각형, 원, 호에만 적용됩니다",
+  "Click the first end of an axis": "축의 한쪽 끝을 클릭",
+  "Click the other end of that axis": "그 축의 다른 끝을 클릭",
+  "Click one end of the other axis": "다른 축의 한쪽 끝을 클릭",
+  "Click its other end": "그 반대쪽 끝을 클릭",
+  "Click the other end of the first axis": "첫 번째 축의 다른 끝을 클릭",
 }

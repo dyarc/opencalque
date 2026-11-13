@@ -176,15 +176,10 @@ describe('offsetOps', () => {
     expect(offsetOps(doc, source(doc), 1000)).toBeNull()
   })
 
-  it('has no copy of an ellipse that is no circle or a text', () => {
-    for (const node of [
-      { type: 'ellipse', cx: 0, cy: 0, rx: 500, ry: 300 },
-      { type: 'text', x: 0, y: 0, text: 'Hall', size: 200 },
-    ]) {
-      const doc = drawn(node)
-      expect(canOffset(source(doc))).toBe(false)
-      expect(offsetOps(doc, source(doc), 100)).toBeNull()
-    }
+  it('has no copy of a text', () => {
+    const doc = drawn({ type: 'text', x: 0, y: 0, text: 'Hall', size: 200 })
+    expect(canOffset(source(doc))).toBe(false)
+    expect(offsetOps(doc, source(doc), 100)).toBeNull()
   })
 
   it('reads a side so that the copy goes to it, whatever the object', () => {
@@ -212,5 +207,21 @@ describe('offsetOps', () => {
     const doc = drawn({ type: 'line', a: { x: 0, y: 0 }, b: { x: 1000, y: 0 } })
     const { ops } = offsetOps(doc, source(doc), 100)!
     expect(ops.map((op) => op.op)).toEqual(['add_node', 'update_node'])
+  })
+})
+
+describe('offsetting an ellipse or an arc', () => {
+  it('grows both of its radii, and keeps an arc an arc', () => {
+    const doc = applyOps(createDocument('Plan'), [
+      { op: 'add_node', node: { id: 'ellipse', type: 'ellipse', parent: 'page_1', layer: 'layer_1', cx: 0, cy: 0, rx: 1000, ry: 500 } } as never,
+      { op: 'add_node', node: { id: 'arc', type: 'ellipse', parent: 'page_1', layer: 'layer_1', cx: 0, cy: 0, rx: 1000, ry: 400, from: 20, to: 140 } } as never,
+    ])
+    expect(canOffset(doc.nodes.ellipse)).toBe(true)
+    const ellipse = offsetOps(doc, doc.nodes.ellipse, 100)!
+    const madeEllipse = applyOps(doc, ellipse.ops).nodes[ellipse.id] as never as { rx: number; ry: number }
+    expect([madeEllipse.rx, madeEllipse.ry]).toEqual([1100, 600])
+    const arc = offsetOps(doc, doc.nodes.arc, 50)!
+    const madeArc = applyOps(doc, arc.ops).nodes[arc.id] as never as { rx: number; ry: number; from: number; to: number }
+    expect([madeArc.rx, madeArc.ry, madeArc.from, madeArc.to]).toEqual([1050, 450, 20, 140])
   })
 })

@@ -68,6 +68,8 @@ export function hintsFor(tool: Tool, step: number, opening: boolean, selected = 
       return [['', t('Click where the angle arc goes')], ['Esc', t('cancels')]]
     case 'recess':
       return [['', t('Click a rectangle with a top and a bottom to sink a pit into it')], ['Esc', t('cancels')]]
+    case 'ellipse':
+      return [['', t('Click the first end of an axis')], ['', t('Click the other end of that axis')], ['', t('Click one end of the other axis')], ['', t('Click its other end')]]
     case 'column':
       return [['', t('Click where the column stands')], ['0-9', t('type its size')], ['Esc', t('cancels')]]
     case 'beam':
