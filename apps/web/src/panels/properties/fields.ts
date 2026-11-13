@@ -190,6 +190,7 @@ const FIELDS: Partial<Record<Node['type'], FieldSpec[]>> = {
   // A guide has no ends to give symbols to, and its line is what there is to set: colour, weight, dashes.
   construction: [...stroke(STROKE)],
   radialDimension: [
+    { ...len('leader', msg('Leader'), 150, msg('Text')), optional: true },
     len('radius', msg('Radius')),
     ...stroke(msg('Dimension line')),
     { path: 'startMarker', label: msg('Start'), type: 'string', section: msg('Ends'), fallback: 'none', options: MARKERS, ends: 'start' },

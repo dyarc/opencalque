@@ -1177,4 +1177,5 @@ export const fr: Record<string, string> = {
   "Sunken by": "Enfoncement",
   "Only arcs, circles and curved walls can carry a radius dimension": "Seuls les arcs, les cercles et les murs courbes peuvent porter une cote de rayon",
   "Only straight lines, walls and straight stretches of a polyline can measure an angle": "Seules les lignes droites, les murs et les segments droits d’une polyligne peuvent mesurer un angle",
+  "Leader": "Ligne de rappel",
 }

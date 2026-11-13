@@ -729,7 +729,7 @@ function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindCon
   const dir = { x: Math.cos((node.angle * Math.PI) / 180), y: Math.sin((node.angle * Math.PI) / 180) }
   const at = add(node.centre, scale(dir, node.radius))
   const start = add(at, scale(dir, node.extensionGap ?? 0))
-  const end = add(node.centre, scale(dir, node.radius + size * 1.8))
+  const end = add(node.centre, scale(dir, node.radius + (node.leader ?? size * 1.8)))
   const line = node.style
   const markers = { own: true, stroke: line?.stroke, strokeWidth: line?.strokeWidth }
   const extension = {
@@ -918,7 +918,7 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
       const higher = Object.values(ctx.doc.nodes).filter(
         (other): other is NodeOf<'beam'> => other.type === 'beam' && other.id !== node.id && other.parent === node.parent && above(other, node),
       )
-      if (higher.length === 0) return [{ kind: 'path', points: band, closed: true, openEnds: true, union: beamUnion(node) }]
+      if (higher.length === 0) return [{ kind: 'path', points: band, closed: true, openEnds: true, union: beamUnion(node), over: true, fill: 'none' }]
       const through = higher.map(beamBand)
       const runs: Vec2[][] = []
       let run: Vec2[] | null = null
@@ -941,7 +941,7 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
         }
       }
       if (run) runs.push(run)
-      return runs.filter((points) => points.length > 1).map((points): Primitive => ({ kind: 'path', points, closed: false, union: beamUnion(node) }))
+      return runs.filter((points) => points.length > 1).map((points): Primitive => ({ kind: 'path', points, closed: false, union: beamUnion(node), over: true, fill: 'none' }))
     },
     move: moveAB,
     handles: handlesAB,

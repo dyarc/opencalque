@@ -1,4 +1,4 @@
-import { add, bulgeArc, bulgePoints, dist, hitTest, newId, norm, scale, sub, wallArc, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
+import { add, bulgeArc, bulgePoints, dist, hitTest, newId, norm, perp, scale, sub, wallArc, wallSides, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
 import { t } from '../../i18n'
 import { formatLength } from '../../units'
 import { cancel, commit, layerHere, preview, useStore } from '../../store'
@@ -35,7 +35,12 @@ function arcUnder(c: Canvas, world: Vec2): { node: Node; centre: Vec2; radius: n
   }
   if (node.type === 'wall') {
     const arc = wallArc(node)
-    return arc && arc.radius > 0 ? { node, centre: arc.centre, radius: arc.radius } : null
+    if (!arc) return null
+    // Its two faces are circles a half thickness either side of the middle line: take the one clicked.
+    const half = node.thickness / 2
+    const near = dist(world, arc.centre)
+    const radius = Math.abs(near - (arc.radius - half)) <= Math.abs(near - (arc.radius + half)) ? arc.radius - half : arc.radius + half
+    return radius > 0 ? { node, centre: arc.centre, radius } : null
   }
   if (node.type !== 'polyline' || !node.bulges?.some((bulge) => bulge)) return null
   const reach = REACH / get().view.zoom
@@ -62,7 +67,16 @@ function arcUnder(c: Canvas, world: Vec2): { node: Node; centre: Vec2; radius: n
 function stretchUnder(c: Canvas, world: Vec2): { target: FilletTarget; a: Vec2; b: Vec2 } | null {
   const node = nodeUnder(c, world)
   if (!node) return null
-  if (node.type === 'line' || node.type === 'wall') return { target: { node, at: world }, a: node.a, b: node.b }
+  if (node.type === 'line') return { target: { node, at: world }, a: node.a, b: node.b }
+  if (node.type === 'wall') {
+    // A wall is measured at the face clicked, not at its middle line.
+    const across = perp(norm(sub(node.b, node.a)))
+    const sides = wallSides(node)
+    const offsets = [sides.left, -sides.right]
+    const side = offsets.reduce((best, off) => (Math.abs(distToEdge(world, node.a, node.b, across, off)) < Math.abs(distToEdge(world, node.a, node.b, across, best)) ? off : best))
+    const shift = scale(across, side)
+    return { target: { node, at: world }, a: add(node.a, shift), b: add(node.b, shift) }
+  }
   if (node.type !== 'polyline' || node.smooth) return null
   let best: { segment: number; near: number } | null = null
   for (let i = 0; i < node.points.length; i++) {
@@ -75,6 +89,13 @@ function stretchUnder(c: Canvas, world: Vec2): { target: FilletTarget; a: Vec2; 
   const a = node.points[best.segment]
   const b = node.points[(best.segment + 1) % node.points.length]
   return { target: { node, at: world, segment: best.segment }, a, b }
+}
+
+const distToEdge = (p: Vec2, a: Vec2, b: Vec2, across: Vec2, off: number): number => {
+  const d = sub(b, a)
+  const length = Math.hypot(d.x, d.y) || 1
+  const at = add(a, scale(across, off))
+  return Math.abs((p.x - at.x) * (d.y / length) - (p.y - at.y) * (d.x / length))
 }
 
 const pointToSegment = (p: Vec2, a: Vec2, b: Vec2): number => {
@@ -101,6 +122,8 @@ const radialNode = (g: GestureOf<'radiusDimension'>, at: Vec2): Record<string, u
   centre: g.centre,
   radius: g.radius,
   angle: (Math.atan2(at.y - g.centre.y, at.x - g.centre.x) * 180) / Math.PI,
+  // The words stand where the click is, past the arc; the leader runs out to them.
+  leader: Math.max(100, dist(at, g.centre) - g.radius),
 })
 
 export const radialDimensionDown: Press = (c, _e, _at, world) => {

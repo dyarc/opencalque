@@ -1177,4 +1177,5 @@ export const ko: Record<string, string> = {
   "Sunken by": "내려간 깊이",
   "Only arcs, circles and curved walls can carry a radius dimension": "반지름 치수는 호, 원, 곡선 벽에만 붙일 수 있습니다",
   "Only straight lines, walls and straight stretches of a polyline can measure an angle": "각도는 직선, 벽, 폴리라인의 직선 구간만 측정할 수 있습니다",
+  "Leader": "지시선",
 }

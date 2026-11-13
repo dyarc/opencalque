@@ -645,7 +645,8 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
   // Between the line and the far side, or `slack` past it (a door's place is the middle of its wall, behind the face).
   const between = (p: Vec2, slack = 0) => off(p) <= ON_FACE + slack && off(p) >= -deep - ON_FACE - slack
   for (const wall of walls) {
-    if (dist(wall.a, wall.b) < 1e-6) continue
+    // A curved wall is not a face of this view: its front projection is added below.
+    if (wall.bulge || dist(wall.a, wall.b) < 1e-6) continue
     const straight = chordWall(wall)
     const course = courseOf(straight)
     const turn = Math.abs(cross(course.dir(0), d))
@@ -666,6 +667,20 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
       if (turn <= 1e-3) along0.add(wall.id)
     }
   }
+  // A curved wall is seen by its front projection: what its outline takes across the view, stood
+  // up to its height. It is not a face the views can unfold, but this is the shape it makes.
+  for (const wall of walls) {
+    if (!wall.bulge || seen.has(wall.id)) continue
+    const outline = wallOutline(wall, doc)
+    if (clipConvex(convexHull(outline), seenArea(node)).length < 3) continue
+    const ss = outline.map(along)
+    const from = Math.max(0, Math.min(...ss))
+    const to = Math.min(length, Math.max(...ss))
+    if (to - from < 1e-6) continue
+    seen.add(wall.id)
+    layers.push({ from, to, depth: depthOn(outline), prims: [{ kind: 'path', points: box(from, to, 0, heightOf(doc, wall)), closed: true, fill: WALL_SEEN, own: true }] })
+  }
+
   for (const { wall, face, ends } of seenFaces) {
     const ss = ends.map(along)
     const from = Math.max(0, Math.min(...ss))

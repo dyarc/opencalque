@@ -27,6 +27,9 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- A curved wall appears in an elevation or a section by its front projection, not left out: the width it takes across the view, stood up to its height.
+- Radius dimensions take the face of a curved wall that was clicked, and angle dimensions the face of a wall, inside or outside, not its middle line. A radius dimension's leader length can be set, or placed by the click, and its words follow it.
+- Beams have no fill, so they cannot cover the wall they meet; their long sides still stop cleanly at it.
 - A sunken pit's floor and underside are now measured down from the top of the slab, so a depth of 500 sinks it 500; its depth is edited as "Sunken by".
 - Radius dimensions take curved walls, and angle dimensions take walls, along their centre lines.
 - A curved wall shows in elevations and sections by its chord, with its height and openings, instead of disappearing.

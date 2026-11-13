@@ -1177,4 +1177,5 @@ export const tr: Record<string, string> = {
   "Sunken by": "Çökme",
   "Only arcs, circles and curved walls can carry a radius dimension": "Yarıçap ölçüsü yalnızca yaylara, dairelere ve kavisli duvarlara verilebilir",
   "Only straight lines, walls and straight stretches of a polyline can measure an angle": "Açıyı yalnızca düz çizgiler, duvarlar ve bir çoklu çizginin düz bölümleri ölçebilir",
+  "Leader": "Kılavuz çizgisi",
 }

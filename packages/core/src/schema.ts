@@ -522,6 +522,7 @@ export const NodeSchema = z
         centre: Vec2Schema.describe('The centre of the arc or circle it measures, in mm.'),
         radius: z.number().positive().describe('Its radius, in mm.'),
         angle: z.number().describe('Where its leader points, in degrees clockwise on screen from the X axis.'),
+        leader: z.number().nonnegative().optional().describe('How far the words stand past the arc, in mm along the leader. Defaults to 1.8 times the text size.'),
         text: z.string().optional().describe('Replaces the measured radius when set.'),
         dimensionStyle: Id.optional().describe("The id of a dimension style it is drawn in, among the drawing's \"dimensionStyles\". It takes what the style defines, except where it gives itself a value."),
         markerSize: z.number().positive().optional().describe('Length of the arrows, in mm. Defaults to 100.'),
