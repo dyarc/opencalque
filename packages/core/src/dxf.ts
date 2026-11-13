@@ -57,6 +57,7 @@ export function toDXF(doc: Document, containerId: string, registry: Registry): s
           if (prim.union) for (const [from, to] of outsideMass(mass, a, b, of.get(prim))) line(layer, from, to, prim.clip)
           else line(layer, a, b, prim.clip)
         }
+        for (const hole of prim.holes ?? []) for (let i = 0; i < hole.length; i++) line(layer, hole[i], hole[(i + 1) % hole.length], prim.clip)
       } else if (prim.kind === 'ellipse') {
         if (Math.abs(prim.rx - prim.ry) < 1e-6 && !prim.clip?.length) entity('CIRCLE', layer, [10, n(prim.cx), 20, n(-prim.cy), 40, n(prim.rx)])
         else {

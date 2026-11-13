@@ -1163,4 +1163,7 @@ export const tr: Record<string, string> = {
   "Click where the beam starts": "Kirişin başladığı yeri tıklayın",
   "Column: a post standing from the floor to its top": "Kolon: zeminden üst yüzüne kadar duran dikme",
   "Beam: a girder running between two points, between its bottom and its top": "Kiriş: iki nokta arasında, alt ve üst yüzü arasında uzanan kiriş",
+  "Cut an opening in the shape": "Şekle bir açıklık kes",
+  "Select a rectangle and the smaller rectangles inside it to cut them out of it": "Dıştaki dikdörtgeni ve içindeki küçükleri seçerek kesin",
+  "Opening cut": "Açıklık kesildi",
 }

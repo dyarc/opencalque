@@ -1163,4 +1163,7 @@ export const fr: Record<string, string> = {
   "Click where the beam starts": "Cliquez où commence la poutre",
   "Column: a post standing from the floor to its top": "Poteau : un montant du sol jusqu’à son dessus",
   "Beam: a girder running between two points, between its bottom and its top": "Poutre : un élément entre deux points, entre son dessous et son dessus",
+  "Cut an opening in the shape": "Découper une ouverture dans la forme",
+  "Select a rectangle and the smaller rectangles inside it to cut them out of it": "Sélectionnez un rectangle et les plus petits à l’intérieur pour les découper",
+  "Opening cut": "Ouverture découpée",
 }

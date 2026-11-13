@@ -250,8 +250,12 @@ function pageContent(doc: Document, paper: Paper, registry: Registry, resources:
           out.push(
             `${point(1, 0)} m ${point(1, k)} ${point(k, 1)} ${point(0, 1)} c ${point(-k, 1)} ${point(-1, k)} ${point(-1, 0)} c ${point(-1, -k)} ${point(-k, -1)} ${point(0, -1)} c ${point(k, -1)} ${point(1, -k)} ${point(1, 0)} c h`,
           )
-        } else outline(prim.points, prim.closed ?? false)
-        out.push(filled && edge ? 'B' : filled ? 'f' : 'S')
+        } else {
+          outline(prim.points, prim.closed ?? false)
+          for (const hole of prim.holes ?? []) outline(hole, true)
+        }
+        const odd = prim.kind === 'path' && prim.holes?.length
+        out.push(filled && edge ? (odd ? 'B*' : 'B') : filled ? (odd ? 'f*' : 'f') : 'S')
       }
     }
     out.push('Q')

@@ -1163,4 +1163,7 @@ export const de: Record<string, string> = {
   "Click where the beam starts": "Klicken Sie, wo der Träger beginnt",
   "Column: a post standing from the floor to its top": "Stütze: ein Pfosten vom Boden bis zu seiner Oberkante",
   "Beam: a girder running between two points, between its bottom and its top": "Träger: ein Balken zwischen zwei Punkten, zwischen Unter- und Oberkante",
+  "Cut an opening in the shape": "Eine Öffnung in die Form schneiden",
+  "Select a rectangle and the smaller rectangles inside it to cut them out of it": "Wählen Sie ein Rechteck und die kleineren Rechtecke darin, um sie auszuschneiden",
+  "Opening cut": "Öffnung ausgeschnitten",
 }

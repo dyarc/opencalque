@@ -4,6 +4,7 @@ import { buildScene, componentsOf, pagesOf, unusedComponents } from '@opencalque
 import {
   canExplodeSelection,
   canJoinSelection,
+  cutOpeningSelection,
   deleteSelection,
   explodeSelection,
   joinSelection,
@@ -225,6 +226,7 @@ const STATIC: Command[] = [
   { id: 'wall.split', title: msg('Split the wall in two'), category: 'Edit', keywords: 'split cut divide corner', when: canSplitWall, run: splitWall },
   { id: 'wall.extend', title: msg('Extend walls to the next wall'), category: 'Edit', keywords: 'extend lengthen', when: canFitWalls, run: () => fitWalls('extend') },
   { id: 'edit.explode', title: msg('Explode'), category: 'Edit', keys: ['Shift+B'], interrupts: true, keywords: 'break apart split segments lines polygon rectangle', when: canExplodeSelection, run: explodeSelection },
+  { id: 'edit.cutOpening', title: msg('Cut an opening in the shape'), category: 'Object', keys: ['Shift+H'], run: cutOpeningSelection },
   { id: 'edit.join', title: msg('Join'), category: 'Edit', keys: ['Shift+J'], interrupts: true, keywords: 'merge combine connect polyline closed shape', when: canJoinSelection, run: joinSelection },
   { id: 'shape.close', title: msg('Close the shape'), category: 'Edit', keywords: 'polygon polyline join', when: canClosePolylines, run: () => setPolylines({ closed: true }) },
   { id: 'shape.open', title: msg('Open the shape'), category: 'Edit', keywords: 'polygon polyline', when: canOpenPolylines, run: () => setPolylines({ closed: null }) },

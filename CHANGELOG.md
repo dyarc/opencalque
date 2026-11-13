@@ -7,6 +7,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 ## 1.9.1 — 2026-11-13
 
 ### New
+- Cut an opening in a shape (`Shift+H`, Object › Cut an opening in the shape): select a rectangle and the smaller rectangles inside it, and they are cut out of its fill, leaving a ring that moves and turns with it. The edges of the opening are drawn, and it is left out of what a click inside it picks.
 - The application is now **AxioDraw** throughout, and a saved drawing is an **`.adg`** file; `.opencalque` and `.opencad` drawings still open, and the file format inside is the same.
 - Slabs, columns and beams: a rectangle can take a top and a bottom height and stands as a slab; the Column tool places a post, and the Beam tool runs a girder between two points, each with its own width and its top and bottom. The 3D view draws them as solids, between those faces.
 - 3D view (`Shift+3`): an axonometric view of the page, with its walls standing as blocks and the floors of its rooms, from four directions, panned and zoomed, and with no perspective. It is worked out from the plan each time and is read-only; the plan is still what is edited.
@@ -25,6 +26,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- The Beam tool shows the snap it would take for its first point, and beams of one height and depth that cross are drawn as one shape, their outlines running into each other.
 - Preferences › Drawing › View has Wheel and trackpad: a mouse wheel zooms about the pointer as it did before, while a trackpad scrolls the drawing and pinches to zoom.
 - The wheel moves the view the way a trackpad moves it elsewhere: two fingers scroll to pan the drawing, side to side as well as up and down, and pinching zooms about the pointer. A mouse wheel pans too; Ctrl-wheel (⌘-wheel) zooms.
 - How fast a pinch, or Ctrl-wheel, zooms is a setting of its own: Preferences › Drawing › View has a slider and a number, from 0.2 to 4 times the usual speed.

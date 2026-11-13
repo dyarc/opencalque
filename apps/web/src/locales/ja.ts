@@ -1163,4 +1163,7 @@ export const ja: Record<string, string> = {
   "Click where the beam starts": "梁の始点をクリック",
   "Column: a post standing from the floor to its top": "柱：床から上面までの柱",
   "Beam: a girder running between two points, between its bottom and its top": "梁：2 点の間に架かる、下面から上面までの梁",
+  "Cut an opening in the shape": "図形に開口を切り抜く",
+  "Select a rectangle and the smaller rectangles inside it to cut them out of it": "外側の長方形と、その中の小さい長方形を選んで切り抜きます",
+  "Opening cut": "開口を切り抜きました",
 }

@@ -68,6 +68,8 @@ export interface PathPrim extends PrimStyle {
   kind: 'path'
   points: Vec2[]
   closed?: boolean
+  /** Openings cut out of a closed path, in the same space as its points; the fill stops at them and their edges are stroked. */
+  holes?: Vec2[][]
   /**
    * Paths with a union key are painted together (`paintOrder`): their fills, then the outline of
    * the whole, centred on its edges, with what lies inside it left out (`mergedOutlines`). Those
@@ -215,7 +217,7 @@ const filled = (p: PrimStyle) => p.fill !== undefined && p.fill !== 'none'
  */
 export function insidePrimitive(p: Primitive, pt: Vec2): boolean {
   if (p.backdrop || p.clip?.some((outline) => !pointInPolygon(pt, outline))) return false
-  if (p.kind === 'path') return !!p.closed && p.points.length > 2 && pointInPolygon(pt, p.points)
+  if (p.kind === 'path') return !!p.closed && p.points.length > 2 && pointInPolygon(pt, p.points) && !(p.holes ?? []).some((hole) => pointInPolygon(pt, hole))
   if (p.kind === 'ellipse') {
     if (p.rx <= 0 || p.ry <= 0) return false
     const q = rotate({ x: pt.x - p.cx, y: pt.y - p.cy }, -(p.rotation ?? 0))

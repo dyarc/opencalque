@@ -170,6 +170,11 @@ const handlesAB = (node: { a: Vec2; b: Vec2 }) => [node.a, node.b]
 const moveHandleAB = (_: unknown, index: number, p: Vec2) => (index === 0 ? { a: p } : { b: p })
 
 /** The four corners of a rectangle, turned with it, from its top-left corner round. */
+/** A rectangle's openings, in its own unrotated space, brought into the drawing. */
+export function rectHoles(node: NodeOf<'rect'>): Vec2[][] {
+  return (node.holes ?? []).map((hole) => hole.map((p) => add(rotate(p, node.rotation ?? 0), node)))
+}
+
 export function rectCorners(node: NodeOf<'rect'>): Vec2[] {
   const local = [
     { x: 0, y: 0 },
@@ -869,7 +874,10 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     primitives: (node) => {
       const across = perp(norm(sub(node.b, node.a)))
       const half = node.width / 2
-      return [{ kind: 'path', points: [add(node.a, scale(across, half)), add(node.b, scale(across, half)), add(node.b, scale(across, -half)), add(node.a, scale(across, -half))], closed: true }]
+      // Beams of one height and depth that cross are one mass, as walls of one material are: their
+      // outlines run into each other instead of one drawing through the other.
+      const union = `beam:${node.top ?? ''}:${node.bottom ?? ''}`
+      return [{ kind: 'path', points: [add(node.a, scale(across, half)), add(node.b, scale(across, half)), add(node.b, scale(across, -half)), add(node.a, scale(across, -half))], closed: true, union }]
     },
     move: moveAB,
     handles: handlesAB,
@@ -878,7 +886,7 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     transform: (node, t) => ({ ...transformAB(node, t), width: t.length(node.width) }),
   },
   rect: {
-    primitives: (node) => [{ kind: 'path', points: rectCorners(node), closed: true }],
+    primitives: (node) => [{ kind: 'path', points: rectCorners(node), holes: node.holes?.length ? rectHoles(node) : undefined, closed: true }],
     // Its corners run clockwise on screen: a positive distance is inwards.
     parallel: (node, distance) => {
       const [width, height] = [node.width - 2 * distance, node.height - 2 * distance]

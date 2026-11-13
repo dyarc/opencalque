@@ -1163,4 +1163,7 @@ export const ko: Record<string, string> = {
   "Click where the beam starts": "보가 시작하는 위치를 클릭",
   "Column: a post standing from the floor to its top": "기둥: 바닥에서 상단까지 서는 기둥",
   "Beam: a girder running between two points, between its bottom and its top": "보: 두 점 사이를 잇는, 하단에서 상단까지의 보",
+  "Cut an opening in the shape": "도형에 구멍 내기",
+  "Select a rectangle and the smaller rectangles inside it to cut them out of it": "바깥 사각형과 그 안의 작은 사각형을 선택해 잘라냅니다",
+  "Opening cut": "구멍을 냈습니다",
 }

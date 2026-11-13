@@ -19,6 +19,7 @@ const ON_SELECTION = [
   'edit.selectSimilar',
   null,
   'edit.join',
+  'edit.cutOpening',
   'edit.explode',
   null,
   'edit.group',

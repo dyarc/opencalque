@@ -5,6 +5,7 @@ import {
   applyOps,
   canExplode,
   canJoin,
+  cutOpeningOps,
   explodeOps,
   joinOps,
   buildScene,
@@ -235,6 +236,17 @@ function lookFrom(source: Node, target: Node): Record<string, unknown> {
   const made = 'material' in material ? material.material : (target as { material?: string }).material
   const style = target.type === 'wall' || (target.type === 'room' && made) ? withoutFill(source.style) : source.style
   return { style: style ?? null, ...material }
+}
+
+/**
+ * Cuts the rectangles selected inside the largest of them out of it, so that a rectangle drawn
+ * within another leaves a ring: the fill stops at the opening and its edge is drawn.
+ */
+export function cutOpeningSelection(): void {
+  const { doc, selection } = get()
+  const ops = cutOpeningOps(doc, selection)
+  if (!ops) return toast(t('Select a rectangle and the smaller rectangles inside it to cut them out of it'))
+  if (apply(ops)) toast(t('Opening cut'))
 }
 
 export function pickStyle(source: Node): void {

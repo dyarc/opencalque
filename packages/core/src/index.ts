@@ -1,4 +1,5 @@
 export * from './assemble'
+export * from './holes'
 export * from './axonometric'
 export * from './chains'
 export * from './check'

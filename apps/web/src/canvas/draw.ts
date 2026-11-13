@@ -413,15 +413,20 @@ function paintWhole(ctx: CanvasRenderingContext2D, { prim, stroke, fill, widthSc
     return
   }
   ctx.beginPath()
+  const holes = prim.kind === 'path' ? prim.holes : undefined
   if (prim.kind === 'ellipse') {
     ctx.ellipse(prim.cx, prim.cy, prim.rx, prim.ry, ((prim.rotation ?? 0) * Math.PI) / 180, 0, Math.PI * 2)
   } else {
     prim.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
     if (prim.closed) ctx.closePath()
+    for (const hole of holes ?? []) {
+      hole.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
+      ctx.closePath()
+    }
   }
   if (fill && prim.fill && prim.fill !== 'none') {
     ctx.fillStyle = ink(prim.fill)
-    ctx.fill()
+    ctx.fill(holes?.length ? 'evenodd' : 'nonzero')
     if (seam > 0) {
       ctx.strokeStyle = ink(prim.fill)
       ctx.lineWidth = seam / zoom

@@ -258,6 +258,10 @@ export const NodeSchema = z
         rotation,
         top: z.number().optional().describe('The upper face of the slab it is, in mm above the floor (z = 0). With "bottom", the rectangle stands as a slab in the 3D view and in sections.'),
         bottom: z.number().optional().describe('The lower face of the slab it is, in mm above the floor (z = 0).'),
+        holes: z
+          .array(z.array(Vec2Schema).min(3))
+          .optional()
+          .describe('Openings cut out of the rectangle, each an outline in its own space: x to the right and y down from its top-left corner, before its turn. The fill stops at them and their edges are drawn.'),
       })
       .describe('Rectangle with its top-left corner at (x, y), rotated around that corner.'),
     z

@@ -41,8 +41,9 @@ function stepToSvg({ prim, stroke, fill, widthScale, widthExtra, seam }: PaintSt
     const turn = prim.rotation ? ` transform="rotate(${num(prim.rotation)} ${num(prim.cx)} ${num(prim.cy)})"` : ''
     return `<ellipse cx="${num(prim.cx)}" cy="${num(prim.cy)}" rx="${num(prim.rx)}" ry="${num(prim.ry)}"${paint}${turn}/>`
   }
-  const d = prim.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)}`).join(' ') + (prim.closed ? ' Z' : '')
-  return `<path d="${d}"${paint}/>`
+  const ring = [prim.points, ...(prim.holes ?? [])]
+  const d = ring.map((points) => points.map((p, i) => `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)}`).join(' ') + (prim.closed ? ' Z' : '')).join(' ')
+  return `<path d="${d}"${prim.holes?.length ? ' fill-rule="evenodd"' : ''}${paint}/>`
 }
 
 /** The part of the drawing an SVG made by `toSVG` shows, in millimetres. */

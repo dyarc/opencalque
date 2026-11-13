@@ -1163,4 +1163,7 @@ export const zh: Record<string, string> = {
   "Click where the beam starts": "点击梁的起点",
   "Column: a post standing from the floor to its top": "柱子：从地面立到顶面的竖向构件",
   "Beam: a girder running between two points, between its bottom and its top": "梁：两点之间、从底面到顶面的横向构件",
+  "Cut an opening in the shape": "在图形中挖一个洞",
+  "Select a rectangle and the smaller rectangles inside it to cut them out of it": "选中外侧大矩形和里面的小矩形，把它们从大矩形中挖掉",
+  "Opening cut": "已挖洞",
 }
