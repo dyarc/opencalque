@@ -26,6 +26,8 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- The pattern of a fill stops at an opening cut in the shape, as its colour does.
+- The Beam tool holds its direction with Shift and shows its length as it is drawn, as a line does. Beams of different heights that cross show the higher one running through, the lower one stopping at it.
 - The Beam tool shows the snap it would take for its first point, and beams of one height and depth that cross are drawn as one shape, their outlines running into each other.
 - Preferences › Drawing › View has Wheel and trackpad: a mouse wheel zooms about the pointer as it did before, while a trackpad scrolls the drawing and pinches to zoom.
 - The wheel moves the view the way a trackpad moves it elsewhere: two fingers scroll to pan the drawing, side to side as well as up and down, and pinching zooms about the pointer. A mouse wheel pans too; Ctrl-wheel (⌘-wheel) zooms.

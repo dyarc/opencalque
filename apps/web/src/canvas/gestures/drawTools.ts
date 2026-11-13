@@ -20,7 +20,7 @@ export function aim(c: Canvas, g: GestureOf<'draw'>, world: Vec2, e: Keys): Targ
   const { tool } = get()
   if (CHAINED.includes(tool)) return lineEnd(c, world, e, [g.id], g.start)
   // From a circle's centre, the foot of a perpendicular onto a line is where a circle touching it goes through.
-  return snap(c, world, e, [g.id], tool === 'dimension' || tool === 'gridline' || tool === 'arc' || tool === 'circle' ? g.start : undefined)
+  return snap(c, world, e, [g.id], tool === 'dimension' || tool === 'gridline' || tool === 'arc' || tool === 'circle' || tool === 'beam' ? g.start : undefined)
 }
 
 /**
@@ -194,7 +194,7 @@ export const drawDown: Press = (c, e, at, world) => {
 
 export const drawMove: Move<'draw'> = (c, g, e, _at, world, out) => {
   const s = get()
-  const constrained = CHAINED.includes(s.tool) || s.tool === 'dimension' || s.tool === 'gridline' || s.tool === 'arc'
+  const constrained = CHAINED.includes(s.tool) || s.tool === 'dimension' || s.tool === 'gridline' || s.tool === 'arc' || s.tool === 'beam'
   const target = aim(c, g, world, e)
   out.marker = target.marker
   out.link = target.link

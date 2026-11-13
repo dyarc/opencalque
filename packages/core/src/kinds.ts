@@ -1,5 +1,5 @@
 import { childrenOf, isVisible, rootOf } from './document'
-import { add, applyTransform, besidePath, bulgePoints, centroid, dist, inverseTransform, len, mid, norm, parallelPath, perp, rotate, scale, sub, type Bounds, type Vec2, ellipseArc, smoothPoints, unionBounds } from './geometry'
+import { add, applyTransform, besidePath, bulgePoints, centroid, dist, inverseTransform, len, mid, norm, parallelPath, perp, pointInPolygon, rotate, scale, sub, type Bounds, type Vec2, ellipseArc, smoothPoints, unionBounds } from './geometry'
 import { fadeColor, resolveColor } from './colors'
 import { DIMENSION_MARKER_SIZE, DIMENSION_TEXT_SIZE, styledDimension, styledMeasure } from './dimensions'
 import { fillFields } from './fields'
@@ -870,14 +870,35 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     transform: transformBox,
   },
   beam: {
-    // A beam in plan is the band it runs along, as wide as it is.
-    primitives: (node) => {
-      const across = perp(norm(sub(node.b, node.a)))
-      const half = node.width / 2
-      // Beams of one height and depth that cross are one mass, as walls of one material are: their
-      // outlines run into each other instead of one drawing through the other.
-      const union = `beam:${node.top ?? ''}:${node.bottom ?? ''}`
-      return [{ kind: 'path', points: [add(node.a, scale(across, half)), add(node.b, scale(across, half)), add(node.b, scale(across, -half)), add(node.a, scale(across, -half))], closed: true, union }]
+    // A beam in plan is the band it runs along, as wide as it is. A lower beam stops at the outline
+    // of a higher one, which runs through: the plan shows which is above, as its section would.
+    primitives: (node, ctx) => {
+      const band = beamBand(node)
+      const higher = Object.values(ctx.doc.nodes).filter(
+        (other): other is NodeOf<'beam'> => other.type === 'beam' && other.id !== node.id && other.parent === node.parent && above(other, node),
+      )
+      if (higher.length === 0) return [{ kind: 'path', points: band, closed: true, union: beamUnion(node) }]
+      const through = higher.map(beamBand)
+      const runs: Vec2[][] = []
+      let run: Vec2[] | null = null
+      for (let i = 0; i < band.length; i++) {
+        const a = band[i]
+        const b = band[(i + 1) % band.length]
+        const pieces = cutOpenings([a, b], through)
+        for (const piece of pieces) {
+          if (run && dist(run[run.length - 1], piece[0]) < 1e-6) run.push(...piece.slice(1))
+          else {
+            if (run) runs.push(run)
+            run = [...piece]
+          }
+        }
+        if (pieces.length === 0 && run) {
+          runs.push(run)
+          run = null
+        }
+      }
+      if (run) runs.push(run)
+      return runs.filter((points) => points.length > 1).map((points): Primitive => ({ kind: 'path', points, closed: false, union: beamUnion(node) }))
     },
     move: moveAB,
     handles: handlesAB,
@@ -1281,6 +1302,82 @@ export function drawnSolid(doc: Document, containerId: string | null): boolean {
 }
 
 /**
+ * A line cut where it runs into openings: the stretches outside them, in the order they run. A
+ * pattern is drawn over the whole outline and then loses what falls in an opening, so that a ring
+ * is hatched through its width only.
+ */
+function cutOpenings(line: Vec2[], openings: Vec2[][]): Vec2[][] {
+  const runs: Vec2[][] = []
+  let run: Vec2[] | null = null
+  for (let s = 0; s < line.length - 1; s++) {
+    const a = line[s]
+    const b = line[s + 1]
+    const cuts = [0, 1]
+    for (const opening of openings) {
+      for (let i = 0; i < opening.length; i++) {
+        const c = opening[i]
+        const d = opening[(i + 1) % opening.length]
+        const t = crossing(a, b, c, d)
+        if (t !== null) cuts.push(t)
+      }
+    }
+    cuts.sort((x, y) => x - y)
+    let last = 0
+    for (const t of cuts) {
+      if (t - last > 1e-9) {
+        const from = pointOn(a, b, last)
+        const to = pointOn(a, b, t)
+        if (!openings.some((opening) => pointInPolygon(pointOn(a, b, (last + t) / 2), opening))) {
+          if (run && dist(run[run.length - 1], from) < 1e-6) run.push(to)
+          else {
+            if (run && run.length > 1) runs.push(run)
+            run = [from, to]
+          }
+        } else {
+          if (run && run.length > 1) runs.push(run)
+          run = null
+        }
+      }
+      last = t
+    }
+  }
+  if (run && run.length > 1) runs.push(run)
+  return runs
+}
+
+const pointOn = (a: Vec2, b: Vec2, t: number): Vec2 => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t })
+
+/** Where the stretch from a to b crosses the stretch from c to d, as a fraction along the first, or null. */
+function crossing(a: Vec2, b: Vec2, c: Vec2, d: Vec2): number | null {
+  const r = sub(b, a)
+  const s = sub(d, c)
+  const denominator = r.x * s.y - r.y * s.x
+  if (Math.abs(denominator) < 1e-12) return null
+  const t = ((c.x - a.x) * s.y - (c.y - a.y) * s.x) / denominator
+  const u = ((c.x - a.x) * r.y - (c.y - a.y) * r.x) / denominator
+  return t > 1e-9 && t < 1 - 1e-9 && u >= -1e-9 && u <= 1 + 1e-9 ? t : null
+}
+
+/** The rectangle a beam runs as in plan. */
+function beamBand(node: NodeOf<'beam'>): Vec2[] {
+  const across = perp(norm(sub(node.b, node.a)))
+  const half = node.width / 2
+  return [add(node.a, scale(across, half)), add(node.b, scale(across, half)), add(node.b, scale(across, -half)), add(node.a, scale(across, -half))]
+}
+
+/** The height of a beam's top, the way the plan decides which beam runs through another. */
+const beamTop = (node: NodeOf<'beam'>) => node.top ?? node.bottom ?? 0
+
+/** Whether `one` stands above `two`: its top face higher, or its underside higher when the tops meet. */
+function above(one: NodeOf<'beam'>, two: NodeOf<'beam'>): boolean {
+  const [top, other] = [beamTop(one), beamTop(two)]
+  return top > other + 1e-6 || (Math.abs(top - other) <= 1e-6 && (one.bottom ?? 0) > (two.bottom ?? 0) + 1e-6)
+}
+
+/** Beams of one height and depth that cross are one mass: their outlines run into each other. */
+const beamUnion = (node: NodeOf<'beam'>) => `beam:${node.top ?? ''}:${node.bottom ?? ''}`
+
+/**
  * The primitives of a node with styles resolved: the node's own style wins, then what the kind
  * specified, then the layer color, then the default ink. Primitives marked `own` skip the first step.
  */
@@ -1328,7 +1425,9 @@ export function nodePrimitives(node: Node, ctx: KindContext): Primitive[] {
         // A merged shape that is only an outline (a wall whose layers fill it) is not a fill to lay a pattern on.
         if (p.own || (p.kind === 'path' && p.union !== undefined && p.fill === 'none')) return []
         const shape = p.kind === 'path' && p.closed ? p.points : p.kind === 'ellipse' ? ellipseArc({ ...p, from: 0, to: 360 }).slice(0, -1) : []
-        return patternStrokes(shape, laid!, frame).map(
+        const openings = p.kind === 'path' && p.closed ? (p.holes ?? []) : []
+        const lines = patternStrokes(shape, laid!, frame).flatMap((line) => (openings.length > 0 ? cutOpenings(line, openings) : [line]))
+        return lines.map(
           (points): Primitive => ({ kind: 'path', points, stroke: ink, strokeWidth: pattern.strokeWidth ?? HATCH_WEIGHT, own: true, texture: true, backdrop: p.backdrop, clip: [...(p.clip ?? []), shape], ...(p.kind === 'path' && p.union !== undefined ? { merged: true } : {}) }),
         )
       })

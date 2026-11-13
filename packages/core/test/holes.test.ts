@@ -32,3 +32,22 @@ describe('cutting an opening in a rectangle', () => {
     expect(cutOpeningOps(doc, ['outer', 'inner'])).toBeNull()
   })
 })
+
+describe('a pattern on a shape with an opening', () => {
+  it('stops at the opening, as the fill does', () => {
+    const doc = applyOps(plan(), [{ op: 'update_node', id: 'outer', patch: { style: { fill: '#eeeeee', pattern: { kind: 'Lines', angle: 45, spacing: 100, stroke: '#333333' } } } }])
+    const cut = applyOps(doc, cutOpeningOps(doc, ['outer', 'inner'])!)
+    const hatches = nodePrimitives(cut.nodes.outer, { doc: cut, registry, depth: 0 }).filter((prim) => prim.kind === 'path' && prim.texture)
+    expect(hatches.length).toBeGreaterThan(0)
+    // No stretch of a hatch runs through the middle of the opening.
+    for (const prim of hatches) {
+      if (prim.kind !== 'path') continue
+      for (let i = 0; i < prim.points.length - 1; i++) {
+        const a = prim.points[i]
+        const b = prim.points[i + 1]
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+        expect(mid.x > 400 && mid.x < 600 && mid.y > 400 && mid.y < 600).toBe(false)
+      }
+    }
+  })
+})
