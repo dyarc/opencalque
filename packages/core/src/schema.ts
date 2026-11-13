@@ -350,6 +350,9 @@ export const NodeSchema = z
         y: z.number(),
         walls: z.boolean().optional().describe('false leaves out the walls in front of the faces it sees, to see all of them: those its line cuts, and those in the way (a wall at an angle within what it sees). Shown when left out, all plain grey.'),
         dimensions: z.boolean().optional().describe('false leaves out the dimensions it draws by itself: along the floor from its start to each object fixed on the face, and the height of each above the floor. Shown when left out.'),
+        cutFill: z.string().optional().describe('What is cut through is filled with. Defaults to a plain grey.'),
+        cutWeight: z.number().positive().optional().describe('Line weight of what is cut, in mm. Defaults to 0.35.'),
+
       })
       .describe(
         'An elevation or a section: the view of what its viewline sees, drawn from the plan each time it is drawn, on any page, with (x, y) the point of the floor under the start of its line (a); heights go up from there. Moving it moves only where it is drawn; what it shows is set by its line.',

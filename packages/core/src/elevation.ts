@@ -1,7 +1,7 @@
 import { leavesOf, rootOf } from './document'
-import { applyTransform, dist, norm, perp, sub, unionBounds, type Bounds, type Vec2 } from './geometry'
+import { add, applyTransform, dist, norm, perp, rotate, scale, sub, unionBounds, type Bounds, type Vec2 } from './geometry'
 import type { Op } from './ops'
-import { primitiveBounds, transformPrimitive, type Primitive } from './primitives'
+import { PRINT_MM_PER_PIXEL, primitiveBounds, transformPrimitive, type Primitive } from './primitives'
 import type { ParametricKind, Registry } from './registry'
 import { leavesOf as everythingIn } from './document'
 import type { Document, Node, NodeOf } from './schema'
@@ -678,7 +678,54 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
     const to = Math.min(length, Math.max(...ss))
     if (to - from < 1e-6) continue
     seen.add(wall.id)
-    layers.push({ from, to, depth: depthOn(outline), prims: [{ kind: 'path', points: box(from, to, 0, heightOf(doc, wall)), closed: true, fill: WALL_SEEN, own: true }] })
+    layers.push({ from, to, depth: depthOn(outline), prims: [{ kind: 'path', points: box(from, to, 0, heightOf(doc, wall)), closed: true, fill: WALL_SEEN, stroke: 'none', own: true }] })
+  }
+
+  // Slabs, columns and beams stand in the view as their top and bottom take: a band for a slab,
+  // a post for a column, a band for a beam, each filled as what is cut is.
+  for (const leaf of everythingIn(doc, rootOf(doc, node.parent)?.id ?? '')) {
+    let outline: Vec2[] = []
+    let [low, high] = [0, 0]
+    if ((leaf.type === 'rect' || leaf.type === 'column') && leaf.top !== undefined && leaf.bottom !== undefined) {
+      const [w, h] = leaf.type === 'rect' ? [leaf.width, leaf.height] : [leaf.width, leaf.height]
+      outline = [
+        { x: 0, y: 0 },
+        { x: w, y: 0 },
+        { x: w, y: h },
+        { x: 0, y: h },
+      ].map((p) => add(rotate(p, leaf.rotation ?? 0), leaf))
+      ;[low, high] = [Math.min(leaf.top, leaf.bottom), Math.max(leaf.top, leaf.bottom)]
+    } else if (leaf.type === 'beam' && leaf.top !== undefined && leaf.bottom !== undefined) {
+      const across = perp(norm(sub(leaf.b, leaf.a)))
+      const half = leaf.width / 2
+      outline = [add(leaf.a, scale(across, half)), add(leaf.b, scale(across, half)), add(leaf.b, scale(across, -half)), add(leaf.a, scale(across, -half))]
+      ;[low, high] = [Math.min(leaf.top, leaf.bottom), Math.max(leaf.top, leaf.bottom)]
+    }
+    if (outline.length < 3 || clipConvex(convexHull(outline), seenArea(node)).length < 3) continue
+    const ss = outline.map(along)
+    const from = Math.max(0, Math.min(...ss))
+    const to = Math.min(length, Math.max(...ss))
+    if (to - from < 1e-6) continue
+    // A solid the line crosses is cut, at the cut's weight; one beyond it falls away with distance.
+    const cut = clipLine(node.a, d, length, outline) !== null
+    layers.push({ from, to, depth: cut ? () => 0 : depthOn(outline), prims: [{ kind: 'path', points: box(from, to, low, high), closed: true, fill: view.cutFill ?? WALL_GREY, own: true }] })
+    // A sunken pit has a floor of its own, between its depth below the top and its underside.
+    if (leaf.type === 'rect' && leaf.recess) {
+      const r = leaf.recess
+      const pitHigh = high - r.top
+      const pitLow = high - r.bottom
+      if (pitHigh - pitLow > 1) {
+        const corners = [
+          { x: r.x, y: r.y },
+          { x: r.x + r.width, y: r.y },
+          { x: r.x + r.width, y: r.y + r.height },
+          { x: r.x, y: r.y + r.height },
+        ].map((p) => add(rotate(p, leaf.rotation ?? 0), leaf))
+        const pit = corners.map(along)
+        const [p0, p1] = [Math.max(from, Math.min(...pit)), Math.min(to, Math.max(...pit))]
+        if (p1 - p0 > 1) layers.push({ from: p0, to: p1, depth: cut ? () => 0 : depthOn(corners), prims: [{ kind: 'path', points: box(p0, p1, pitLow, pitHigh), closed: true, fill: view.cutFill ?? WALL_GREY, own: true }] })
+      }
+    }
   }
 
   for (const { wall, face, ends } of seenFaces) {
@@ -827,10 +874,30 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
     layers.push({ from: Math.max(0, Math.min(...ss)), to: Math.min(length, Math.max(...ss)), depth: depthOn(seenOf(points)), prims })
   }
 
-  const floor: Primitive = { kind: 'path', points: [at(left, 0), at(right, 0)], strokeWidth: FLOOR_WEIGHT }
+  const floor: Primitive = { kind: 'path', points: [at(left, 0), at(right, 0)], strokeWidth: (view.cutWeight ?? 0.35) / PRINT_MM_PER_PIXEL, stroke: '#1f1f1f' }
   // Where each thing fixed on the face is: a chain along the floor from the start of the view, and
   // its height above the floor beside it. What a person setting them out on site measures.
   const dimensions: Primitive[] = []
+  // A cut line is the heaviest and darkest (0.35 mm by default); lines beyond it fall away in
+  // three steps, 0.25, 0.18 and 0.13 mm, both thinner and lighter with distance.
+  const cutFill = view.cutFill ?? WALL_GREY
+  const weights = [view.cutWeight ?? 0.35, 0.25, 0.18, 0.13].map((mm) => mm / PRINT_MM_PER_PIXEL)
+  const tones = ['#1f1f1f', '#4a4a4a', '#777777', '#a0a0a0']
+  for (const layer of layers) {
+    const d = layer.depth((layer.from + layer.to) / 2)
+    const level = d <= ON_FACE + 1 ? 0 : d <= deep / 3 ? 1 : d <= (deep * 2) / 3 ? 2 : 3
+    for (const prim of layer.prims) {
+      if (prim.kind !== 'path') continue
+      if (prim.fill === WALL_GREY) prim.fill = cutFill
+      if (prim.fill === (view.cutFill ?? WALL_GREY)) prim.fill = cutFill
+      if (prim.stroke !== 'none') {
+        prim.stroke = tones[level]
+        // What already gives itself a weight (what stands in front, a floor) keeps it.
+        if (prim.strokeWidth === undefined) prim.strokeWidth = weights[level]
+      }
+    }
+  }
+
   // What is painted after an item and filled hides it; one all hidden is not dimensioned.
   const ordered = paintOrder(layers)
   const layerOf = new Map<Primitive, number>(ordered.flatMap((layer, i) => layer.prims.map((p) => [p, i] as [Primitive, number])))

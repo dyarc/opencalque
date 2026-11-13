@@ -1178,4 +1178,6 @@ export const ja: Record<string, string> = {
   "Only arcs, circles and curved walls can carry a radius dimension": "半径寸法を付けられるのは円弧・円・曲がった壁だけです",
   "Only straight lines, walls and straight stretches of a polyline can measure an angle": "角度を測れるのは直線・壁・ポリラインの直線部分だけです",
   "Leader": "引出線",
+  "Cut fill": "切断面の塗り",
+  "Cut line weight": "切断線の太さ",
 }

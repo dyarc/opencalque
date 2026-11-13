@@ -216,6 +216,17 @@ describe('elevations of every kind of wall', () => {
     expect(wallFaceAt(doc, 'page_1', { x: 2000, y: 600 }, 500)).toMatchObject({ wall: { id: 'lining' }, a: { x: 0, y: 220 }, b: { x: 6000, y: 220 } })
   })
 
+  it('fills what is cut with its own fill, at the cut weight, and steps the rest down with distance', () => {
+    const doc = applyOps(plan(), [{ op: 'update_node', id: 'ev', patch: { cutFill: '#ff0000', cutWeight: 0.5 } }])
+    const prims = view(doc)
+    const cut = prims.filter((p) => p.kind === 'path' && p.fill === '#ff0000')
+    expect(cut.length).toBeGreaterThan(0)
+    expect(cut.every((p) => p.kind === 'path' && p.strokeWidth === 2)).toBe(true)
+    // What is further away is drawn lighter and thinner than the cut.
+    const weights = prims.flatMap((p) => (p.kind === 'path' ? [p.strokeWidth] : [])).filter((w): w is number => w !== undefined)
+    expect(weights.some((w) => w > 0 && w < 2)).toBe(true)
+  })
+
   it('cut a wall the line runs into plain grey, whatever it is made of', () => {
     const doc = applyOps(plan(), [
       { op: 'add_material', material: { id: 'brick', name: 'Brick', fill: '#efc7b4', pattern: { kind: 'Lines', spacing: 60 } } },

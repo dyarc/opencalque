@@ -1178,4 +1178,6 @@ export const es: Record<string, string> = {
   "Only arcs, circles and curved walls can carry a radius dimension": "Solo arcos, círculos y muros curvos pueden llevar una cota de radio",
   "Only straight lines, walls and straight stretches of a polyline can measure an angle": "Solo las líneas rectas, los muros y los tramos rectos de una polilínea pueden medir un ángulo",
   "Leader": "Línea guía",
+  "Cut fill": "Relleno del corte",
+  "Cut line weight": "Grosor de la línea de corte",
 }

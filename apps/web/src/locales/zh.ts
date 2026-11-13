@@ -1178,4 +1178,6 @@ export const zh: Record<string, string> = {
   "Only arcs, circles and curved walls can carry a radius dimension": "只有圆弧、圆和弧形墙可以标注半径",
   "Only straight lines, walls and straight stretches of a polyline can measure an angle": "只有直线、墙和连续线的直线段可以标注角度",
   "Leader": "引线长度",
+  "Cut fill": "剖切填充",
+  "Cut line weight": "剖切线宽",
 }

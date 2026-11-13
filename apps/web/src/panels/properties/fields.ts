@@ -282,6 +282,8 @@ const FIELDS: Partial<Record<Node['type'], FieldSpec[]>> = {
     len('x', msg('X')),
     len('y', msg('Y')),
     { path: 'walls', label: msg('Show walls'), type: 'boolean', fallback: true },
+    { path: 'cutFill', label: msg('Cut fill'), type: 'color', fallback: '#e8ecf1' },
+    { ...num('cutWeight', msg('Cut line weight'), 0.35), optional: true },
     { path: 'dimensions', label: msg('Dimensions'), type: 'boolean', fallback: true },
   ],
   // The line a view is taken from: how far it sees. Its ends are dragged on the plan.
