@@ -391,6 +391,8 @@ function viewFields(doc: Document): FieldSpec[] {
 
 /** The fields of a sunken box, shown once a rectangle has one. */
 const RECESS_FIELDS: FieldSpec[] = [
+  { ...len('recess.x', msg('X'), undefined, msg('Sunken box')), optional: true },
+  { ...len('recess.y', msg('Y'), undefined, msg('Sunken box')), optional: true },
   { ...len('recess.top', msg('Pit floor'), undefined, msg('Sunken box')), optional: true },
   { ...len('recess.bottom', msg('Underside'), undefined, msg('Sunken box')), optional: true },
   { ...len('recess.width', msg('Width'), undefined, msg('Sunken box')), optional: true },

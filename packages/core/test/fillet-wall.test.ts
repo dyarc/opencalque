@@ -19,7 +19,7 @@ describe('filleting walls', () => {
     expect(w2.a.y).toBeCloseTo(300, 6)
     const arc = cut.nodes.arc as never as { type: string; bulge?: number; thickness?: number; a: { x: number; y: number }; b: { x: number; y: number } }
     expect(arc.type).toBe('wall')
-    expect(arc.bulge).toBeTruthy()
+    expect(Math.abs(arc.bulge ?? 0)).toBeGreaterThan(50)
     expect(arc.thickness).toBe(200)
     expect(arc.a.x).toBeCloseTo(1700, 6)
     expect(arc.b.y).toBeCloseTo(300, 6)

@@ -185,6 +185,37 @@ export function rectHoles(node: NodeOf<'rect'>): Vec2[][] {
   return holes
 }
 
+/** The four corners of a rectangle's sunken pit, in the drawing. */
+function recessCorners(node: NodeOf<'rect'>): Vec2[] {
+  const r = node.recess
+  if (!r) return []
+  return [
+    { x: r.x, y: r.y },
+    { x: r.x + r.width, y: r.y },
+    { x: r.x + r.width, y: r.y + r.height },
+    { x: r.x, y: r.y + r.height },
+  ].map((p) => add(rotate(p, node.rotation ?? 0), node))
+}
+
+/** A corner of the pit dragged to `p`, the one across from it staying: the pit keeps itself inside its slab. */
+function moveRecess(node: NodeOf<'rect'>, index: number, p: Vec2): Record<string, unknown> {
+  const r = node.recess
+  if (!r) return {}
+  const turn = -((node.rotation ?? 0) * Math.PI) / 180
+  const local = rotate(sub(sub(p, node), { x: 0, y: 0 }), turn)
+  const fixed = [
+    { x: r.x, y: r.y },
+    { x: r.x + r.width, y: r.y },
+    { x: r.x + r.width, y: r.y + r.height },
+    { x: r.x, y: r.y + r.height },
+  ][(index + 2) % 4]
+  const x = Math.max(0, Math.min(Math.min(fixed.x, local.x), node.width - 20))
+  const y = Math.max(0, Math.min(Math.min(fixed.y, local.y), node.height - 20))
+  const width = Math.min(Math.max(20, Math.abs(local.x - fixed.x)), node.width - x)
+  const height = Math.min(Math.max(20, Math.abs(local.y - fixed.y)), node.height - y)
+  return { recess: { ...r, x: tidy(x), y: tidy(y), width: tidy(width), height: tidy(height) } }
+}
+
 export function rectCorners(node: NodeOf<'rect'>): Vec2[] {
   const local = [
     { x: 0, y: 0 },
@@ -931,6 +962,9 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     move: moveXY,
     // No points of its own to drag: it is resized as a box, by a frame that turns with it (resize.ts).
     transform: transformBox,
+    // A sunken pit has four corners of its own, to pull it into place or out to its size.
+    handles: (node) => (node.recess ? recessCorners(node) : []),
+    moveHandle: (node, index, p) => moveRecess(node, index, p),
   },
   room: {
     primitives: (node, ctx) => {

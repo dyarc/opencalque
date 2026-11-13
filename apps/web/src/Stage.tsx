@@ -381,6 +381,9 @@ function Toolbar() {
   const measureTool = useStore((s) => s.measureTool)
   const cutTool = useStore((s) => s.cutTool)
   const transformTool = useStore((s) => s.transformTool)
+  // The group shows the structure tool in hand, or the wall when another kind of tool is: never a
+  // tool the group has no picture for (a placement, an elevation), which would take the toolbar down.
+  const structureTool = useStore((s) => (STRUCTURE_TOOLS.includes(s.tool) ? s.tool : 'wall'))
   const tool = useStore((s) => s.tool)
   return (
     <div className="toolbar">
@@ -388,7 +391,7 @@ function Toolbar() {
       <ToolButton id="hand" />
       <hr />
       <ToolGroup tools={SHAPE_TOOLS} current={shapeTool} more={t('More 2D shapes')} />
-      <ToolGroup tools={STRUCTURE_TOOLS} current={tool} more={t('Wall, column or beam')} />
+      <ToolGroup tools={STRUCTURE_TOOLS} current={structureTool} more={t('Wall, column or beam')} />
       <ToolGroup tools={ROOM_TOOLS} current={roomTool} more={t('Room divider, elevation or section')} />
       <PlaceButton kind="arch.door" icon={DoorOpen} />
       <PlaceButton kind="arch.window" icon={Grid2x2} />

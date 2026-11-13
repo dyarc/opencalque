@@ -1,7 +1,7 @@
 import { add, arcThrough, bulgeOf, len, norm, scale, sub, type Vec2 } from './geometry'
 import type { NodeInput, Op } from './ops'
 import type { Node, NodeOf } from './schema'
-import { cross, dot, tidy } from './walls/course'
+import { bulgeThrough, cross, dot, tidy } from './walls/course'
 
 /*
  * The fillet tool, as in CAD: two stretches of line made to meet. With no radius, each is cut back
@@ -137,8 +137,10 @@ export function filletOps(first: FilletTarget, second: FilletTarget, radius: num
   if (first.node.type === 'wall' && second.node.type === 'wall') {
     // A wall's rounding is a curved wall between the two tangent points, so it keeps its thickness
     // and its material, and stands in the 3D view and in sections as the walls it joins do.
-    const bulge = bulgeOf(ends[0], ends[1], sub(centre, scale(halfway, radius)))
-    if (bulge === null) return null
+    // A wall's bulge is the rise at its middle in millimetres, not the tangent a polyline keeps: a
+    // tangent here would make the curve a thousandth of its size.
+    const bulge = bulgeThrough({ a: ends[0], b: ends[1] }, sub(centre, scale(halfway, radius)))
+    if (bulge === undefined) return null
     const wall = {
       id: arcId,
       type: 'wall',
