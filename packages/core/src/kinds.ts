@@ -655,6 +655,72 @@ function dimensionPrimitives(node: NodeOf<'dimension'>, drawing?: DrawingSetting
   ]
 }
 
+/** The arrow at the end of a radius or angle dimension, in mm. */
+const MEASURE_ARROW = 100
+
+/** A radius dimension: R and its value, the leader from the centre through the arc and out to the words. */
+function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindContext): Primitive[] {
+  const size = node.size ?? DIMENSION_TEXT_SIZE
+  const dir = { x: Math.cos((node.angle * Math.PI) / 180), y: Math.sin((node.angle * Math.PI) / 180) }
+  const at = add(node.centre, scale(dir, node.radius))
+  const end = add(node.centre, scale(dir, node.radius + size * 1.8))
+  const textAt = add(end, scale(dir, size * 0.45))
+  const line = node.style
+  const markers = { own: true, stroke: line?.stroke, strokeWidth: line?.strokeWidth }
+  const label = node.text ?? `R ${dimensionLabel(node, node.radius, ctx.doc.settings ?? {})}`
+  // Text reads upright, turned with the leader but never upside down.
+  let rotation = ((node.angle % 360) + 360) % 360
+  if (rotation > 90 && rotation < 270) rotation -= 180
+  const cross = { x: size * 0.35, y: size * 0.35 }
+  return [
+    { kind: 'path', points: [node.centre, at] },
+    { kind: 'path', points: [at, end] },
+    ...dimensionMarker('arrow', at, dir, dir, MEASURE_ARROW, markers),
+    // The centre, marked with a small cross.
+    { kind: 'path', points: [sub(node.centre, cross), add(node.centre, cross)], ...markers },
+    { kind: 'path', points: [{ x: node.centre.x, y: node.centre.y - cross.y }, { x: node.centre.x, y: node.centre.y + cross.y }], ...markers },
+    { kind: 'text', x: textAt.x, y: textAt.y, text: label, size, rotation, align: 'center', font: node.font, own: true, stroke: node.textColor ?? line?.stroke },
+  ]
+}
+
+/** An angle dimension: its arc between two directions, an arrow at each end, and the degrees beyond it. */
+function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindContext): Primitive[] {
+  const size = node.size ?? DIMENSION_TEXT_SIZE
+  const d1 = norm(sub(node.from, node.vertex))
+  const d2 = norm(sub(node.to, node.vertex))
+  const a1 = (Math.atan2(d1.y, d1.x) * 180) / Math.PI
+  const a2 = (Math.atan2(d2.y, d2.x) * 180) / Math.PI
+  // The smaller angle between them, taken from the first direction towards the second.
+  const delta = ((a2 - a1 + 540) % 360) - 180
+  if (Math.abs(delta) < 1e-6) return []
+  const steps = Math.max(4, Math.ceil(Math.abs(delta) / 2))
+  const at = (angle: number): Vec2 => ({
+    x: node.vertex.x + Math.cos((angle * Math.PI) / 180) * node.radius,
+    y: node.vertex.y + Math.sin((angle * Math.PI) / 180) * node.radius,
+  })
+  const points = Array.from({ length: steps + 1 }, (_, i) => at(a1 + (delta * i) / steps))
+  const sign = delta >= 0 ? 1 : -1
+  const tangent = (angle: number, way: number): Vec2 => ({ x: -Math.sin((angle * Math.PI) / 180) * way, y: Math.cos((angle * Math.PI) / 180) * way })
+  const line = node.style
+  const markers = { own: true, stroke: line?.stroke, strokeWidth: line?.strokeWidth }
+  const middle = a1 + delta / 2
+  const textAt = {
+    x: node.vertex.x + Math.cos((middle * Math.PI) / 180) * (node.radius + size * 1.3),
+    y: node.vertex.y + Math.sin((middle * Math.PI) / 180) * (node.radius + size * 1.3),
+  }
+  let rotation = ((middle % 360) + 360) % 360
+  if (rotation > 90 && rotation < 270) rotation -= 180
+  const decimal = node.decimal ?? ctx.doc.settings?.decimal ?? '.'
+  const value = Math.abs(delta)
+  const label = node.text ?? `${(Math.round(value * 10) / 10).toString().replace('.', decimal)}°`
+  return [
+    { kind: 'path', points },
+    ...dimensionMarker('arrow', points[0], tangent(a1, -sign), tangent(a1, -sign), MEASURE_ARROW, markers),
+    ...dimensionMarker('arrow', points[points.length - 1], tangent(a2, sign), tangent(a2, sign), MEASURE_ARROW, markers),
+    { kind: 'text', x: textAt.x, y: textAt.y, text: label, size, rotation, align: 'center', font: node.font, own: true, stroke: node.textColor ?? line?.stroke },
+  ]
+}
+
 // Building a data: URL copies megabytes, so it is done once per asset, not once per redraw.
 const assetUrls = new WeakMap<Asset, string>()
 
@@ -991,6 +1057,31 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
       ...(node.size === undefined ? {} : { size: t.length(node.size) }),
       ...markerSize(node, t),
       ...(node.extensionGap === undefined ? {} : { extensionGap: t.length(node.extensionGap) }),
+    }),
+  },
+  radialDimension: {
+    primitives: (node, ctx) => radialDimensionPrimitives(node, ctx),
+    move: (node, d) => ({ centre: add(node.centre, d) }),
+    snapPoints: (node) => [node.centre],
+    snapLines: () => [],
+    transform: (node, t) => ({
+      centre: t.point(node.centre),
+      radius: t.length(node.radius),
+      angle: t.angle(node.angle),
+      ...(node.size === undefined ? {} : { size: t.length(node.size) }),
+    }),
+  },
+  angleDimension: {
+    primitives: (node, ctx) => angleDimensionPrimitives(node, ctx),
+    move: (node, d) => ({ vertex: add(node.vertex, d), from: add(node.from, d), to: add(node.to, d) }),
+    snapPoints: (node) => [node.vertex],
+    snapLines: () => [],
+    transform: (node, t) => ({
+      vertex: t.point(node.vertex),
+      from: t.point(node.from),
+      to: t.point(node.to),
+      radius: t.length(node.radius),
+      ...(node.size === undefined ? {} : { size: t.length(node.size) }),
     }),
   },
   image: {

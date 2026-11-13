@@ -189,6 +189,18 @@ const FIELDS: Partial<Record<Node['type'], FieldSpec[]>> = {
   line: [...AB, ...LINE_ENDS, ...stroke(STROKE)],
   // A guide has no ends to give symbols to, and its line is what there is to set: colour, weight, dashes.
   construction: [...stroke(STROKE)],
+  radialDimension: [
+    len('radius', msg('Radius')),
+    len('size', msg('Size')),
+    { path: 'font', label: msg('Font'), type: 'string', section: msg('Text'), options: FONTS },
+    { path: 'textColor', label: msg('Color'), type: 'color', section: msg('Text') },
+  ],
+  angleDimension: [
+    len('radius', msg('Arc radius')),
+    len('size', msg('Size')),
+    { path: 'font', label: msg('Font'), type: 'string', section: msg('Text'), options: FONTS },
+    { path: 'textColor', label: msg('Color'), type: 'color', section: msg('Text') },
+  ],
   // A wall's fill is its material's: it has none of its own to set.
   wall: [...AB, len('bulge', msg('Curve'), 0), len('thickness', msg('Thickness')), { ...len('height', msg('Height')), optional: true }, ...stroke(STROKE)],
   dimension: DIMENSION,

@@ -87,6 +87,8 @@ const ICONS: Partial<Record<Tool, [title: string, icon: LucideIcon]>> = {
   circle: [msg('Circle: click its centre, then a point it goes through'), CircleDot],
   wall: [msg('Wall'), BrickWall],
   dimension: [msg('Dimension: annotate a distance on the drawing'), RulerDimensionLine],
+  radialDimension: [msg('Radius dimension: R and the radius of an arc or a circle'), CircleDot],
+  angleDimension: [msg('Angle dimension: the angle between two lines'), Triangle],
   measure: [msg('Measure: read a distance without drawing anything'), Ruler],
   split: [msg('Split: cut a wall, a line or a polyline in two where you click'), Slice],
   trim: [msg('Trim: take away the stretch of a wall or a line you click, up to what crosses it'), Scissors],

@@ -292,4 +292,6 @@ export const MIGRATIONS: ((doc: Raw) => Raw)[] = [
   (doc) => doc,
   // Version 4 brings construction lines (the `construction` node type) and nothing that changes what was there.
   (doc) => doc,
+  // Version 5 brings radius and angle dimensions (the `radialDimension` and `angleDimension` node types) and nothing else.
+  (doc) => doc,
 ]

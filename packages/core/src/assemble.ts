@@ -1,21 +1,25 @@
 import { newId } from './document'
-import { bulgeArc, dist, smoothPoints, type Vec2 } from './geometry'
+import { bulgeArc, dist, ellipseArc, smoothPoints, type Vec2 } from './geometry'
 import { rectCorners } from './kinds'
 import type { NodeInput, Op } from './ops'
 import type { Document, Node, NodeOf } from './schema'
 
 /*
  * Taking drawings apart and putting them together again: a polyline or a rectangle exploded into
- * the lines it is drawn as, and lines and open polylines joined end to end into one polyline, or
- * into a closed shape when the ends meet back where they began.
+ * the lines (and arcs) it is drawn as, and lines, open polylines and circular arcs joined end to
+ * end into one polyline, closed when the ends meet back where they began. An arc keeps its bow as
+ * the polyline's bulge, so what is joined stays as round as it was.
  */
 
 /** How near two ends must be, in mm, to be taken as one when joining. */
 export const JOIN_TOLERANCE = 0.01
 
+/** A node that can be joined end to end: a line, an open polyline, or a circular arc. */
+export type Joinable = NodeOf<'line'> | NodeOf<'polyline'> | NodeOf<'ellipse'>
+
 export interface ExplodeResult {
   ops: Op[]
-  /** The lines made, for the editor to leave selected. */
+  /** The pieces made, for the editor to leave selected. */
   ids: string[]
 }
 
@@ -23,16 +27,20 @@ export interface JoinResult {
   ops: Op[]
   /** The polylines and shapes made, for the editor to leave selected. */
   ids: string[]
-  /** The lines left as they were: they touch a corner three or more meet at, and do not join end to end. */
+  /** The pieces left as they were: they touch a corner three or more meet at, and do not join end to end. */
   skipped: number
 }
 
-/** What can be exploded into lines: a polyline, closed or open, or a rectangle. */
+/** What can be exploded into lines and arcs: a polyline, closed or open, or a rectangle. */
 export const canExplode = (node: Node): node is NodeOf<'polyline'> | NodeOf<'rect'> => node.type === 'polyline' || node.type === 'rect'
 
-/** What can be joined: a line, or a polyline that lies open. */
-export const canJoin = (node: Node): node is NodeOf<'line'> | NodeOf<'polyline'> =>
-  node.type === 'line' || (node.type === 'polyline' && !node.smooth && !node.closed && !node.bulges?.some((bulge) => bulge))
+/** A circular arc: an ellipse given a start and an end angle, its radii equal. */
+export const isCircularArc = (node: Node): node is NodeOf<'ellipse'> =>
+  node.type === 'ellipse' && node.from !== undefined && node.to !== undefined && Math.abs(node.rx - node.ry) < 1e-6 && !node.rotation
+
+/** What can be joined: a line, an open polyline (straight or with arcs), or a circular arc. */
+export const canJoin = (node: Node): node is Joinable =>
+  node.type === 'line' || (node.type === 'polyline' && !node.smooth && !node.closed) || isCircularArc(node)
 
 /** The lines a polyline or a rectangle is drawn as, in order, in its layer and its look. */
 export function explodeOps(doc: Document, ids: string[]): ExplodeResult | null {
@@ -56,10 +64,7 @@ export function explodeOps(doc: Document, ids: string[]): ExplodeResult | null {
         pieces.push({ id: newId(), node: { ...common, type: 'line', a, b } })
         return
       }
-      pieces.push({
-        id: newId(),
-        node: { ...common, type: 'ellipse', cx: arc.cx, cy: arc.cy, rx: arc.r, ry: arc.r, from: arc.from, to: arc.to },
-      })
+      pieces.push({ id: newId(), node: { ...common, type: 'ellipse', cx: arc.cx, cy: arc.cy, rx: arc.r, ry: arc.r, from: arc.from, to: arc.to } })
     }
     if (node.type === 'polyline') {
       const count = node.closed ? node.points.length : node.points.length - 1
@@ -86,22 +91,44 @@ export function explodeOps(doc: Document, ids: string[]): ExplodeResult | null {
 
 interface Piece {
   id: string
-  node: NodeOf<'line'> | NodeOf<'polyline'>
+  node: Joinable
   points: Vec2[]
+  /** For each stretch between two points, the arc it bows by, 0 for a straight one. */
+  bulges: number[]
+}
+
+/** A circular arc as one stretch: its ends, and the bow that joins them. */
+function arcPiece(node: NodeOf<'ellipse'>): Piece | null {
+  if (node.from === undefined || node.to === undefined) return null
+  const sampled = ellipseArc({ cx: node.cx, cy: node.cy, rx: node.rx, ry: node.ry, from: node.from, to: node.to })
+  const a = sampled[0]
+  const b = sampled[sampled.length - 1]
+  const quarter = sampled[Math.max(1, Math.floor(sampled.length / 4))]
+  const middle = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+  const side = (b.x - a.x) * (quarter.y - middle.y) - (b.y - a.y) * (quarter.x - middle.x)
+  const sweep = (((node.to - node.from) % 360) + 360) % 360
+  if (sweep < 1e-6 || sweep >= 360 - 1e-6) return null
+  // The bow is positive to the left of a to b, as a polyline's bulges are.
+  const bulge = (side < 0 ? 1 : -1) * Math.tan(((sweep * Math.PI) / 180) / 4)
+  return { id: node.id, node, points: [a, b], bulges: [bulge] }
 }
 
 const piecesOf = (doc: Document, ids: string[]): Piece[] =>
   ids.flatMap((id) => {
     const node = doc.nodes[id]
     if (!node || !canJoin(node)) return []
+    if (node.type === 'ellipse') return arcPiece(node) ? [arcPiece(node)!] : []
     const points = node.type === 'line' ? [node.a, node.b] : node.points
-    return points.length >= 2 && dist(points[0], points[points.length - 1]) > JOIN_TOLERANCE ? [{ id, node, points }] : []
+    if (points.length < 2 || dist(points[0], points[points.length - 1]) <= JOIN_TOLERANCE) return []
+    const bulges = Array.from({ length: points.length - 1 }, (_, i) => (node.type === 'polyline' ? (node.bulges?.[i] ?? 0) : 0))
+    return [{ id, node, points, bulges }]
   })
 
 /**
- * The operations that join lines and open polylines selected together, end to end, into one
- * polyline each: closed when the chain comes back to where it began, open otherwise. A corner
- * where three or more ends meet is left alone, and the lines there counted in `skipped`.
+ * The operations that join lines, open polylines and circular arcs selected together, end to end,
+ * into one polyline each: closed when the chain comes back to where it began, open otherwise. An
+ * arc keeps its bow as a bulge of the polyline. A corner where three or more ends meet is left
+ * alone, and the pieces there counted in `skipped`.
  */
 export function joinOps(doc: Document, ids: string[]): JoinResult | null {
   const pieces = piecesOf(doc, ids)
@@ -163,7 +190,6 @@ function joinGroup(pieces: Piece[]): { ops: Op[]; ids: string[]; joined: number;
   const seen = new Set<number>()
   for (let start = 0; start < pieces.length; start++) {
     if (seen.has(start) || touching.has(start)) continue
-    // The chain this piece is in.
     const component: number[] = []
     const queue = [start]
     while (queue.length > 0) {
@@ -181,16 +207,18 @@ function joinGroup(pieces: Piece[]): { ops: Op[]; ids: string[]; joined: number;
       continue
     }
     const loop = component.every((p) => links[p][0] !== null && links[p][1] !== null)
-    const points = loop ? walkClosed(component, pieces, links) : walkOpen(component, pieces, links)
-    if (points.length < 2) {
+    const walked = loop ? walkClosed(component, pieces, links) : walkOpen(component, pieces, links)
+    if (walked.points.length < 2) {
       skipped += component.length
       continue
     }
     const first = pieces[component[0]].node
     const id = newId()
-    const closed = loop && dist(points[0], points[points.length - 1]) <= JOIN_TOLERANCE
-    const shape = closed ? points.slice(0, -1) : points
-    if (closed && shape.length < 3) {
+    const closed = loop && dist(walked.points[0], walked.points[walked.points.length - 1]) <= JOIN_TOLERANCE
+    const points = closed ? walked.points.slice(0, -1) : walked.points
+    const bulges = walked.bulges
+    // A loop of two stretches, an arc and a line, is a shape too; two straight ones are not.
+    if (closed && points.length < 3 && !bulges.some((bulge) => bulge)) {
       skipped += component.length
       continue
     }
@@ -201,7 +229,8 @@ function joinGroup(pieces: Piece[]): { ops: Op[]; ids: string[]; joined: number;
       order: first.order,
       ...(first.layer ? { layer: first.layer } : {}),
       ...(first.style ? { style: first.style } : {}),
-      points: shape,
+      points,
+      ...(bulges.some((bulge) => bulge) ? { bulges } : {}),
       ...(closed ? { closed: true } : {}),
     } as NodeInput
     for (const piece of component) ops.push({ op: 'remove_node', id: pieces[piece].id })
@@ -212,33 +241,48 @@ function joinGroup(pieces: Piece[]): { ops: Op[]; ids: string[]; joined: number;
   return { ops, ids, joined, skipped }
 }
 
-/** The points of a chain walked from a free end, or all round when its ends meet. */
-function walk(start: number, entry: 0 | 1, pieces: Piece[], links: ({ piece: number; end: 0 | 1 } | null)[][]): Vec2[] {
+/** A piece's points and bulges as they run from `entry` to its other end. */
+function oriented(piece: Piece, entry: 0 | 1): { points: Vec2[]; bulges: number[] } {
+  return entry === 0 ? { points: piece.points, bulges: piece.bulges } : { points: [...piece.points].reverse(), bulges: [...piece.bulges].reverse().map((bulge) => -bulge) }
+}
+
+/** The points and bulges of a chain walked from a free end, or all round when its ends meet. */
+function walk(start: number, entry: 0 | 1, pieces: Piece[], links: ({ piece: number; end: 0 | 1 } | null)[][]): { points: Vec2[]; bulges: number[] } {
   const points: Vec2[] = []
+  const bulges: number[] = []
   const seen = new Set<number>()
   let at = start
   let enter = entry
   for (let guard = 0; guard <= pieces.length; guard++) {
     if (seen.has(at)) break
     seen.add(at)
-    const points0 = enter === 0 ? pieces[at].points : [...pieces[at].points].reverse()
-    points.push(...(points.length === 0 ? points0 : points0.slice(1)))
+    const run = oriented(pieces[at], enter)
+    if (points.length === 0) {
+      points.push(...run.points)
+      bulges.push(...run.bulges)
+    } else {
+      points.push(...run.points.slice(1))
+      bulges.push(...run.bulges)
+    }
     const exit: 0 | 1 = enter === 0 ? 1 : 0
     const link = links[at][exit]
     if (!link) break
     at = link.piece
     enter = link.end
   }
-  return points
+  return { points, bulges }
 }
 
-const walkOpen = (component: number[], pieces: Piece[], links: ({ piece: number; end: 0 | 1 } | null)[][]): Vec2[] => {
+const walkOpen = (component: number[], pieces: Piece[], links: ({ piece: number; end: 0 | 1 } | null)[][]): { points: Vec2[]; bulges: number[] } => {
   const start = component.find((p) => links[p][0] === null || links[p][1] === null) ?? component[0]
   return walk(start, links[start][0] === null ? 0 : 1, pieces, links)
 }
 
-const walkClosed = (component: number[], pieces: Piece[], links: ({ piece: number; end: 0 | 1 } | null)[][]): Vec2[] => {
-  const points = walk(component[0], 0, pieces, links)
-  if (points.length > 1 && dist(points[0], points[points.length - 1]) > JOIN_TOLERANCE) points.push(points[0])
-  return points
+const walkClosed = (component: number[], pieces: Piece[], links: ({ piece: number; end: 0 | 1 } | null)[][]): { points: Vec2[]; bulges: number[] } => {
+  const walked = walk(component[0], 0, pieces, links)
+  if (walked.points.length > 1 && dist(walked.points[0], walked.points[walked.points.length - 1]) > JOIN_TOLERANCE) {
+    walked.points.push(walked.points[0])
+    walked.bulges.push(0)
+  }
+  return walked
 }

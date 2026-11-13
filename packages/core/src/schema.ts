@@ -6,7 +6,7 @@ z.config({ jitless: true })
 export const FORMAT = 'opencalque'
 /** What `format` was before the project was renamed. Such drawings are still read. */
 export const FORMER_FORMAT = 'opencad'
-export const FORMAT_VERSION = 4
+export const FORMAT_VERSION = 5
 
 const Id = z.string().min(1)
 
@@ -474,6 +474,39 @@ export const NodeSchema = z
       .describe(
         'A linear dimension: an annotation showing the distance between a and b. The node "style" styles the dimension line and its end markers.',
       ),
+    z
+      .object({
+        ...base,
+        type: z.literal('radialDimension'),
+        centre: Vec2Schema.describe('The centre of the arc or circle it measures, in mm.'),
+        radius: z.number().positive().describe('Its radius, in mm.'),
+        angle: z.number().describe('Where its leader points, in degrees clockwise on screen from the X axis.'),
+        text: z.string().optional().describe('Replaces the measured radius when set.'),
+        size: z.number().positive().optional().describe('Text size in mm. Defaults to 150.'),
+        font,
+        textColor: z.string().optional().describe('Defaults to the colour of its line.'),
+        unit: z.enum(['mm', 'cm', 'm', 'in', 'ft', 'ft-in']).optional().describe("Unit the radius is shown in. Defaults to 'mm'."),
+        fraction: z.number().int().positive().optional().describe("With unit 'ft-in': the fraction of an inch the value is rounded to."),
+        decimals: z.number().int().min(0).max(6).optional().describe('Decimal places.'),
+        showUnit: z.boolean().optional().describe('Append the unit to the value.'),
+        decimal: z.enum(['.', ',']).optional().describe("The decimal separator, in place of the drawing's."),
+      })
+      .describe('A radius dimension: R and a radius, with a leader from the centre of the arc or circle it measures.'),
+    z
+      .object({
+        ...base,
+        type: z.literal('angleDimension'),
+        vertex: Vec2Schema.describe('Where the two directions meet, in mm.'),
+        from: Vec2Schema.describe('A point along the first direction, as it was clicked: the way it points from the vertex.'),
+        to: Vec2Schema.describe('A point along the second direction, the same way.'),
+        radius: z.number().positive().describe('How far from the vertex its arc is drawn, in mm.'),
+        text: z.string().optional().describe('Replaces the measured angle when set.'),
+        size: z.number().positive().optional().describe('Text size in mm. Defaults to 150.'),
+        font,
+        textColor: z.string().optional().describe('Defaults to the colour of its line.'),
+        decimal: z.enum(['.', ',']).optional().describe("The decimal separator, in place of the drawing's."),
+      })
+      .describe('An angle dimension: the angle between two directions, drawn as an arc with its degrees.'),
     z
       .object({
         ...base,

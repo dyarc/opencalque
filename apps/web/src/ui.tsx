@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { BrickWall, ChevronDown, MoveHorizontal, ScanEye, Circle, Hexagon, Component, File, Group, Image, Lock, LockOpen, MessageSquare, Minus, RulerDimensionLine, Shapes, SeparatorVertical, Slash, Spline, Square, SquareDashed, StickyNote, Table, Type, type LucideIcon } from 'lucide-react'
-import type { Document, Node } from '@opencalque/core'
-import { GridLine } from './icons'
+import { BrickWall, ChevronDown, MoveHorizontal, ScanEye, Circle, Hexagon, Component, File, Group, Image, Lock, LockOpen, MessageSquare, Minus, CircleDot, RulerDimensionLine, Shapes, SeparatorVertical, Slash, Spline, Square, SquareDashed, StickyNote, Table, Triangle, Type, type LucideIcon } from 'lucide-react'
+import { arcOf, type Document, type Node } from '@opencalque/core'
+import { Arc, GridLine } from './icons'
 import { msg, t } from './i18n'
 import { registry } from './extensions'
 import { setPrefs, usePrefs } from './prefs'
@@ -29,6 +29,8 @@ const TYPE_LABELS: Record<Node['type'], string> = {
   text: msg('Text'),
   wall: msg('Wall'),
   dimension: msg('Dimension'),
+  radialDimension: msg('Radius dimension'),
+  angleDimension: msg('Angle dimension'),
   image: msg('Picture'),
   instance: msg('Instance'),
   parametric: msg('Parametric object'),
@@ -54,17 +56,27 @@ const TYPE_ICONS: Record<Node['type'], LucideIcon> = {
   text: Type,
   wall: BrickWall,
   dimension: RulerDimensionLine,
+  radialDimension: CircleDot,
+  angleDimension: Triangle,
   image: Image,
   instance: Component,
   parametric: Shapes,
 }
 
+/** What a node is called: an ellipse with a start and an end angle is an arc, a round one a circle. */
+function typeName(node: Node): string {
+  if (node.type !== 'ellipse') return TYPE_LABELS[node.type]
+  if (arcOf(node)) return msg('Arc')
+  if (Math.abs(node.rx - node.ry) < 1e-6) return msg('Circle')
+  return TYPE_LABELS.ellipse
+}
+
 /** The small picture that tells kinds of object apart at a glance. Components and their instances are tinted. */
 export function TypeIcon({ node }: { node: Node }) {
   const shut = node.type === 'polyline' && node.closed
-  const Icon = shut ? Hexagon : TYPE_ICONS[node.type]
+  const Icon = shut ? Hexagon : node.type === 'ellipse' && arcOf(node) ? Arc : TYPE_ICONS[node.type]
   return (
-    <i className={`type-icon ${node.type}`} title={shut ? t('Polygon') : t(TYPE_LABELS[node.type])}>
+    <i className={`type-icon ${node.type}`} title={shut ? t('Polygon') : t(typeName(node))}>
       <Icon size={13} />
     </i>
   )
@@ -80,7 +92,7 @@ export function labelOf(doc: Document, node: Node): string {
   if (node.type === 'parametric') return t(registry.parametric.get(node.kind)?.label ?? node.kind)
   // A closed polyline is a polygon: what it is called says which.
   if (node.type === 'polyline' && node.closed) return t('Polygon')
-  return t(TYPE_LABELS[node.type])
+  return t(typeName(node))
 }
 
 export function IconButton(props: { title: string; onClick: () => void; active?: boolean; pressed?: boolean; disabled?: boolean; children: ReactNode }) {

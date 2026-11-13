@@ -1,0 +1,57 @@
+import { describe, expect, it } from 'vitest'
+import { applyOps, createDocument, nodePrimitives, parseDocument, Registry, serializeDocument, type Document, type NodeOf, type Op } from '../src'
+
+const registry = new Registry()
+const add = (node: Record<string, unknown>): Op => ({ op: 'add_node', node: { parent: 'page_1', ...node } }) as Op
+
+/** A page with a radius dimension and an angle dimension. */
+const plan = (): Document =>
+  applyOps(createDocument('Plan'), [
+    add({ type: 'radialDimension', id: 'r', centre: { x: 0, y: 0 }, radius: 1000, angle: 0 }),
+    add({ type: 'angleDimension', id: 'a', vertex: { x: 0, y: 0 }, from: { x: 1000, y: 0 }, to: { x: 0, y: 1000 }, radius: 500 }),
+  ])
+
+const prims = (doc: Document, id: string) => nodePrimitives(doc.nodes[id] as NodeOf<'radialDimension'>, { doc, registry, depth: 0 })
+
+describe('measuring dimensions', () => {
+  it('writes a radius as R and its value, with a leader from the centre and an arrow at the arc', () => {
+    const drawn = prims(plan(), 'r')
+    const texts = drawn.flatMap((prim) => (prim.kind === 'text' ? [prim.text] : []))
+    expect(texts).toEqual(['R 1000'])
+    // The line from the centre to the arc, and on to the words.
+    const paths = drawn.flatMap((prim) => (prim.kind === 'path' ? [prim.points] : []))
+    expect(paths[0]).toEqual([{ x: 0, y: 0 }, { x: 1000, y: 0 }])
+    expect(paths[1][0]).toEqual({ x: 1000, y: 0 })
+    // The arrow is filled with the line's colour.
+    expect(drawn.some((prim) => prim.kind === 'path' && prim.closed && prim.fill === prim.stroke)).toBe(true)
+  })
+
+  it('writes an angle as its degrees, with its arc at the radius chosen', () => {
+    const doc = plan()
+    const drawn = nodePrimitives(doc.nodes.a as NodeOf<'angleDimension'>, { doc, registry, depth: 0 })
+    const text = drawn.find((prim) => prim.kind === 'text')
+    expect(text).toMatchObject({ text: '90°' })
+    const arc = drawn.find((prim) => prim.kind === 'path' && !prim.closed)
+    if (arc?.kind !== 'path') throw new Error('no arc')
+    expect(arc.points[0]).toEqual({ x: 500, y: 0 })
+    expect(arc.points.at(-1)!.x).toBeCloseTo(0, 6)
+    expect(arc.points.at(-1)!.y).toBeCloseTo(500, 6)
+    expect(arc.points.length).toBeGreaterThan(5)
+  })
+
+  it('keeps them in a drawing of the version that knows them, and reads them back', () => {
+    const text = serializeDocument(plan())
+    expect(JSON.parse(text).version).toBe(5)
+    const read = parseDocument(JSON.parse(text))
+    expect(read.nodes.r).toMatchObject({ type: 'radialDimension', radius: 1000 })
+    expect(read.nodes.a).toMatchObject({ type: 'angleDimension', radius: 500 })
+  })
+
+  it('is placed by moving and turning like anything else', () => {
+    const doc = plan()
+    expect(doc.nodes.r).toMatchObject({ type: 'radialDimension' })
+    // The text of a radius dimension follows its leader's angle: a turn rounds it back to reading upright.
+    const turned = applyOps(doc, [{ op: 'update_node', id: 'r', patch: { angle: 180 } }])
+    expect(turned.nodes.r).toMatchObject({ angle: 180 })
+  })
+})

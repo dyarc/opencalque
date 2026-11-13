@@ -41,6 +41,12 @@ export type Gesture =
   | { kind: 'arc'; id: string; a: Vec2; b: Vec2 }
   /** The fillet tool has taken its first stretch of line, and the side of it kept; the pointer now chooses the second. */
   | { kind: 'fillet'; first: FilletTarget }
+  /** A radius dimension of the arc or circle at `centre`, waiting to be put down where the pointer points. */
+  | { kind: 'radiusDimension'; id: string; centre: Vec2; radius: number }
+  /** The angle dimension has taken its first stretch of line; the pointer now chooses the second. */
+  | { kind: 'angleDimension'; first: FilletTarget; a: Vec2; b: Vec2 }
+  /** The angle between two directions is set; the pointer now chooses how far from the vertex its arc runs. */
+  | { kind: 'anglePlace'; id: string; vertex: Vec2; from: Vec2; to: Vec2 }
   /** The offset tool has taken `node`; the pointer now chooses how far from it the copy goes. `copy` is the copy being shown. */
   | { kind: 'parallel'; node: Node; copy?: string }
   /** A live reading from `start`. Nothing is added to the drawing. */

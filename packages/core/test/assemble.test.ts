@@ -38,9 +38,13 @@ describe('exploding', () => {
     expect((read.nodes.p as NodeOf<'polyline'>).bulges).toEqual([Math.tan(Math.PI / 8), 0])
   })
 
-  it('leaves a line with an arc out of joining, where its points alone would lose the arc', () => {
+  it('carries a polyline with an arc along when a line is joined to it', () => {
     const doc = applyOps(createDocument('Plan'), [polyline('p', [[0, 0], [1000, 0], [1000, 1000]], { bulges: [Math.tan(Math.PI / 8), 0] }), line('l', 1000, 1000, 2000, 1000)])
-    expect(joinOps(doc, ['p', 'l'])).toBeNull()
+    const out = joinOps(doc, ['p', 'l'])!
+    const shape = applyOps(doc, out.ops).nodes[out.ids[0]] as NodeOf<'polyline'>
+    expect(shape.points).toEqual([{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }, { x: 2000, y: 1000 }])
+    expect(shape.bulges![0]).toBeCloseTo(Math.tan(Math.PI / 8), 9)
+    expect(shape.bulges!.slice(1)).toEqual([0, 0])
   })
 
   it('draws an open polyline as its segments, and a rectangle as its four sides', () => {
@@ -83,6 +87,36 @@ describe('joining', () => {
     const out = joinOps(doc, ['p', 'q', 'l'])!
     const joined = applyOps(doc, out.ops).nodes[out.ids[0]] as NodeOf<'polyline'>
     expect(joined.points).toEqual([{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 2000, y: 0 }, { x: 2000, y: 800 }])
+  })
+
+  it('joins a circular arc between two lines, keeping its bow as a bulge of the polyline', () => {
+    const doc = applyOps(createDocument('Plan'), [
+      line('l1', 0, 0, 1000, 0),
+      add({ type: 'ellipse', id: 'a', cx: 1000, cy: 1000, rx: 1000, ry: 1000, from: -90, to: 0 }),
+      line('l2', 2000, 1000, 3000, 1000),
+    ])
+    const out = joinOps(doc, ['l1', 'a', 'l2'])!
+    expect(out.ids).toHaveLength(1)
+    const shape = applyOps(doc, out.ops).nodes[out.ids[0]] as NodeOf<'polyline'>
+    expect(shape.type).toBe('polyline')
+    expect(shape.points).toHaveLength(4)
+    expect(shape.bulges).toHaveLength(3)
+    expect(shape.bulges![0]).toBe(0)
+    expect(Math.abs(shape.bulges![1])).toBeCloseTo(Math.tan(Math.PI / 8), 6)
+    expect(shape.bulges![2]).toBe(0)
+  })
+
+  it('joins an arc and a line into a closed shape', () => {
+    const doc = applyOps(createDocument('Plan'), [
+      add({ type: 'ellipse', id: 'a', cx: 0, cy: 0, rx: 1000, ry: 1000, from: 0, to: 180 }),
+      line('l', -1000, 0, 1000, 0),
+    ])
+    const out = joinOps(doc, ['a', 'l'])!
+    const shape = applyOps(doc, out.ops).nodes[out.ids[0]] as NodeOf<'polyline'>
+    expect(shape.type).toBe('polyline')
+    expect(shape.closed).toBe(true)
+    expect(shape.points).toHaveLength(2)
+    expect(shape.bulges!.some((bulge) => Math.abs(bulge) > 0.01)).toBe(true)
   })
 
   it('leaves a corner where three lines meet alone, and says how many', () => {

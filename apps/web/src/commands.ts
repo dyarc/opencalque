@@ -341,6 +341,8 @@ const STATIC: Command[] = [
   tool('eyedropper', msg('Eyedropper: copy the look of an object'), 'I'),
   tool('text', msg('Text'), 'T'),
   tool('annotation', msg('Annotation'), 'Shift+T'),
+  { id: 'tool.radialDimension', title: msg('Radius dimension'), category: 'Tools', keywords: 'radius arc circle R measure annotate', run: () => setTool('radialDimension') },
+  { id: 'tool.angleDimension', title: msg('Angle dimension'), category: 'Tools', keywords: 'angle degrees measure annotate', run: () => setTool('angleDimension') },
   tool('gridline', msg('Grid line'), 'G'),
   tool('paper', msg('Paper'), 'F'),
   tool('room', msg('Room'), 'A'),

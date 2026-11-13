@@ -5,6 +5,7 @@ import { arcMove, drawDown, drawMove, drawUp, lineDown, offsetMove, polyMove, po
 import { angleDown, angleMove, measureDown, measureMove } from './measure'
 import { offsetDown, parallelMove } from './offset'
 import { constructionDown, constructionMove } from './construction'
+import { angleDimensionDown, angleDimensionMove, anglePlaceMove, radialDimensionDown, radialDimensionMove } from './dimensions'
 import { extendDown, filletDown, filletMove } from './fit'
 import { elevationDown, eyedropperDown, placeDown, sectionMove, splitDown, toolHover, trimDown } from './place'
 import { cornerMove, cropMove, dragUp, elevatedMove, endMove, faceMove, handleMove, hover, marqueeMove, marqueeUp, moveMove, pressMove, pressUp, resizeMove, rotateMove, scaleMove, selectDown } from './select'
@@ -37,6 +38,8 @@ export const PRESSES: Partial<Record<Tool, Press>> = {
   calibrate: measureDown,
   line: lineDown,
   construction: constructionDown,
+  radialDimension: radialDimensionDown,
+  angleDimension: angleDimensionDown,
   curve: lineDown,
 }
 /** The tools that draw by two points (and a dimension's third), and any not listed above. */
@@ -61,6 +64,9 @@ export const MOVES: { [K in Gesture['kind']]: Move<K> } = {
   marquee: marqueeMove,
   draw: drawMove,
   construction: constructionMove,
+  radiusDimension: radialDimensionMove,
+  angleDimension: angleDimensionMove,
+  anglePlace: anglePlaceMove,
   offset: offsetMove,
   arc: arcMove,
   parallel: parallelMove,
