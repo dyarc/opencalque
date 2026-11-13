@@ -68,6 +68,8 @@ export const de: Record<string, string> = {
   "Undo": "Rückgängig",
   "Redo": "Wiederholen",
   "Zoom to fit": "Alles anzeigen",
+  "Zoom speed": "Zoomgeschwindigkeit",
+  "How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.": "Wie schnell Zwei-Finger-Zoom oder Strg-Mausrad die Zeichnung vergrößern. 1 ist der Standard, 2 vergrößert doppelt so schnell.",
   "Zoom to selection": "Auf Auswahl zoomen",
   "The red and green axes cross at the insertion point of the component": "Die rote und die grüne Achse kreuzen sich am Einfügepunkt der Komponente",
   "Untitled": "Unbenannt",

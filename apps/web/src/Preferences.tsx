@@ -331,6 +331,57 @@ function GeneralSettings() {
   )
 }
 
+/** How far the speed of a zoom may be set, as a multiple of the usual speed. */
+const MIN_ZOOM_SPEED = 0.2
+const MAX_ZOOM_SPEED = 4
+
+/**
+ * How fast a pinch or Ctrl-wheel zooms, set by its slider or by the number beside it. A number is
+ * taken when it is done being typed (Enter, or leaving the field), so that typing 0.5 does not
+ * zoom by 0.2 on the way.
+ */
+function ZoomSpeed() {
+  const speed = usePrefs((state) => state.zoomSpeed)
+  const [typed, setTyped] = useState(String(speed))
+  // The field follows the slider, and a speed read from storage.
+  useEffect(() => setTyped(String(speed)), [speed])
+  const commit = () => {
+    const number = Number(typed)
+    const next = Number.isFinite(number) ? Math.min(MAX_ZOOM_SPEED, Math.max(MIN_ZOOM_SPEED, number)) : speed
+    setPrefs({ zoomSpeed: next })
+    setTyped(String(next))
+  }
+  return (
+    <div className="zoom-speed">
+      <input
+        type="range"
+        min={MIN_ZOOM_SPEED}
+        max={MAX_ZOOM_SPEED}
+        step={0.05}
+        value={speed}
+        aria-label={t('Zoom speed')}
+        onChange={(e) => setPrefs({ zoomSpeed: Number(e.target.value) })}
+      />
+      <input
+        type="number"
+        min={MIN_ZOOM_SPEED}
+        max={MAX_ZOOM_SPEED}
+        step={0.05}
+        value={typed}
+        aria-label={t('Zoom speed')}
+        onChange={(e) => setTyped(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter') return
+          commit()
+          e.currentTarget.blur()
+        }}
+      />
+      <span aria-hidden="true">×</span>
+    </div>
+  )
+}
+
 function DrawingSettings() {
   const prefs = usePrefs()
   return (
@@ -349,6 +400,11 @@ function DrawingSettings() {
             </>
           }
         />
+      </Section>
+      <Section title={t('View')}>
+        <Setting label={t('Zoom speed')} hint={t('How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.')}>
+          <ZoomSpeed />
+        </Setting>
       </Section>
       <Section title={t('Groups and components')}>
         <Setting label={t('Editing inside a group')}>

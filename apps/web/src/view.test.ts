@@ -45,3 +45,12 @@ test('zooming stops at the limits the view bar has', () => {
   expect(wheelNavigation({ ...view, zoom: MIN_ZOOM }, at, wheel({ deltaY: 100000, ctrlKey: true }), 800).zoom).toBe(MIN_ZOOM)
   expect(wheelNavigation({ ...view, zoom: MAX_ZOOM }, at, wheel({ deltaY: -100000, ctrlKey: true }), 800).zoom).toBe(MAX_ZOOM)
 })
+
+test('a faster zoom speed zooms further, in proportion, and one is the speed without it', () => {
+  const at = { x: 0, y: 0 }
+  const slow = wheelNavigation({ ...view, zoom: 1 }, at, wheel({ deltaY: -100, ctrlKey: true }), 800)
+  const once = wheelNavigation({ ...view, zoom: 1 }, at, wheel({ deltaY: -100, ctrlKey: true }), 800, 1)
+  const twice = wheelNavigation({ ...view, zoom: 1 }, at, wheel({ deltaY: -100, ctrlKey: true }), 800, 2)
+  expect(once).toEqual(slow)
+  expect(Math.log(twice.zoom)).toBeCloseTo(2 * Math.log(once.zoom), 9)
+})

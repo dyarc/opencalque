@@ -32,6 +32,8 @@ export interface Prefs {
   snapToObjects: boolean
   /** Show how far the one object selected stands from the walls around it, as dimensions to type into. */
   showClearances: boolean
+  /** How fast a pinch or Ctrl-wheel zooms the drawing, as a multiple of the usual speed. */
+  zoomSpeed: number
   /** While editing inside a group: the rest of the drawing shown faded around it, to see and snap to, or not shown. */
   editGroups: Surroundings
   /** The same, while editing a component gone into by one of its placements. */
@@ -97,6 +99,7 @@ const DEFAULTS: Prefs = {
   snapToGrid: true,
   snapToObjects: true,
   showClearances: true,
+  zoomSpeed: 1,
   editGroups: 'faded',
   editComponents: 'alone',
   agentBridge: false,

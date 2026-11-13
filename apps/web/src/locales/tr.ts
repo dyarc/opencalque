@@ -68,6 +68,8 @@ export const tr: Record<string, string> = {
   "Undo": "Geri al",
   "Redo": "Yinele",
   "Zoom to fit": "Sığacak şekilde yakınlaştır",
+  "Zoom speed": "Yakınlaştırma hızı",
+  "How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.": "İki parmakla veya Ctrl+tekerlekle yakınlaştırma hızı. 1 varsayılandır, 2 iki kat hızlıdır.",
   "Zoom to selection": "Seçime yakınlaştır",
   "The red and green axes cross at the insertion point of the component": "Kırmızı ve yeşil eksenler bileşenin ekleme noktasında kesişir",
   "Untitled": "Adsız",

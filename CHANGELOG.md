@@ -8,6 +8,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 
 ### Improved
 - The wheel moves the view the way a trackpad moves it elsewhere: two fingers scroll to pan the drawing, side to side as well as up and down, and pinching zooms about the pointer. A mouse wheel pans too; Ctrl-wheel (⌘-wheel) zooms.
+- How fast a pinch, or Ctrl-wheel, zooms is a setting of its own: Preferences › Drawing › View has a slider and a number, from 0.2 to 4 times the usual speed.
 
 ## 1.9.0 — 2026-11-11
 

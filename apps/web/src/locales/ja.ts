@@ -68,6 +68,8 @@ export const ja: Record<string, string> = {
   "Undo": "元に戻す",
   "Redo": "やり直し",
   "Zoom to fit": "全体を表示",
+  "Zoom speed": "ズーム速度",
+  "How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.": "ピンチや Ctrl+ホイールで拡大縮小する速さ。1 が既定で、2 なら 2 倍速くなります。",
   "Zoom to selection": "選択範囲にズーム",
   "The red and green axes cross at the insertion point of the component": "赤と緑の軸が交わる点がコンポーネントの挿入点です",
   "Untitled": "無題",

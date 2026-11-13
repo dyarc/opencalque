@@ -1693,6 +1693,40 @@ button.crumb.ahead:hover {
   padding: 4px 0;
 }
 
+/* How fast a pinch zooms: a slider, the number it is at, and the × it is a multiple of. */
+.zoom-speed {
+  display: flex;
+  flex: 0 0 240px;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+}
+
+.zoom-speed > input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.zoom-speed > input[type='number'] {
+  flex: none;
+  width: 64px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  outline: 0;
+}
+
+.zoom-speed > input[type='number']:focus {
+  border-color: var(--accent);
+}
+
+.zoom-speed > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .pref-item > .pref-command {
   margin: 6px 0;
 }

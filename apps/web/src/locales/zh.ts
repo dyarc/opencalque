@@ -68,6 +68,8 @@ export const zh: Record<string, string> = {
   "Undo": "撤销",
   "Redo": "重做",
   "Zoom to fit": "缩放至全部",
+  "Zoom speed": "缩放速度",
+  "How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.": "捏合或 Ctrl+滚轮缩放图纸的快慢。1 为默认值，2 则快一倍。",
   "Zoom to selection": "缩放至所选对象",
   "The red and green axes cross at the insertion point of the component": "红色与绿色轴线的交点是组件的插入点",
   "Untitled": "未命名",

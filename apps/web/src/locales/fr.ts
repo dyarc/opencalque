@@ -68,6 +68,8 @@ export const fr: Record<string, string> = {
   "Undo": "Annuler",
   "Redo": "Rétablir",
   "Zoom to fit": "Ajuster à la fenêtre",
+  "Zoom speed": "Vitesse de zoom",
+  "How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.": "Rapidité du zoom au pincement ou avec Ctrl+molette. 1 est la valeur par défaut, 2 zoome deux fois plus vite.",
   "Zoom to selection": "Zoomer sur la sélection",
   "The red and green axes cross at the insertion point of the component": "Les axes rouge et vert se croisent au point d’insertion du composant",
   "Untitled": "Sans titre",

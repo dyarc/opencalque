@@ -68,6 +68,8 @@ export const ko: Record<string, string> = {
   "Undo": "실행 취소",
   "Redo": "다시 실행",
   "Zoom to fit": "전체 보기",
+  "Zoom speed": "확대/축소 속도",
+  "How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.": "핀치나 Ctrl+휠로 확대/축소하는 속도입니다. 1이 기본값이고 2는 두 배 빠릅니다.",
   "Zoom to selection": "선택 영역 확대",
   "The red and green axes cross at the insertion point of the component": "빨간 축과 초록 축이 만나는 점이 컴포넌트의 삽입점입니다",
   "Untitled": "제목 없음",
