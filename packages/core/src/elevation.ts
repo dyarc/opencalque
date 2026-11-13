@@ -725,7 +725,12 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
     if (to - from < 1e-6) continue
     // A solid the line crosses is cut, at the cut's weight; one beyond it falls away with distance.
     const cut = clipLine(node.a, d, length, outline) !== null
-    layers.push({ from, to, depth: cut ? () => 0 : depthOn(outline), prims: [{ kind: 'path', points: box(from, to, low, high), closed: true, fill: view.cutFill ?? WALL_GREY, own: true }] })
+    // Its face is the width it spans, and its edges are where its plan's corners stand: each makes a
+    // vertical line between its top and its bottom, so a zigzag or a polygon keeps its shape.
+    const corners = [...new Set(outline.map((p) => Math.round(along(p) * 1000) / 1000))].sort((a, b) => a - b)
+    const prims: Primitive[] = [{ kind: 'path', points: box(from, to, low, high), closed: true, fill: view.cutFill ?? WALL_GREY, own: true }]
+    for (const s of corners) if (s > from + 1e-6 && s < to - 1e-6) prims.push({ kind: 'path', points: [at(s, low), at(s, high)] })
+    layers.push({ from, to, depth: cut ? () => 0 : depthOn(outline), prims })
     // A sunken pit has a floor of its own, between its depth below the top and its underside.
     if (leaf.type === 'rect' && leaf.recess) {
       const r = leaf.recess
