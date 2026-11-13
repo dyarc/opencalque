@@ -35,7 +35,7 @@ export interface WheelInput {
 /** Pixels a line of a line-based wheel event is taken as. */
 const WHEEL_LINE = 16
 /** How fast a pinch or a Ctrl-wheel zooms: the factor is e to the power of minus the pixels times this. */
-const WHEEL_ZOOM = 0.0015
+const WHEEL_ZOOM = 0.003
 
 /**
  * The view a wheel event leaves, as a trackpad is used on a Mac and a mouse wheel elsewhere: a
