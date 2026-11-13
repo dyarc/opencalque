@@ -116,7 +116,14 @@ export function itemsInside(scene: SceneItem[], rect: Bounds): SceneItem[] {
  */
 export function itemsTouching(scene: SceneItem[], rect: Bounds): SceneItem[] {
   const corner = { x: rect.minX, y: rect.minY }
-  return scene.filter((item) => !item.locked && item.bounds && boundsTouch(rect, item.bounds) && item.prims.some((prim) => primitiveTouches(prim, rect) || (isSolid(item) && insidePrimitive(prim, corner))))
+  return scene.filter(
+    (item) =>
+      !item.locked &&
+      // A construction line has no bounds to fit or frame (it is endless), but a crossing box can
+      // still touch its line: the box goes by what the primitive itself covers.
+      (item.bounds ? boundsTouch(rect, item.bounds) : true) &&
+      item.prims.some((prim) => primitiveTouches(prim, rect) || (isSolid(item) && insidePrimitive(prim, corner))),
+  )
 }
 
 export function snapPointsOf(item: SceneItem): Vec2[] {

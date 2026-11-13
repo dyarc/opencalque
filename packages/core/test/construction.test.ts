@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyOps, buildScene, canOffset, CONSTRUCTION_DASH, constructionEnds, createDocument, hitTest, nodePrimitives, offsetOps, parseDocument, Registry, sceneBounds, serializeDocument, snapTo, toSVG, type Document, type NodeOf } from '../src'
+import { applyOps, buildScene, canOffset, CONSTRUCTION_DASH, constructionEnds, createDocument, hitTest, itemsTouching, nodePrimitives, offsetOps, parseDocument, Registry, sceneBounds, serializeDocument, snapTo, toSVG, type Document, type NodeOf } from '../src'
 
 /*
  * Construction lines: endless dashed guides through two points, drawn across the view, never
@@ -97,5 +97,13 @@ describe('offsetting a construction line', () => {
     expect(Math.abs((node as never as { a: { y: number } }).a.y)).toBeCloseTo(500, 6)
     const [prim] = nodePrimitives(node, { doc: made, registry, depth: 0 })
     expect(prim.kind === 'path' && prim.dash).toEqual(CONSTRUCTION_DASH)
+  })
+})
+
+describe('picking a construction line with a box', () => {
+  it('is touched by a crossing box, though it has no bounds to fit', () => {
+    const doc = plan()
+    const scene = buildScene(doc, 'page_1', registry)
+    expect(itemsTouching(scene, { minX: 100, minY: -100, maxX: 900, maxY: 100 }).map((item) => item.id)).toContain('guide')
   })
 })
