@@ -664,6 +664,14 @@ function upright(degrees: number): number {
   return turned > 90 && turned < 270 ? turned - 180 : turned
 }
 
+/** How a measuring dimension's text is turned: with its line or level, and either way when the line is vertical. */
+function measureRotation(along: number, node: { textRotation?: 'aligned' | 'horizontal'; verticalText?: 'up' | 'down' }): number {
+  if (node.textRotation === 'horizontal') return 0
+  const turned = upright(along)
+  if (Math.abs(Math.abs(turned) - 90) <= 1) return node.verticalText === 'up' ? -90 : 90
+  return turned
+}
+
 /** A radius dimension: R and its value, the leader from the centre through the arc and out to the words. */
 function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindContext): Primitive[] {
   const size = node.size ?? DIMENSION_TEXT_SIZE
@@ -684,7 +692,7 @@ function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindCon
   const label = node.text ?? `R ${dimensionLabel(node, node.radius, ctx.doc.settings ?? {})}`
   const side = node.textPosition === 'below' ? -1 : node.textPosition === 'center' ? 0 : 1
   const textAt = add(add(end, scale(dir, size * (side === 0 ? 0.15 : 0.45))), scale(perp(dir), side * size * 0.5))
-  const rotation = node.textRotation === 'horizontal' ? 0 : upright(node.angle)
+  const rotation = measureRotation(node.angle, node)
   const cross = { x: size * 0.35, y: size * 0.35 }
   return [
     { kind: 'path', points: [node.centre, at] },
@@ -739,7 +747,7 @@ function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindConte
     x: node.vertex.x + Math.cos((middle * Math.PI) / 180) * (node.radius + (side < 0 ? -size * 0.5 : size * 1.3)),
     y: node.vertex.y + Math.sin((middle * Math.PI) / 180) * (node.radius + (side < 0 ? -size * 0.5 : size * 1.3)),
   }
-  const rotation = node.textRotation === 'horizontal' ? 0 : upright(middle + (delta >= 0 ? 90 : -90))
+  const rotation = measureRotation(middle + (delta >= 0 ? 90 : -90), node)
   const decimal = node.decimal ?? ctx.doc.settings?.decimal ?? '.'
   const value = Math.abs(delta)
   const label = node.text ?? `${(Math.round(value * 10) / 10).toString().replace('.', decimal)}°`
