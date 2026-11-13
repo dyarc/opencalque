@@ -1136,4 +1136,11 @@ export const de: Record<string, string> = {
   "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "Wählen Sie, wie das Mausrad die Zeichnung bewegt. Ein Touchpad scrollt die Zeichnung und zoomt durch Zusammenziehen; ein Mausrad zoomt um den Zeiger, wie bisher.",
   "Trackpad: two fingers pan, a pinch zooms": "Touchpad: zwei Finger verschieben, Zusammenziehen zoomt",
   "Mouse: the wheel zooms": "Maus: Das Rad zoomt",
+  "Format painter": "Formatpinsel",
+  "Format painter: copy the layer, stroke and ends of an object to others": "Formatpinsel: Ebene, Linie und Enden eines Objekts auf andere übertragen",
+  "Click an object to take its layer, stroke and ends": "Klicken Sie ein Objekt an, um Ebene, Linie und Enden zu übernehmen",
+  "then click each object to paint with them": "klicken Sie dann jedes Objekt an, das sie bekommen soll",
+  "stops painting": "beendet das Malen",
+  "Brush loaded: click what to paint": "Pinsel geladen: Klicken Sie, was gestrichen werden soll",
+  "Painted": "Gestrichen",
 }

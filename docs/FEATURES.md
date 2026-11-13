@@ -30,7 +30,7 @@ Last updated: 2026-11-11 (after 1.8.0).
 - **Dimension styles**: whichever of those settings a style defines, shared by the dimensions drawn in it, each of which may still differ from it.
 - Text typed directly on the drawing, on several lines; double-click a text to change it. **Fields** (`{date}`, `{page}`, `{page-number}`, `{pages}`, `{document}`) are filled in when drawn and exported.
 - **Line style**: weight chosen as printed millimetres, kinds of line (dashes, dots), and arrows or other ends on lines and polylines; a bar above the tools sets the colour of the lines of the next shapes (the layer's until another is chosen) and the fill of the next closed shapes.
-- **Eyedropper**: copy the look of an object to the selection or to the next shapes.
+- **Eyedropper**: copy the look of an object to the selection or to the next shapes. **Format painter**: take the layer, stroke, fill, dashes and ends of one object, and paint them onto others with the brush.
 - **Arrange** from the toolbar: stacking order, align and space evenly. The common properties of several selected objects are edited together.
 - **Properties panel**: sections that fold and stay folded; the name, layer (picked by its colour) and status (locked, hidden) of what is selected; X and Y, and width and height, on one row, with a lock that keeps the proportions when a size is typed.
 - A guide line across the view while a segment is exactly horizontal or vertical, and a hint bar with the keys that matter for the tool in use.

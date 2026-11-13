@@ -1136,4 +1136,11 @@ export const ko: Record<string, string> = {
   "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "휠이 도면을 어떻게 움직일지 선택합니다. 트랙패드는 스크롤로 이동하고 핀치로 확대/축소합니다. 마우스 휠은 포인터를 중심으로 확대/축소합니다(이전과 같음).",
   "Trackpad: two fingers pan, a pinch zooms": "트랙패드: 두 손가락으로 이동, 핀치로 확대/축소",
   "Mouse: the wheel zooms": "마우스: 휠로 확대/축소",
+  "Format painter": "서식 복사",
+  "Format painter: copy the layer, stroke and ends of an object to others": "서식 복사: 개체의 레이어, 선, 끝 기호를 다른 개체에 복사합니다",
+  "Click an object to take its layer, stroke and ends": "개체를 클릭해 레이어, 선, 끝 기호를 가져옵니다",
+  "then click each object to paint with them": "그다음 적용할 개체를 클릭합니다",
+  "stops painting": "칠하기 중지",
+  "Brush loaded: click what to paint": "브러시를 불러왔습니다. 칠할 개체를 클릭",
+  "Painted": "칠했습니다",
 }

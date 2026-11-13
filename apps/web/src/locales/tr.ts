@@ -1136,4 +1136,11 @@ export const tr: Record<string, string> = {
   "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "Tekerleğin çizimi nasıl hareket ettireceğini seçin. Dokunmatik yüzey kaydırarak gezinir ve iki parmakla yakınlaştırır; fare tekerleği imlecin çevresinde yakınlaştırır (eskisi gibi).",
   "Trackpad: two fingers pan, a pinch zooms": "Dokunmatik yüzey: iki parmak gezinir, kıstırma yakınlaştırır",
   "Mouse: the wheel zooms": "Fare: tekerlek yakınlaştırır",
+  "Format painter": "Biçim boyacısı",
+  "Format painter: copy the layer, stroke and ends of an object to others": "Biçim boyacısı: bir nesnenin katmanını, çizgisini ve uçlarını diğerlerine kopyalar",
+  "Click an object to take its layer, stroke and ends": "Katmanını, çizgisini ve uçlarını almak için bir nesneyi tıklayın",
+  "then click each object to paint with them": "sonra bunları alacak nesneleri tıklayın",
+  "stops painting": "boyamayı bitirir",
+  "Brush loaded: click what to paint": "Fırça hazır: boyanacak nesneyi tıklayın",
+  "Painted": "Boyandı",
 }

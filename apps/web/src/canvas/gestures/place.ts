@@ -10,6 +10,7 @@ import type { SizeLabel } from '../draw'
 import { MOUNT_REACH, TWO_POINT, type Keys } from '../gesture'
 import { get, type Canvas, type Move, type Press } from '../runtime'
 import { angleDimensionHover, radialDimensionHover } from './dimensions'
+import { painterHover } from './painter'
 import { offsetHover } from './offset'
 import { extendHover, filletHover } from './fit'
 
@@ -212,6 +213,8 @@ export const toolHover: Move<'idle'> = (c, _g, e, _at, world, out) => {
     radialDimensionHover(c, world, out)
   } else if (s.tool === 'angleDimension') {
     angleDimensionHover(c, world, out)
+  } else if (s.tool === 'formatPainter') {
+    painterHover(c, world, out)
   } else if (s.tool === 'trim') {
     const aim = trimAim(c, world)
     if (aim) out.trim = { piece: aim.place.piece, width: aim.node.type === 'wall' ? aim.node.thickness * s.view.zoom : 0 }

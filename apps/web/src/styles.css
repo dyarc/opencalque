@@ -1,21 +1,22 @@
 :root {
-  --bg: #ffffff;
-  --border: #e6e6e6;
-  --text: #1e1e1e;
-  --muted: #8a8a8a;
-  --faint: #bdbdbd;
-  --hover: #f3f3f3;
-  --pressed: #dcdcdc;
-  --accent: #0d99ff;
-  --accent-soft: #e5f4ff;
+  /* The interface colours of CreaBIM (its light theme). */
+  --bg: #eef0f3;
+  --border: #e3e6eb;
+  --text: #1a1d23;
+  --muted: #6b7384;
+  --faint: #9aa1ae;
+  --hover: #eceef2;
+  --pressed: #e2e5ea;
+  --accent: #3d6ff5;
+  --accent-soft: rgb(61 111 245 / 11%);
   --on-accent: #ffffff;
   /* A panel's tab in front, and another under the pointer. */
-  --tab-front: #ebebeb;
-  --tab-hover: #f5f5f5;
+  --tab-front: #ffffff;
+  --tab-hover: #f6f7f9;
   /* A button under the pointer on a tinted background (the sections of Preferences). */
-  --strip-hover: #ececec;
+  --strip-hover: #eceef2;
   /* Components and banners. */
-  --special: #7b61ff;
+  --special: #7a55f2;
   --danger: #e5484d;
   --danger-text: #c2272d;
   /* Dark notes over the drawing: toasts, badges. */
@@ -33,18 +34,20 @@
 
 /* The dark theme changes only the colours above; `theme.ts` sets the attribute. */
 :root[data-theme='dark'] {
-  --bg: #2c2c2c;
-  --border: #444444;
-  --text: #e8e8e8;
-  --muted: #a0a0a0;
-  --faint: #6b6b6b;
-  --hover: #383838;
-  --pressed: #505050;
-  --accent-soft: #1d3a52;
-  --tab-front: #3f3f3f;
-  --tab-hover: #353535;
-  --strip-hover: #303030;
-  --special: #9d8bff;
+  /* The interface colours of CreaBIM (its dark theme). */
+  --bg: #121419;
+  --border: #272b34;
+  --text: #e8eaef;
+  --muted: #8a93a3;
+  --faint: #5f6777;
+  --hover: #252a33;
+  --pressed: #2d323d;
+  --accent: #5b8cff;
+  --accent-soft: rgb(91 140 255 / 15%);
+  --tab-front: #1c1f26;
+  --tab-hover: #252a33;
+  --strip-hover: #1c1f26;
+  --special: #8a6cff;
   --danger: #ff6369;
   --danger-text: #ff8a8f;
   --note: #454545;

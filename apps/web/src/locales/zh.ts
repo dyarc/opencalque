@@ -1136,4 +1136,11 @@ export const zh: Record<string, string> = {
   "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "选择滚轮如何移动图纸。触控板滚动平移、捏合缩放；鼠标滚轮以指针为中心缩放，和以前一样。",
   "Trackpad: two fingers pan, a pinch zooms": "触摸板：双指平移，捏合缩放",
   "Mouse: the wheel zooms": "鼠标：滚轮缩放",
+  "Format painter": "格式刷",
+  "Format painter: copy the layer, stroke and ends of an object to others": "格式刷：把对象的图层、描边和端部复制到其他对象",
+  "Click an object to take its layer, stroke and ends": "点击一个对象，取它的图层、描边和端部",
+  "then click each object to paint with them": "再点击要刷上这些属性的对象",
+  "stops painting": "结束刷属性",
+  "Brush loaded: click what to paint": "格式刷已就绪：点击要刷上属性的对象",
+  "Painted": "已刷上",
 }

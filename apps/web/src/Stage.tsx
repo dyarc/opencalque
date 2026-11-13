@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Minus,
   MousePointer2,
+  Paintbrush,
   Pipette,
   Redo2,
   Slash,
@@ -99,6 +100,7 @@ const ICONS: Partial<Record<Tool, [title: string, icon: LucideIcon]>> = {
   move: [msg('Move: take the selection by a point and put that point down on another'), Move],
   angle: [msg('Angle: read the angle between two directions'), Triangle],
   eyedropper: [msg('Eyedropper: copy the look of an object'), Pipette],
+  formatPainter: [msg('Format painter: copy the layer, stroke and ends of an object to others'), Paintbrush],
   text: [msg('Text'), Type],
   annotation: [msg('Annotation: a note with an arrow to what it is about'), MessageSquare],
   gridline: [msg('Grid line: an axis of the building, with its letter or number in a bubble'), GridLine],
@@ -393,6 +395,7 @@ function Toolbar() {
       {/* Mirroring is not a tool: the selection is flipped on itself, at once, from the same list. */}
       <ToolGroup tools={TRANSFORM_TOOLS} current={transformTool} more={t('Move, mirror')} actions={FLIPS} />
       <ArrangeMenu />
+      <ToolButton id="formatPainter" />
       <ToolGroup tools={MEASURE_TOOLS} current={measureTool} more={t('Measure an angle')} />
       <ToolGroup tools={TEXT_TOOLS} current={textTool} more={t('Annotation, dimension, grid line')} />
       <hr />

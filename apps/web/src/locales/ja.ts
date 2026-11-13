@@ -1136,4 +1136,11 @@ export const ja: Record<string, string> = {
   "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "ホイールで図面をどう動かすかを選びます。タッチパッドはスクロールで移動し、ピンチで拡大縮小します。マウスホイールはポインターを中心に拡大縮小します（従来どおり）。",
   "Trackpad: two fingers pan, a pinch zooms": "タッチパッド：2 本指で移動、ピンチで拡大縮小",
   "Mouse: the wheel zooms": "マウス：ホイールで拡大縮小",
+  "Format painter": "書式のコピー",
+  "Format painter: copy the layer, stroke and ends of an object to others": "書式のコピー：オブジェクトのレイヤー、線、端部を他のオブジェクトにコピーします",
+  "Click an object to take its layer, stroke and ends": "オブジェクトをクリックして、レイヤー・線・端部を取得します",
+  "then click each object to paint with them": "次に、適用するオブジェクトをクリックします",
+  "stops painting": "ペイントを終了",
+  "Brush loaded: click what to paint": "ブラシを取得しました。適用するオブジェクトをクリック",
+  "Painted": "適用しました",
 }

@@ -339,6 +339,7 @@ const STATIC: Command[] = [
   tool('rotate', msg('Rotate'), 'E'),
   tool('move', msg('Move'), 'Shift+E'),
   tool('eyedropper', msg('Eyedropper: copy the look of an object'), 'I'),
+  tool('formatPainter', msg('Format painter'), 'Shift+I'),
   tool('text', msg('Text'), 'T'),
   tool('annotation', msg('Annotation'), 'Shift+T'),
   { id: 'tool.radialDimension', title: msg('Radius dimension'), category: 'Tools', keywords: 'radius arc circle R measure annotate', run: () => setTool('radialDimension') },

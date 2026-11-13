@@ -5,7 +5,7 @@ import { t } from './i18n'
  * each step of using one (`hintsFor`). What a tool does on the drawing is in `canvas/gestures/`
  * (`PRESSES`, and the gestures it starts); its command and shortcut are in `commands.ts` (`tool(…)`).
  */
-export type Tool = 'select' | 'hand' | 'line' | 'construction' | 'curve' | 'arc' | 'rect' | 'ellipse' | 'circle' | 'wall' | 'dimension' | 'radialDimension' | 'angleDimension' | 'measure' | 'angle' | 'split' | 'trim' | 'extend' | 'fillet' | 'offset' | 'rotate' | 'move' | 'calibrate' | 'eyedropper' | 'text' | 'annotation' | 'gridline' | 'paper' | 'room' | 'divider' | 'elevation' | 'place'
+export type Tool = 'select' | 'hand' | 'line' | 'construction' | 'curve' | 'arc' | 'rect' | 'ellipse' | 'circle' | 'wall' | 'dimension' | 'radialDimension' | 'angleDimension' | 'measure' | 'angle' | 'split' | 'trim' | 'extend' | 'fillet' | 'offset' | 'rotate' | 'move' | 'calibrate' | 'eyedropper' | 'formatPainter' | 'text' | 'annotation' | 'gridline' | 'paper' | 'room' | 'divider' | 'elevation' | 'place'
 
 /** The plain shapes, which share one toolbar button. */
 // A paper is drawn as a rectangle is, by its corners: it is offered with the shapes.
@@ -52,6 +52,12 @@ export function hintsFor(tool: Tool, step: number, opening: boolean, selected = 
       return step === 0
         ? [['', t('Click beside a wall for an elevation of its face on that side')], ['', t('click elsewhere to start a section line')]]
         : [['', t('Click where the section line ends')], ['Esc', t('cancels')]]
+    case 'formatPainter':
+      return [
+        ['', t('Click an object to take its layer, stroke and ends')],
+        ['', t('then click each object to paint with them')],
+        ['Esc', t('stops painting')],
+      ]
     case 'radialDimension':
       return step === 0 ? [['', t('Click an arc or a circle')], ['Esc', t('cancels')]] : [['', t('Click where the radius dimension goes')], ['Esc', t('cancels')]]
     case 'angleDimension':

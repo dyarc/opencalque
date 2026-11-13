@@ -35,7 +35,7 @@ function pictureFor(href: string): HTMLImageElement | null {
 import type { View } from '../view'
 import { formatAngle, formatLength, formatNumber } from '../units'
 
-const ACCENT = '#0d99ff'
+const ACCENT = '#5b8cff'
 const CROSSING = '#16a34a'
 /** The colour of what the pointer snaps to and of the guides shown while something is moved. */
 const SNAP = '#e5008a'
@@ -62,24 +62,24 @@ const same = (color: string) => color
 
 export const LIGHT_CANVAS: CanvasPalette = {
   surface: '#ffffff',
-  desk: '#f3f4f6',
+  desk: '#eef0f3',
   grid: ['rgb(0 0 0 / 5.5%)', 'rgb(0 0 0 / 11%)'],
   axes: ['#f0b4b4', '#a9d8b0'],
   title: '#8b9099',
-  label: { fill: '#dbe7ff', text: '#1d4ed8' },
-  guide: 'rgb(29 78 216 / 40%)',
+  label: { fill: '#dce7fe', text: '#2f5ee0' },
+  guide: 'rgb(61 111 245 / 40%)',
   ink: same,
 }
 
 export const DARK_CANVAS: CanvasPalette = {
   // White paper as `darkInk` turns it.
-  surface: '#1f1f1f',
-  desk: '#141414',
+  surface: '#1c1f26',
+  desk: '#121419',
   grid: ['rgb(255 255 255 / 5%)', 'rgb(255 255 255 / 10%)'],
   axes: ['#7a3a3a', '#3a6b44'],
   title: '#8b9099',
-  label: { fill: '#1d3a6b', text: '#c6d8ff' },
-  guide: 'rgb(110 160 255 / 50%)',
+  label: { fill: '#1c2b4a', text: '#9ab8ff' },
+  guide: 'rgb(91 140 255 / 50%)',
   ink: darkInk,
 }
 

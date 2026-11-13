@@ -490,7 +490,10 @@ export function CanvasView() {
     }
   }, [])
 
-  const cursor = tool === 'hand' ? 'grab' : tool === 'select' ? (gripCursor ?? 'default') : 'crosshair'
+  const brush = `url("data:image/svg+xml,${encodeURIComponent(
+    "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M4 20c3 0 4-2 4-4l7-7 3 3-7 7c-2 2-4 1-7 1z' fill='#ffffff' stroke='#1f1f1f' stroke-width='1.5' stroke-linejoin='round'/><path d='M14 6l4 4 3-3-4-4z' fill='#1f1f1f'/></svg>",
+  )}") 4 20, copy`
+  const cursor = tool === 'formatPainter' ? brush : tool === 'hand' ? 'grab' : tool === 'select' ? (gripCursor ?? 'default') : 'crosshair'
   return (
     <canvas
       ref={canvasRef}
