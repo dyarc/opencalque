@@ -27,6 +27,9 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- A section's cut lines are the heaviest and darkest; lines beyond fall away in three steps, 0.25, 0.18 and 0.13 mm, thinner and lighter with distance, from a cut weight of 0.35 mm by default.
+- What is cut is filled with the elevation's own Cut fill, and its Cut line weight can be changed, in Properties.
+- Slabs, columns and beams show in a section as the bands their top and bottom make; a sunken pit shows its floor between its depth and its underside.
 - A curved wall appears in an elevation or a section by its front projection, not left out: the width it takes across the view, stood up to its height.
 - Radius dimensions take the face of a curved wall that was clicked, and angle dimensions the face of a wall, inside or outside, not its middle line. A radius dimension's leader length can be set, or placed by the click, and its words follow it.
 - Beams have no fill, so they cannot cover the wall they meet; their long sides still stop cleanly at it.
