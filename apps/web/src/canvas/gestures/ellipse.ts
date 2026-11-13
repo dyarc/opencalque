@@ -37,7 +37,7 @@ const ellipseNode = (points: Vec2[], id: string): Record<string, unknown> => {
 /** Shows the ellipse as far as the points and the pointer have taken it. */
 function show(c: Canvas, g: GestureOf<'ellipse'>, world: Vec2): void {
   if (g.points.length < 2) return
-  const points = [...g.points, world].slice(0, 4)
+  const points = [...g.points, world].slice(0, 3)
   const shape = ellipseOf(points)
   if (!shape) return
   preview([{ op: 'add_node', node: { ...ellipseNode(points, g.id), ...shape } as never }])
@@ -53,7 +53,7 @@ export const ellipseDown: Press = (c, e, _at, world) => {
   }
   if (dist(snapped, g.points[g.points.length - 1]) < 1e-6) return
   g.points.push(snapped)
-  if (g.points.length === 4) {
+  if (g.points.length === 3) {
     const node = ellipseNode(g.points, g.id)
     if (preview([{ op: 'add_node', node: node as never }])) commit()
     else cancel()
@@ -68,7 +68,10 @@ export const ellipseDown: Press = (c, e, _at, world) => {
 
 export const ellipseMove: Move<'ellipse'> = (c, g, _e, _at, world, out) => {
   show(c, g, world)
-  const shape = ellipseOf([...g.points, world].slice(0, 4))
+  const shape = ellipseOf([...g.points, world].slice(0, 3))
   if (shape) out.status = `${formatLength(shape.rx * 2)} × ${formatLength(shape.ry * 2)}`
   else if (g.points.length === 1) out.status = t('Click the other end of the first axis')
+  // A dashed line in the colour of a snap follows the first point out to where the pointer is.
+  if (g.points.length === 1) out.link = [g.points[0], world]
+  else if (g.points.length === 2) out.link = [g.points[0], g.points[1]]
 }

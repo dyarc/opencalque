@@ -1182,7 +1182,6 @@ export const de: Record<string, string> = {
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Nur Wände, Linien, Konstruktionslinien, Polylinien, Kurven, Rechtecke, Kreise und Bögen können versetzt werden",
   "Click the first end of an axis": "Klicken Sie das erste Ende einer Achse an",
   "Click the other end of that axis": "Klicken Sie das andere Ende dieser Achse an",
-  "Click one end of the other axis": "Klicken Sie ein Ende der anderen Achse an",
-  "Click its other end": "Klicken Sie ihr anderes Ende an",
   "Click the other end of the first axis": "Klicken Sie das andere Ende der ersten Achse an",
+  "Click to set how wide it is the other way": "Klicken Sie, wie breit sie in der anderen Richtung wird",
 }

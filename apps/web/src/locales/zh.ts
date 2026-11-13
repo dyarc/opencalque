@@ -1182,7 +1182,6 @@ export const zh: Record<string, string> = {
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "只有墙、直线、构造线、多段线、曲线、矩形、圆和圆弧可以偏移",
   "Click the first end of an axis": "点击一条轴的第一个端点",
   "Click the other end of that axis": "点击这条轴的另一个端点",
-  "Click one end of the other axis": "点击另一条轴的一个端点",
-  "Click its other end": "点击它的另一个端点",
   "Click the other end of the first axis": "点击第一条轴的另一个端点",
+  "Click to set how wide it is the other way": "点击确定它在另一方向的宽度",
 }

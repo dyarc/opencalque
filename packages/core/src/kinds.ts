@@ -900,11 +900,11 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
       ...(t.mirror && node.bulges ? { bulges: node.bulges.map((b) => -b) } : {}),
       ...markerSize(node, t),
     }),
-    // A copy alongside a line with arcs would have to bend them: not made.
+    // A copy alongside a line with arcs follows the arcs as they are drawn, sampled, so that the
+    // whole line (a filleted shape, a joined outline) can be offset; the copy itself is a polyline.
     parallel: (node, distance) => {
-      if (node.bulges?.some((b) => b)) return null
-      const points = parallelPath(node.points, !!node.closed, distance, node.smooth)
-      return points && { points }
+      const points = parallelPath(node.bulges?.some((b) => b) ? polylinePath(node) : node.points, !!node.closed, distance, node.smooth && !node.bulges?.some((b) => b))
+      return points && { points, ...(node.bulges?.some((b) => b) ? { bulges: null, smooth: false } : {}) }
     },
     beside: (node, p) => besidePath(node.bulges?.some((b) => b) ? polylinePath(node) : node.smooth ? smoothPoints(node.points, node.closed) : node.points, !!node.closed, p),
     centre: (node) => (node.closed ? centroid(node.smooth ? smoothPoints(node.points, true) : node.points) : null),

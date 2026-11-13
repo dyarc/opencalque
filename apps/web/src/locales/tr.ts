@@ -1182,7 +1182,6 @@ export const tr: Record<string, string> = {
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Yalnızca duvarlar, çizgiler, inşaat çizgileri, çoklu çizgiler, eğriler, dikdörtgenler, daireler ve yaylar ötelenebilir",
   "Click the first end of an axis": "Bir eksenin ilk ucunu tıklayın",
   "Click the other end of that axis": "Bu eksenin diğer ucunu tıklayın",
-  "Click one end of the other axis": "Diğer eksenin bir ucunu tıklayın",
-  "Click its other end": "Diğer ucunu tıklayın",
   "Click the other end of the first axis": "İlk eksenin diğer ucunu tıklayın",
+  "Click to set how wide it is the other way": "Diğer yöndeki genişliğini belirlemek için tıklayın",
 }

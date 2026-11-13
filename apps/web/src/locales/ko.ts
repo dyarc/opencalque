@@ -1182,7 +1182,6 @@ export const ko: Record<string, string> = {
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "간격 띄우기는 벽, 선, 보조선, 폴리선, 곡선, 사각형, 원, 호에만 적용됩니다",
   "Click the first end of an axis": "축의 한쪽 끝을 클릭",
   "Click the other end of that axis": "그 축의 다른 끝을 클릭",
-  "Click one end of the other axis": "다른 축의 한쪽 끝을 클릭",
-  "Click its other end": "그 반대쪽 끝을 클릭",
   "Click the other end of the first axis": "첫 번째 축의 다른 끝을 클릭",
+  "Click to set how wide it is the other way": "다른 방향의 너비를 정할 위치를 클릭",
 }

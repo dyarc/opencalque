@@ -1182,7 +1182,6 @@ export const es: Record<string, string> = {
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Solo se pueden desfasar muros, líneas, líneas de construcción, polilíneas, curvas, rectángulos, círculos y arcos",
   "Click the first end of an axis": "Haz clic en el primer extremo de un eje",
   "Click the other end of that axis": "Haz clic en el otro extremo de ese eje",
-  "Click one end of the other axis": "Haz clic en un extremo del otro eje",
-  "Click its other end": "Haz clic en su otro extremo",
   "Click the other end of the first axis": "Haz clic en el otro extremo del primer eje",
+  "Click to set how wide it is the other way": "Haz clic para fijar su anchura en el otro sentido",
 }

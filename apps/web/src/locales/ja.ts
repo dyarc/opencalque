@@ -1182,7 +1182,6 @@ export const ja: Record<string, string> = {
   "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "オフセットできるのは壁・線・作図線・ポリライン・曲線・長方形・円・円弧だけです",
   "Click the first end of an axis": "軸の一方の端をクリック",
   "Click the other end of that axis": "その軸のもう一方の端をクリック",
-  "Click one end of the other axis": "もう一方の軸の端をクリック",
-  "Click its other end": "そのもう一方の端をクリック",
   "Click the other end of the first axis": "最初の軸のもう一方の端をクリック",
+  "Click to set how wide it is the other way": "もう一方の幅を決める位置をクリック",
 }

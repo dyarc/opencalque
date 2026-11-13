@@ -225,3 +225,17 @@ describe('offsetting an ellipse or an arc', () => {
     expect([madeArc.rx, madeArc.ry, madeArc.from, madeArc.to]).toEqual([1050, 450, 20, 140])
   })
 })
+
+describe('offsetting a polyline with arc stretches', () => {
+  it('follows its arcs, sampled, and gives a plain parallel polyline', () => {
+    const doc = applyOps(createDocument('Plan'), [
+      { op: 'add_node', node: { id: 'p', type: 'polyline', parent: 'page_1', layer: 'layer_1', points: [{ x: 0, y: 0 }, { x: 2000, y: 0 }, { x: 2000, y: 2000 }], bulges: [0.4142, 0], closed: false } } as never,
+    ])
+    expect(canOffset(doc.nodes.p)).toBe(true)
+    const copy = offsetOps(doc, doc.nodes.p, -200)!
+    const made = applyOps(doc, copy.ops).nodes[copy.id] as never as { type: string; points: unknown[]; bulges?: unknown }
+    expect(made.type).toBe('polyline')
+    expect(made.points.length).toBeGreaterThan(3)
+    expect(made.bulges).toBeUndefined()
+  })
+})
