@@ -29,6 +29,8 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- Ellipses and arcs can be offset: each radius grows or shrinks by the distance, and an arc keeps its start and end angles, so an arc compressed into an ellipse no longer loses its offset.
+- An ellipse is drawn by its two axes: click the two ends of one axis, then the two ends of the other. Its middle and first axis come from the first pair, its width from the second; four points make it easier to line up with a drawing.
 - A construction line can be picked with a crossing selection box (dragged right to left), though it has no bounds to fit.
 - Construction lines can be offset like other lines, and the Offset tool lights one under the pointer before it is clicked.
 - Keyboard shortcuts of one to three letters are command words now, not bare keys; a chord with Ctrl, Alt or Shift still runs at once. The shortcut labels show the Space that confirms a word.
