@@ -9,7 +9,8 @@ Last updated: 2026-11-11 (after 1.8.0).
 ### Drawing
 - Lines, rectangles, ellipses and arcs (an ellipse with a start and an end angle), polylines and polygons, straight or curved through their points, text. The Curved line tool draws the curve as its points are clicked; the Arc tool draws an arc by its two ends and a point it goes through, or a typed radius; the Circle tool a circle by its centre and a point it goes through, or a typed radius.
 - **Construction lines**: an endless dashed guide through two points, or parallel to a line at an offset typed or given by the pointer; picked and snapped to along its length, on its layer, never printed.
-- **Extend**: the end of a line, a polyline or a wall clicked runs straight on to the next thing in its way (for a wall, the next wall), and again to the one after. **Fillet**: two lines clicked meet at their corner, each cut back or carried on to it, or are joined by an arc of a typed radius.
+- **Extend**: the end of a line, a polyline or a wall clicked runs straight on to the next thing in its way (for a wall, the next wall), and again to the one after. **Fillet**: two lines clicked meet at their corner, each cut back or carried on to it, or are joined by an arc of a typed radius; two neighbouring segments of one polyline are rounded inside it too.
+- **Explode and join**: a polyline or a rectangle drawn as the lines it is made of (`Shift+B`); lines and open polylines joined end to end into one polyline, closed when the chain comes back to where it began (`Shift+J`).
 - **Offset**: a parallel copy of a wall, a line, a polyline, a curve, a rectangle, a circle or an arc, at a typed distance or where the pointer says. A wall's copy is a wall like it, its line that far from the first, a curved one round the same centre.
 - **Selecting by a box**, as in CAD: dragged to the right it takes what is wholly inside it; dragged to the left, green and dashed, what it touches, by what is drawn rather than by the box around it.
 - Exact sizes while drawing: a bar above the tools takes typed lengths, angles, widths and heights, and the shape shows its sizes as you draw.
@@ -141,7 +142,7 @@ Agreed with the owner in October 2026. The first was built straight away.
 - ~~Snapping to midpoints, perpendiculars and intersections~~ (done, with the nearest point on a line); tangents and the quarter points of circles
 - ~~Eyedropper~~ (done)
 - Fills made of a picture, or of a texture (wood, concrete, grass), as more tabs of the fill window
-- ~~Trim for lines~~ (done: the trim tool, for walls, lines and polylines); ~~extend and fillet for lines~~ (done: extend for lines, polylines and walls; fillet for straight lines, not yet polylines or walls)
+- ~~Trim for lines~~ (done: the trim tool, for walls, lines and polylines); ~~extend and fillet for lines~~ (done: extend for lines, polylines and walls; fillet for straight lines and the corners of polylines, not yet walls)
 - ~~Offset~~ (done: the offset tool, for walls, lines, polylines, curves, rectangles, circles and arcs; not groups or other ellipses, and a shape that would fold over itself is refused rather than trimmed)
 
 **Import and sharing**

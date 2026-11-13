@@ -8,7 +8,12 @@ const extended = (doc: Document, id: string, x: number, y: number) => {
   return place && applyOps(doc, extendOps(doc.nodes[id], place)!)
 }
 const filleted = (doc: Document, first: string, at1: [number, number], second: string, at2: [number, number], radius: number) => {
-  const ops = filletOps(doc.nodes[first] as NodeOf<'line'>, { x: at1[0], y: at1[1] }, doc.nodes[second] as NodeOf<'line'>, { x: at2[0], y: at2[1] }, radius, 'arc')
+  const ops = filletOps(
+    { node: doc.nodes[first] as NodeOf<'line'>, at: { x: at1[0], y: at1[1] } },
+    { node: doc.nodes[second] as NodeOf<'line'>, at: { x: at2[0], y: at2[1] } },
+    radius,
+    'arc',
+  )
   return ops && applyOps(doc, ops)
 }
 

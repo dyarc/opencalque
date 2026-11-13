@@ -3,6 +3,10 @@ import { entryName, entryTarget, isModel, placementsOf } from '../entries'
 import {
   alikeTo,
   applyOps,
+  canExplode,
+  canJoin,
+  explodeOps,
+  joinOps,
   buildScene,
   childrenOf,
   cloneOps,
@@ -76,6 +80,28 @@ export function finishTextEdit(): void {
 
 export function deleteSelection(): void {
   apply(get().selection.map((id): Op => ({ op: 'remove_node', id })))
+}
+
+/** Whether anything selected is a polyline or a rectangle, to be drawn as lines. */
+export const canExplodeSelection = (): boolean => get().selection.some((id) => get().doc.nodes[id] && canExplode(get().doc.nodes[id]))
+
+/** Draws the selected polylines and rectangles as the lines they are made of, leaving those selected. */
+export function explodeSelection(): void {
+  const result = explodeOps(get().doc, get().selection)
+  if (!result || !apply(result.ops)) return void toast(t('Nothing here can be exploded'))
+  select(result.ids)
+  toast(t('Split into {n} lines', { n: result.ids.length }))
+}
+
+/** Whether two or more selected objects are lines or open polylines, to be joined. */
+export const canJoinSelection = (): boolean => get().selection.filter((id) => get().doc.nodes[id] && canJoin(get().doc.nodes[id])).length >= 2
+
+/** Joins the selected lines and open polylines end to end: closed where they come back to the start. */
+export function joinSelection(): void {
+  const result = joinOps(get().doc, get().selection)
+  if (!result || !apply(result.ops)) return void toast(t('Nothing to join here: the lines do not meet end to end'))
+  select(result.ids)
+  toast(result.skipped > 0 ? t('Joined into {n} shapes; {count} lines were left as they were', { n: result.ids.length, count: result.skipped }) : t('Joined into {n} shapes', { n: result.ids.length }))
 }
 
 export function duplicateSelection(): void {

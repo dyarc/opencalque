@@ -2,7 +2,11 @@ import { create } from 'zustand'
 import { platform } from './platform'
 import { buildScene, componentsOf, pagesOf, unusedComponents } from '@opencalque/core'
 import {
+  canExplodeSelection,
+  canJoinSelection,
   deleteSelection,
+  explodeSelection,
+  joinSelection,
   deleteUnusedComponents,
   copySelection,
   cutSelection,
@@ -220,6 +224,8 @@ const STATIC: Command[] = [
   { id: 'edit.nudgeDown', title: msg('Move down by one grid step'), category: 'Edit', keys: ['ArrowDown'], when: selected, run: () => nudgeSelection(0, 1) },
   { id: 'wall.split', title: msg('Split the wall in two'), category: 'Edit', keywords: 'split cut divide corner', when: canSplitWall, run: splitWall },
   { id: 'wall.extend', title: msg('Extend walls to the next wall'), category: 'Edit', keywords: 'extend lengthen', when: canFitWalls, run: () => fitWalls('extend') },
+  { id: 'edit.explode', title: msg('Explode'), category: 'Edit', keys: ['Shift+B'], interrupts: true, keywords: 'break apart split segments lines polygon rectangle', when: canExplodeSelection, run: explodeSelection },
+  { id: 'edit.join', title: msg('Join'), category: 'Edit', keys: ['Shift+J'], interrupts: true, keywords: 'merge combine connect polyline closed shape', when: canJoinSelection, run: joinSelection },
   { id: 'shape.close', title: msg('Close the shape'), category: 'Edit', keywords: 'polygon polyline join', when: canClosePolylines, run: () => setPolylines({ closed: true }) },
   { id: 'shape.open', title: msg('Open the shape'), category: 'Edit', keywords: 'polygon polyline', when: canOpenPolylines, run: () => setPolylines({ closed: null }) },
   { id: 'shape.curve', title: msg('Curve the line through its points'), category: 'Edit', keywords: 'smooth spline round polyline', when: canCurvePolylines, run: () => setPolylines({ smooth: true }) },

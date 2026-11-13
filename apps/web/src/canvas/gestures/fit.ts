@@ -1,4 +1,4 @@
-import { canFillet, canSplit, dist, extendOps, extendPlace, filletOps, hitTest, newId, type Node, type NodeOf, type Vec2 } from '@opencalque/core'
+import { canFillet, canSplit, dist, distToSegment, extendOps, extendPlace, filletOps, hitTest, newId, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
 import { t } from '../../i18n'
 import { cancel, commit, preview } from '../../store'
 import { formatLength } from '../../units'
@@ -52,25 +52,40 @@ export const extendDown: Press = (c, _e, _at, world) => {
 /** The radius typed for the fillet, or none: the lines then meet at a sharp corner. */
 const radius = () => get().drawLocks.a ?? 0
 
+/** What is under the pointer that can be filleted, and for a polyline the segment of it clicked. */
+function targetOf(c: Canvas, world: Vec2): FilletTarget | null {
+  const found = under(c, world, canFillet)
+  if (!found || !canFillet(found)) return null
+  const node = found
+  if (node.type === 'line') return { node, at: world }
+  let best: { segment: number; distance: number } | null = null
+  for (let i = 0; i < node.points.length; i++) {
+    const distance = distToSegment(world, node.points[i], node.points[(i + 1) % node.points.length])
+    if (!best || distance < best.distance) best = { segment: i, distance }
+  }
+  return best ? { node, at: world, segment: best.segment } : null
+}
+
 /** What a fillet with `g`'s first line would do with the line under the pointer, or why it cannot. */
 function filletAim(c: Canvas, g: GestureOf<'fillet'>, world: Vec2) {
-  const second = under(c, world, (node) => canFillet(node) && node.id !== g.first.id) as NodeOf<'line'> | null
-  if (!second) return null
-  const ops = filletOps(g.first, g.at, second, world, radius(), newId())
-  const why = ops ? '' : filletOps(g.first, g.at, second, world, 0, '') ? t('These lines are too short for this radius') : t('These lines run side by side: they never meet')
+  const second = targetOf(c, world)
+  // The same stretch clicked twice is no corner.
+  if (!second || (second.node.id === g.first.node.id && second.segment === g.first.segment)) return null
+  const ops = filletOps(g.first, second, radius(), newId())
+  const why = ops ? '' : filletOps(g.first, second, 0, '') ? t('These lines are too short for this radius') : t('These lines cannot be filleted here')
   return { second, ops, why }
 }
 
 /** With nothing in progress: the line a click would take. */
 export function filletHover(c: Canvas, world: Vec2, out: Shown): void {
-  const line = under(c, world, canFillet)
-  if (line) out.lit = line.id
-  else if (under(c, world, () => true)) out.status = t('Only straight lines can be filleted')
+  const target = targetOf(c, world)
+  if (target) out.lit = target.node.id
+  else if (under(c, world, () => true)) out.status = t('Only straight lines and polylines can be filleted')
 }
 
 export const filletMove: Move<'fillet'> = (c, g, _e, _at, world, out) => {
   const aim = filletAim(c, g, world)
-  out.lit = aim?.second.id ?? g.first.id
+  out.lit = aim?.second.node.id ?? g.first.node.id
   if (!aim?.ops) {
     cancel()
     if (aim) out.status = aim.why
@@ -83,8 +98,8 @@ export const filletMove: Move<'fillet'> = (c, g, _e, _at, world, out) => {
 export const filletDown: Press = (c, _e, _at, world) => {
   const g = c.gesture
   if (g.kind !== 'fillet') {
-    const first = under(c, world, canFillet) as NodeOf<'line'> | null
-    if (first) c.gesture = { kind: 'fillet', first, at: world }
+    const first = targetOf(c, world)
+    if (first) c.gesture = { kind: 'fillet', first }
     return
   }
   const aim = filletAim(c, g, world)

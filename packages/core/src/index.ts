@@ -1,3 +1,4 @@
+export * from './assemble'
 export * from './chains'
 export * from './check'
 export * from './clearances'

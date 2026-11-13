@@ -4,62 +4,134 @@ import type { Node, NodeOf } from './schema'
 import { cross, dot, tidy } from './walls/course'
 
 /*
- * The fillet tool, as in CAD: two lines made to meet. With no radius, each is cut back or carried
- * on to where they cross, which makes a clean corner; with a radius, each stops where an arc of
- * that radius, added between them, takes over.
+ * The fillet tool, as in CAD: two stretches of line made to meet. With no radius, each is cut back
+ * or carried on to where they cross, which makes a clean corner; with a radius, each stops where an
+ * arc of that radius takes over. A stretch is a whole line, or one segment of a polyline: two
+ * neighbouring segments of one polyline have their corner rounded in place, the arc laid into the
+ * polyline as short straight stretches (`ARC_STEP`), so that the line stays one object.
  */
 
-/** What can be filleted: a straight line. */
-export const canFillet = (node: Node): node is NodeOf<'line'> => node.type === 'line'
+/** A node a stretch of which can be filleted: a line, or a polyline that is not a curve. */
+export type FilletNode = NodeOf<'line'> | NodeOf<'polyline'>
+
+/** What is filleted: the node, where it was clicked, and for a polyline the segment clicked. */
+export interface FilletTarget {
+  node: FilletNode
+  at: Vec2
+  /** The segment clicked, by the index of the point it starts at. */
+  segment?: number
+}
+
+/** What can be filleted: a straight line, or a polyline that is not a curve. */
+export const canFillet = (node: Node): node is FilletNode => node.type === 'line' || (node.type === 'polyline' && !node.smooth)
+
+/** How far apart, in degrees, the points laid into a polyline stand for the arc of a rounded corner. */
+const ARC_STEP = 3
 
 const point = (p: Vec2): Vec2 => ({ x: tidy(p.x), y: tidy(p.y) })
 
+/** The two ends of the stretch of `target`, and the patch that puts one of them elsewhere. */
+function stretch(target: FilletTarget): { a: Vec2; b: Vec2; patch: (end: 0 | 1, p: Vec2) => Record<string, unknown> } | null {
+  const node = target.node
+  if (node.type === 'line') return { a: node.a, b: node.b, patch: (end, p) => (end === 0 ? { a: p } : { b: p }) }
+  const index = target.segment
+  if (index === undefined || !Number.isInteger(index) || index < 0 || index >= node.points.length) return null
+  const next = (index + 1) % node.points.length
+  return {
+    a: node.points[index],
+    b: node.points[next],
+    patch: (end, p) => ({ points: node.points.map((q, i) => (i === (end === 0 ? index : next) ? p : q)) }),
+  }
+}
+
 /**
- * The operations that make `first` and `second` meet, each clicked at `at` (the part of each kept
- * is the one on the side of their crossing it was clicked on), with an arc of `radius` between
- * them when it is more than 0. The arc is a node with the id given, on the first line's layer and
- * in its look. Null when they cannot meet: lines that run side by side, or too short for the radius.
+ * The operations that make the stretches of `first` and `second` meet, each clicked at its own
+ * place (the part kept is the one on the side of their crossing it was clicked on), with an arc of
+ * `radius` between them when it is more than 0. Two neighbouring segments of one polyline are
+ * rounded where they meet, in the polyline itself; anything else gives up a free end, and the arc
+ * is a node of its own with the id given, on the first node's layer and in its look. Null when
+ * they cannot meet: lines that run side by side, too short for the radius, or a polyline that
+ * would have to give up a corner it keeps.
  */
-export function filletOps(first: NodeOf<'line'>, firstAt: Vec2, second: NodeOf<'line'>, secondAt: Vec2, radius: number, arcId: string): Op[] | null {
-  if (first.id === second.id || !(radius >= 0)) return null
-  const d1 = sub(first.b, first.a)
-  const d2 = sub(second.b, second.a)
+export function filletOps(first: FilletTarget, second: FilletTarget, radius: number, arcId: string): Op[] | null {
+  if (!(radius >= 0)) return null
+  const one = stretch(first)
+  const two = stretch(second)
+  if (!one || !two) return null
+  const d1 = sub(one.b, one.a)
+  const d2 = sub(two.b, two.a)
   const denom = cross(d1, d2)
   if (len(d1) < 1e-9 || len(d2) < 1e-9 || Math.abs(denom) < 1e-9 * len(d1) * len(d2)) return null
-  const crossing = add(first.a, scale(d1, cross(sub(second.a, first.a), d2) / denom))
-  // For each line: the way from the crossing to the part kept, the end that stays, and how far it is.
-  const kept = (line: NodeOf<'line'>, at: Vec2) => {
-    const dir = norm(sub(line.b, line.a))
+  const crossing = add(one.a, scale(d1, cross(sub(two.a, one.a), d2) / denom))
+  // For each stretch: the way from the crossing to the part kept, the end that stays, and how far it is.
+  const kept = (stretch: { a: Vec2; b: Vec2 }, at: Vec2) => {
+    const dir = norm(sub(stretch.b, stretch.a))
     const along = (q: Vec2) => dot(sub(q, crossing), dir)
     // Clicked on the crossing itself: the longer part is kept.
-    const side = Math.abs(along(at)) > 1e-6 ? Math.sign(along(at)) : Math.abs(along(line.a)) >= Math.abs(along(line.b)) ? Math.sign(along(line.a)) : Math.sign(along(line.b))
-    const stays: 'a' | 'b' = along(line.a) * side >= along(line.b) * side ? 'a' : 'b'
-    return { way: scale(dir, side || 1), moves: stays === 'a' ? ('b' as const) : ('a' as const), reach: along(line[stays]) * side }
+    const side = Math.abs(along(at)) > 1e-6 ? Math.sign(along(at)) : Math.sign(along(stretch.a)) || 1
+    const stays: 0 | 1 = along(stretch.a) * side >= along(stretch.b) * side ? 0 : 1
+    return { way: scale(dir, side || 1), stays, reach: along(stays === 0 ? stretch.a : stretch.b) * side }
   }
-  const one = kept(first, firstAt)
-  const two = kept(second, secondAt)
-  const angle = Math.acos(Math.max(-1, Math.min(1, dot(one.way, two.way))))
+  const a1 = kept(one, first.at)
+  const a2 = kept(two, second.at)
+  const angle = Math.acos(Math.max(-1, Math.min(1, dot(a1.way, a2.way))))
   if (angle < 1e-6 || Math.PI - angle < 1e-6) return null
-  // How far back from the crossing each line stops, for the arc to touch it there.
+  // How far back from the crossing each stretch stops, for the arc to touch it there.
   const back = radius / Math.tan(angle / 2)
-  if (one.reach <= back + 1e-6 || two.reach <= back + 1e-6) return null
-  const ends = [add(crossing, scale(one.way, back)), add(crossing, scale(two.way, back))].map(point)
+  if (a1.reach <= back + 1e-6 || a2.reach <= back + 1e-6) return null
+  const ends = [add(crossing, scale(a1.way, back)), add(crossing, scale(a2.way, back))].map(point)
+  // The arc is the circle touching both stretches at their ends, its middle nearest the crossing.
+  const halfway = norm(add(a1.way, a2.way))
+  const centre = add(crossing, scale(halfway, radius / Math.sin(angle / 2)))
+  const arc = radius > 0 ? arcThrough(ends[0], ends[1], sub(centre, scale(halfway, radius))) : null
+
+  // Two neighbouring segments of one polyline: the corner between them goes, and the arc takes its place.
+  if (first.node.id === second.node.id && first.node.type === 'polyline' && second.node.type === 'polyline') {
+    const node = first.node
+    const n = node.points.length
+    const i1 = first.segment
+    const i2 = second.segment
+    if (i1 === undefined || i2 === undefined) return null
+    const shared = i2 === (i1 + 1) % n ? (i1 + 1) % n : i1 === (i2 + 1) % n ? (i2 + 1) % n : null
+    if (shared === null || !node.closed && (shared === 0 || shared === n - 1)) return null
+    const moving = (index: number, a: { stays: 0 | 1 }) => (a.stays === 0 ? (index + 1) % n : index)
+    if (moving(i1, a1) !== shared || moving(i2, a2) !== shared) return null
+    // With no radius the two segments already meet there: nothing to do.
+    if (radius === 0) return []
+    if (!arc) return null
+    const before = i1 === (shared - 1 + n) % n ? ends[0] : ends[1]
+    const after = before === ends[0] ? ends[1] : ends[0]
+    // Sampled finely enough, and evenly spaced: the points laid in stand for the arc.
+    const fine = Math.max(2, Math.ceil(((((arc.to - arc.from) % 360) + 360) % 360) / ARC_STEP))
+    const arcPoints = Array.from({ length: fine + 1 }, (_, i) => point(ellipseArcPoint(arc, radius, i / fine)))
+    const points = node.points.map((q, i) => (i === shared ? [point(before), ...arcPoints.slice(1, -1), point(after)] : [q])).flat()
+    return [{ op: 'update_node', id: node.id, patch: { points } }]
+  }
+
+  // Anything else gives up a free end: a line either end, an open polyline its first or its last point.
+  const free = (target: FilletTarget, a: { stays: 0 | 1 }) => {
+    const node = target.node
+    if (node.type === 'line') return true
+    if (node.closed) return false
+    const index = target.segment
+    if (index === undefined) return false
+    const moved = a.stays === 0 ? (index + 1) % node.points.length : index
+    return moved === 0 || moved === node.points.length - 1
+  }
+  if (!free(first, a1) || !free(second, a2)) return null
+  const moving: (end: 0 | 1, stays: 0 | 1) => 0 | 1 = (_end, stays) => (stays === 0 ? 1 : 0)
   const ops: Op[] = [
-    { op: 'update_node', id: first.id, patch: { [one.moves]: ends[0] } },
-    { op: 'update_node', id: second.id, patch: { [two.moves]: ends[1] } },
+    { op: 'update_node', id: first.node.id, patch: one.patch(moving(0, a1.stays), ends[0]) },
+    { op: 'update_node', id: second.node.id, patch: two.patch(moving(0, a2.stays), ends[1]) },
   ]
   if (radius === 0) return ops
-  // The arc's middle is the point of it nearest the crossing, on the line halfway between the two.
-  const halfway = norm(add(one.way, two.way))
-  const centre = add(crossing, scale(halfway, radius / Math.sin(angle / 2)))
-  const arc = arcThrough(ends[0], ends[1], sub(centre, scale(halfway, radius)))
   if (!arc) return null
   const node = {
     id: arcId,
     type: 'ellipse',
-    parent: first.parent,
-    ...(first.layer ? { layer: first.layer } : {}),
-    ...(first.style ? { style: first.style } : {}),
+    parent: first.node.parent,
+    ...(first.node.layer ? { layer: first.node.layer } : {}),
+    ...(first.node.style ? { style: first.node.style } : {}),
     cx: tidy(arc.cx),
     cy: tidy(arc.cy),
     rx: radius,
@@ -68,4 +140,11 @@ export function filletOps(first: NodeOf<'line'>, firstAt: Vec2, second: NodeOf<'
     to: arc.to,
   } as NodeInput
   return [...ops, { op: 'add_node', node }]
+}
+
+/** A point of the arc of a rounded corner, at `t` from its start to its end. */
+function ellipseArcPoint(arc: { cx: number; cy: number; from: number; to: number }, radius: number, t: number): Vec2 {
+  const sweep = (((arc.to - arc.from) % 360) + 360) % 360
+  const angle = ((arc.from + sweep * t) * Math.PI) / 180
+  return { x: arc.cx + radius * Math.cos(angle), y: arc.cy + radius * Math.sin(angle) }
 }

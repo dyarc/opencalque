@@ -1,4 +1,4 @@
-import type { Alignable, Node, NodeOf, ResizeFrame, Vec2 } from '@opencalque/core'
+import type { Alignable, FilletTarget, Node, NodeOf, ResizeFrame, Vec2 } from '@opencalque/core'
 import type { Tool } from '../tools'
 
 /** The interaction in progress on the canvas. Each kind is handled by its gesture module (`gestures/`). */
@@ -39,8 +39,8 @@ export type Gesture =
   | { kind: 'offset'; id: string; a: Vec2; b: Vec2 }
   /** An arc whose two ends are set; the pointer now chooses a point it goes through. */
   | { kind: 'arc'; id: string; a: Vec2; b: Vec2 }
-  /** The fillet tool has taken its first line, clicked at `at` (the side of it kept); the pointer now chooses the second. */
-  | { kind: 'fillet'; first: NodeOf<'line'>; at: Vec2 }
+  /** The fillet tool has taken its first stretch of line, and the side of it kept; the pointer now chooses the second. */
+  | { kind: 'fillet'; first: FilletTarget }
   /** The offset tool has taken `node`; the pointer now chooses how far from it the copy goes. `copy` is the copy being shown. */
   | { kind: 'parallel'; node: Node; copy?: string }
   /** A live reading from `start`. Nothing is added to the drawing. */
