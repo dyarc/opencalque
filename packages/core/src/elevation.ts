@@ -603,7 +603,9 @@ function visibleCorners(outline: Vec2[], front: Vec2, along: (p: Vec2) => number
     const before = outline[(i + outline.length - 1) % outline.length]
     const here = outline[i]
     const after = outline[(i + 1) % outline.length]
-    if (!facing(before, here) && !facing(here, after)) continue
+    // Only where the outline turns from a side facing the viewer to one turned away: the
+    // silhouette. A corner between two front sides is an edge inside the face, not its outline.
+    if (facing(before, here) === facing(here, after)) continue
     const s = Math.round(along(here) * 1000) / 1000
     const depth = off(here)
     const found = near.get(s)

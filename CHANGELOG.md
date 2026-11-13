@@ -28,7 +28,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
-- A closed polygon, slab, beam or column seen in an elevation or a section keeps its visible edges: the corners of its front side make vertical lines between top and bottom, while corners at the back, hidden by the face, are left out.
+- A closed polygon, slab, beam or column seen in an elevation or a section keeps its silhouette: a vertical line is drawn only where its plan outline turns from a side facing the viewer to one turned away, never for an edge inside the face or at the back.
 - A section's cut lines are the heaviest and darkest; lines beyond fall away in three steps, 0.25, 0.18 and 0.13 mm, thinner and lighter with distance, from a cut weight of 0.35 mm by default.
 - What is cut is filled with the elevation's own Cut fill, and its Cut line weight can be changed, in Properties.
 - Slabs, columns and beams show in a section as the bands their top and bottom make; a sunken pit shows its floor between its depth and its underside.
