@@ -267,6 +267,7 @@ const STATIC: Command[] = [
   { id: 'view.zoomToFit', title: msg('Zoom to fit'), category: 'View', keys: ['Shift+1'], run: zoomToFit },
   { id: 'view.zoomToSelection', title: msg('Zoom to selection'), short: msg('Zoom to it'), category: 'View', keys: ['Shift+2'], when: selected, run: zoomToSelection },
   { id: 'view.zoomIn', title: msg('Zoom in'), category: 'View', keys: ['+', 'Shift++', 'Mod+='], run: () => zoomBy(1.25) },
+  { id: 'view.axonometric', title: msg('3D view (axonometric)'), category: 'View', keys: ['Shift+3'], run: () => useWindows.setState({ axonometric: true }) },
   { id: 'view.toggleTheme', title: msg('Dark theme'), category: 'View', keywords: 'dark light mode appearance colours', checked: () => useTheme.getState().dark, run: toggleTheme },
   { id: 'view.toggleGrid', title: msg('Show grid'), category: 'View', checked: () => prefs().showGrid, run: () => setPrefs({ showGrid: !prefs().showGrid }) },
   {

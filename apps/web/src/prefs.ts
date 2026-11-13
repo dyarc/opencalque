@@ -11,8 +11,8 @@ import type { Surroundings } from './surroundings'
 export interface Prefs {
   /** A language code, or 'auto' to follow the system. */
   language: string
-  /** How the interface looks: 'system' follows the light or dark setting of the computer. */
-  theme: 'system' | 'light' | 'dark'
+  /** How the interface looks: 'system' follows the light or dark setting of the computer; the rest are the named palettes. */
+  theme: 'system' | 'light' | 'dark' | 'graphite' | 'paper' | 'blueprint' | 'sage' | 'solarized' | 'ink'
   /** In the dark theme, draw the drawing light on dark too. Off, the drawing keeps its paper colours. */
   darkCanvas: boolean
   /** The unit lengths are shown and typed in. Drawings are stored in millimetres whatever it is. */

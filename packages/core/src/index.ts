@@ -1,4 +1,5 @@
 export * from './assemble'
+export * from './axonometric'
 export * from './chains'
 export * from './check'
 export * from './clearances'

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { About } from './About'
+import { AxonometricView } from './AxonometricView'
 import { DrawingSettingsWindow } from './DrawingSettingsWindow'
 import { startUp } from './actions'
 import { startAutosave } from './autosave'
@@ -104,7 +105,7 @@ export function App() {
     platform.setDirty(dirty)
   }, [dirty])
   useEffect(() => {
-    document.title = `${dirty ? '● ' : ''}${fileName ?? name} – OpenCalque`
+    document.title = `${dirty ? '● ' : ''}${fileName ?? name} – AxioDraw`
   }, [dirty, fileName, name])
 
   return (
@@ -119,6 +120,7 @@ export function App() {
       <ExportDialog />
       <DrawingSettingsWindow />
       <About />
+      <AxonometricView />
       <QuestionWindow />
       <DropTarget />
     </div>

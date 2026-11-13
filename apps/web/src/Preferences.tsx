@@ -265,6 +265,12 @@ function GeneralSettings() {
             <option value="system">{t('Same as the system')}</option>
             <option value="light">{t('Light')}</option>
             <option value="dark">{t('Dark')}</option>
+            <option value="graphite">{t('Graphite')}</option>
+            <option value="paper">{t('Paper')}</option>
+            <option value="blueprint">{t('Blueprint')}</option>
+            <option value="sage">{t('Sage')}</option>
+            <option value="solarized">{t('Solarized')}</option>
+            <option value="ink">{t('Ink (high contrast)')}</option>
           </select>
         </Setting>
         {prefs.theme !== 'light' && (

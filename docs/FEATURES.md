@@ -10,6 +10,7 @@ Last updated: 2026-11-11 (after 1.8.0).
 - Lines, rectangles, ellipses and arcs (an ellipse with a start and an end angle), polylines and polygons, straight or curved through their points, text. The Curved line tool draws the curve as its points are clicked; the Arc tool draws an arc by its two ends and a point it goes through, or a typed radius; the Circle tool a circle by its centre and a point it goes through, or a typed radius.
 - **Construction lines**: an endless dashed guide through two points, or parallel to a line at an offset typed or given by the pointer; picked and snapped to along its length, on its layer, never printed.
 - **Extend**: the end of a line, a polyline or a wall clicked runs straight on to the next thing in its way (for a wall, the next wall), and again to the one after. **Fillet**: two lines clicked meet at their corner, each cut back or carried on to it, or are joined by an arc of a typed radius; two neighbouring segments of one polyline are rounded inside it with a true arc.
+- **3D view**: the page in axonometric, its walls as blocks and the floors of its rooms, from four directions, panned and zoomed, with no perspective; read-only for now.
 - **Explode and join**: a polyline or a rectangle drawn as the lines it is made of, an arc inside a line as an arc (`Shift+B`); lines, open polylines and circular arcs joined end to end into one polyline, an arc keeping its bow as a bulge, closed when the chain comes back to where it began (`Shift+J`).
 - **Offset**: a parallel copy of a wall, a line, a polyline, a curve, a rectangle, a circle or an arc, at a typed distance or where the pointer says. A wall's copy is a wall like it, its line that far from the first, a curved one round the same centre.
 - **Selecting by a box**, as in CAD: dragged to the right it takes what is wholly inside it; dragged to the left, green and dashed, what it touches, by what is drawn rather than by the box around it.
@@ -194,7 +195,7 @@ Not ranked within an area.
 - Tracing an imported plan into walls with a review step; checking a plan against rules (door widths, room sizes).
 
 **Application**
-- ~~Dark theme~~ (done); touch and pen input; high-contrast mode.
+- ~~Dark theme~~ (done), and the CreaBIM palettes: Graphite, Paper, Blueprint, Sage, Solarized, Ink (high contrast); touch and pen input; more contrast work.
 - ~~Crash recovery~~ (done); version history.
 - ~~Automatic updates~~ (done on Windows and Linux; macOS, unsigned, is told of a new version and offered its page); ~~file association for `.opencalque`~~ (done, macOS included).
 - Performance on drawings with tens of thousands of objects (caching per object, then GPU rendering).

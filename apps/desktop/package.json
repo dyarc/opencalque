@@ -1,6 +1,6 @@
 {
   "name": "@opencalque/desktop",
-  "productName": "OpenCalque",
+  "productName": "AxioDraw",
   "version": "1.9.1",
   "private": true,
   "license": "MIT",
@@ -28,8 +28,8 @@
   "author": "OpenCalque contributors",
   "homepage": "https://github.com/laurent512/opencalque",
   "build": {
-    "appId": "io.github.laurent512.opencalque",
-    "productName": "OpenCalque",
+    "appId": "com.axiodraw.app",
+    "productName": "AxioDraw",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -50,7 +50,7 @@
     "fileAssociations": [
       {
         "ext": "opencalque",
-        "name": "OpenCalque drawing",
+        "name": "AxioDraw drawing",
         "role": "Editor"
       }
     ],
@@ -64,10 +64,10 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "OpenCalque-${version}-windows-setup.${ext}"
+      "artifactName": "AxioDraw-${version}-windows-setup.${ext}"
     },
     "portable": {
-      "artifactName": "OpenCalque-${version}-windows-portable.${ext}"
+      "artifactName": "AxioDraw-${version}-windows-portable.${ext}"
     },
     "mac": {
       "target": [
@@ -81,13 +81,13 @@
       ],
       "identity": null,
       "category": "public.app-category.graphics-design",
-      "artifactName": "OpenCalque-${version}-mac-${arch}.${ext}"
+      "artifactName": "AxioDraw-${version}-mac-${arch}.${ext}"
     },
     "linux": {
       "target": "AppImage",
       "category": "Graphics",
       "executableName": "opencalque",
-      "artifactName": "OpenCalque-${version}-linux-${arch}.${ext}"
+      "artifactName": "AxioDraw-${version}-linux-${arch}.${ext}"
     },
     "afterPack": "scripts/after-pack.cjs"
   }

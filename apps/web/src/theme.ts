@@ -13,10 +13,14 @@ const system = typeof matchMedia === 'function' ? matchMedia('(prefers-color-sch
 /** What the host was last told, so it is told at start whatever the theme, and again only on a change. */
 let told = ''
 
+/** The palettes drawn dark, for the canvas and the host window. */
+const DARK_THEMES = new Set(['dark', 'graphite', 'blueprint', 'ink'])
+
 function update(): void {
   const { theme, darkCanvas } = usePrefs.getState()
-  const dark = theme === 'dark' || (theme === 'system' && (system?.matches ?? false))
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+  const chosen = theme === 'system' ? (system?.matches ? 'dark' : 'light') : theme
+  const dark = DARK_THEMES.has(chosen)
+  document.documentElement.dataset.theme = chosen
   const state = useTheme.getState()
   // The host is told the first time too: a window left to the system's dark setting under a light
   // interface draws its buttons for the wrong one.
