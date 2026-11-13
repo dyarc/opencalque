@@ -658,24 +658,39 @@ function dimensionPrimitives(node: NodeOf<'dimension'>, drawing?: DrawingSetting
 /** The arrow at the end of a radius or angle dimension, in mm. */
 const MEASURE_ARROW = 100
 
+/** An angle in degrees brought back to read upright: never upside down. */
+function upright(degrees: number): number {
+  const turned = ((degrees % 360) + 360) % 360
+  return turned > 90 && turned < 270 ? turned - 180 : turned
+}
+
 /** A radius dimension: R and its value, the leader from the centre through the arc and out to the words. */
 function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindContext): Primitive[] {
   const size = node.size ?? DIMENSION_TEXT_SIZE
+  const markerSize = node.markerSize ?? MEASURE_ARROW
   const dir = { x: Math.cos((node.angle * Math.PI) / 180), y: Math.sin((node.angle * Math.PI) / 180) }
   const at = add(node.centre, scale(dir, node.radius))
   const end = add(node.centre, scale(dir, node.radius + size * 1.8))
-  const textAt = add(end, scale(dir, size * 0.45))
   const line = node.style
   const markers = { own: true, stroke: line?.stroke, strokeWidth: line?.strokeWidth }
+  const extension = {
+    own: true,
+    stroke: node.extension?.stroke ?? line?.stroke,
+    strokeWidth: node.extension?.strokeWidth ?? line?.strokeWidth,
+    dash: node.extension?.dash,
+  }
+  // The leader's outer stretch is drawn as an extension line, its gap at the arc.
+  const tail = add(at, scale(dir, node.extensionGap ?? 0))
   const label = node.text ?? `R ${dimensionLabel(node, node.radius, ctx.doc.settings ?? {})}`
-  // Text reads upright, turned with the leader but never upside down.
-  let rotation = ((node.angle % 360) + 360) % 360
-  if (rotation > 90 && rotation < 270) rotation -= 180
+  const side = node.textPosition === 'below' ? -1 : node.textPosition === 'center' ? 0 : 1
+  const textAt = add(add(end, scale(dir, size * (side === 0 ? 0.15 : 0.45))), scale(perp(dir), side * size * 0.5))
+  const rotation = node.textRotation === 'horizontal' ? 0 : upright(node.angle)
   const cross = { x: size * 0.35, y: size * 0.35 }
   return [
     { kind: 'path', points: [node.centre, at] },
-    { kind: 'path', points: [at, end] },
-    ...dimensionMarker('arrow', at, dir, dir, node.markerSize ?? MEASURE_ARROW, markers),
+    { kind: 'path', points: [tail, end], ...extension },
+    ...dimensionMarker(node.startMarker ?? 'none', node.centre, scale(dir, -1), dir, markerSize, markers),
+    ...dimensionMarker(node.endMarker ?? 'arrow', at, dir, dir, markerSize, markers),
     // The centre, marked with a small cross.
     { kind: 'path', points: [sub(node.centre, cross), add(node.centre, cross)], ...markers },
     { kind: 'path', points: [{ x: node.centre.x, y: node.centre.y - cross.y }, { x: node.centre.x, y: node.centre.y + cross.y }], ...markers },
@@ -683,7 +698,7 @@ function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindCon
   ]
 }
 
-/** An angle dimension: its arc between two directions, an arrow at each end, and the degrees beyond it. */
+/** An angle dimension: its arc between two directions, its arrows at each end, and the degrees beyond it. */
 function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindContext): Primitive[] {
   const size = node.size ?? DIMENSION_TEXT_SIZE
   const d1 = norm(sub(node.from, node.vertex))
@@ -703,20 +718,37 @@ function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindConte
   const tangent = (angle: number, way: number): Vec2 => ({ x: -Math.sin((angle * Math.PI) / 180) * way, y: Math.cos((angle * Math.PI) / 180) * way })
   const line = node.style
   const markers = { own: true, stroke: line?.stroke, strokeWidth: line?.strokeWidth }
-  const middle = a1 + delta / 2
-  const textAt = {
-    x: node.vertex.x + Math.cos((middle * Math.PI) / 180) * (node.radius + size * 1.3),
-    y: node.vertex.y + Math.sin((middle * Math.PI) / 180) * (node.radius + size * 1.3),
+  const extension = {
+    own: true,
+    stroke: node.extension?.stroke ?? line?.stroke,
+    strokeWidth: node.extension?.strokeWidth ?? line?.strokeWidth,
+    dash: node.extension?.dash,
   }
-  let rotation = ((middle % 360) + 360) % 360
-  if (rotation > 90 && rotation < 270) rotation -= 180
+  const gap = node.extensionGap ?? 0
+  const over = size * 0.4
+  // The two arms, extended to the arc and a little past it, as a linear dimension's extension lines.
+  const arm = (angle: number): Vec2 => ({ x: node.vertex.x + Math.cos((angle * Math.PI) / 180), y: node.vertex.y + Math.sin((angle * Math.PI) / 180) })
+  const extensionLine = (angle: number): Primitive => ({
+    kind: 'path',
+    points: [add(node.vertex, scale(arm(angle), gap)), add(at(angle), scale(arm(angle), over))],
+    ...extension,
+  })
+  const middle = a1 + delta / 2
+  const side = node.textPosition === 'below' ? -1 : node.textPosition === 'center' ? 0 : 1
+  const textAt = {
+    x: node.vertex.x + Math.cos((middle * Math.PI) / 180) * (node.radius + (side < 0 ? -size * 0.5 : size * 1.3)),
+    y: node.vertex.y + Math.sin((middle * Math.PI) / 180) * (node.radius + (side < 0 ? -size * 0.5 : size * 1.3)),
+  }
+  const rotation = node.textRotation === 'horizontal' ? 0 : upright(middle + (delta >= 0 ? 90 : -90))
   const decimal = node.decimal ?? ctx.doc.settings?.decimal ?? '.'
   const value = Math.abs(delta)
   const label = node.text ?? `${(Math.round(value * 10) / 10).toString().replace('.', decimal)}°`
   return [
+    extensionLine(a1),
+    extensionLine(a1 + delta),
     { kind: 'path', points },
-    ...dimensionMarker('arrow', points[0], tangent(a1, -sign), tangent(a1, -sign), node.markerSize ?? MEASURE_ARROW, markers),
-    ...dimensionMarker('arrow', points[points.length - 1], tangent(a2, sign), tangent(a2, sign), node.markerSize ?? MEASURE_ARROW, markers),
+    ...dimensionMarker(node.startMarker ?? 'arrow', points[0], tangent(a1, -sign), tangent(a1, -sign), node.markerSize ?? MEASURE_ARROW, markers),
+    ...dimensionMarker(node.endMarker ?? 'arrow', points[points.length - 1], tangent(a1 + delta, sign), tangent(a1 + delta, sign), node.markerSize ?? MEASURE_ARROW, markers),
     { kind: 'text', x: textAt.x, y: textAt.y, text: label, size, rotation, align: 'center', font: node.font, own: true, stroke: node.textColor ?? line?.stroke },
   ]
 }

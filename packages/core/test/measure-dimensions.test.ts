@@ -31,7 +31,7 @@ describe('measuring dimensions', () => {
     const drawn = nodePrimitives(doc.nodes.a as NodeOf<'angleDimension'>, { doc, registry, depth: 0 })
     const text = drawn.find((prim) => prim.kind === 'text')
     expect(text).toMatchObject({ text: '90°' })
-    const arc = drawn.find((prim) => prim.kind === 'path' && !prim.closed)
+    const arc = drawn.find((prim) => prim.kind === 'path' && prim.points.length > 5)
     if (arc?.kind !== 'path') throw new Error('no arc')
     expect(arc.points[0]).toEqual({ x: 500, y: 0 })
     expect(arc.points.at(-1)!.x).toBeCloseTo(0, 6)

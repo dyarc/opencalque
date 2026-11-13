@@ -5185,9 +5185,85 @@
                 "minLength": 1
               },
               "markerSize": {
-                "description": "Length of the arrow, in mm. Defaults to 100.",
+                "description": "Length of the arrows, in mm. Defaults to 100.",
                 "type": "number",
                 "exclusiveMinimum": 0
+              },
+              "startMarker": {
+                "description": "Symbol at this end of the dimension line. Defaults to 'tick'.",
+                "type": "string",
+                "enum": [
+                  "tick",
+                  "arrow",
+                  "open-arrow",
+                  "dot",
+                  "none"
+                ]
+              },
+              "endMarker": {
+                "description": "Symbol at this end of the dimension line. Defaults to 'tick'.",
+                "type": "string",
+                "enum": [
+                  "tick",
+                  "arrow",
+                  "open-arrow",
+                  "dot",
+                  "none"
+                ]
+              },
+              "extension": {
+                "description": "Look of the extension lines. Unset values follow the dimension line.",
+                "type": "object",
+                "properties": {
+                  "stroke": {
+                    "description": "CSS color of lines and text, or 'none'. Any colour property may instead be a shared colour, \"var(--<id>)\", or \"var(--layer)\": the colour of the node's layer.",
+                    "type": "string"
+                  },
+                  "strokeWidth": {
+                    "description": "Line weight in screen pixels (does not scale with zoom). On paper one pixel prints as 0.25 mm, so 2 is a 0.5 mm line.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "dash": {
+                    "description": "Dash pattern in screen pixels.",
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "extensionGap": {
+                "description": "Gap in mm between a measured point and its extension line. Defaults to 0.",
+                "type": "number",
+                "minimum": 0
+              },
+              "textPosition": {
+                "description": "Where the text sits relative to the dimension line. Defaults to 'above'.",
+                "type": "string",
+                "enum": [
+                  "above",
+                  "center",
+                  "below"
+                ]
+              },
+              "textRotation": {
+                "description": "Defaults to 'aligned' (along the dimension line).",
+                "type": "string",
+                "enum": [
+                  "aligned",
+                  "horizontal"
+                ]
+              },
+              "verticalText": {
+                "description": "Which way text along a vertical dimension line reads. Defaults to 'down'.",
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down"
+                ]
               },
               "size": {
                 "description": "Text size in mm. Defaults to 150.",
@@ -5494,6 +5570,82 @@
                 "description": "Length of the arrows, in mm. Defaults to 100.",
                 "type": "number",
                 "exclusiveMinimum": 0
+              },
+              "startMarker": {
+                "description": "Symbol at this end of the dimension line. Defaults to 'tick'.",
+                "type": "string",
+                "enum": [
+                  "tick",
+                  "arrow",
+                  "open-arrow",
+                  "dot",
+                  "none"
+                ]
+              },
+              "endMarker": {
+                "description": "Symbol at this end of the dimension line. Defaults to 'tick'.",
+                "type": "string",
+                "enum": [
+                  "tick",
+                  "arrow",
+                  "open-arrow",
+                  "dot",
+                  "none"
+                ]
+              },
+              "extension": {
+                "description": "Look of the extension lines. Unset values follow the dimension line.",
+                "type": "object",
+                "properties": {
+                  "stroke": {
+                    "description": "CSS color of lines and text, or 'none'. Any colour property may instead be a shared colour, \"var(--<id>)\", or \"var(--layer)\": the colour of the node's layer.",
+                    "type": "string"
+                  },
+                  "strokeWidth": {
+                    "description": "Line weight in screen pixels (does not scale with zoom). On paper one pixel prints as 0.25 mm, so 2 is a 0.5 mm line.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "dash": {
+                    "description": "Dash pattern in screen pixels.",
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "extensionGap": {
+                "description": "Gap in mm between a measured point and its extension line. Defaults to 0.",
+                "type": "number",
+                "minimum": 0
+              },
+              "textPosition": {
+                "description": "Where the text sits relative to the dimension line. Defaults to 'above'.",
+                "type": "string",
+                "enum": [
+                  "above",
+                  "center",
+                  "below"
+                ]
+              },
+              "textRotation": {
+                "description": "Defaults to 'aligned' (along the dimension line).",
+                "type": "string",
+                "enum": [
+                  "aligned",
+                  "horizontal"
+                ]
+              },
+              "verticalText": {
+                "description": "Which way text along a vertical dimension line reads. Defaults to 'down'.",
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down"
+                ]
               },
               "size": {
                 "description": "Text size in mm. Defaults to 150.",

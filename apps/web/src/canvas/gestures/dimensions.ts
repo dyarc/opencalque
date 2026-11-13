@@ -1,4 +1,4 @@
-import { add, bulgeArc, dist, hitTest, newId, norm, scale, sub, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
+import { add, bulgeArc, bulgePoints, dist, hitTest, newId, norm, scale, sub, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
 import { t } from '../../i18n'
 import { formatLength } from '../../units'
 import { cancel, commit, layerHere, preview, useStore } from '../../store'
@@ -38,7 +38,13 @@ function arcUnder(c: Canvas, world: Vec2): { node: Node; centre: Vec2; radius: n
   let best: { i: number; near: number } | null = null
   const count = node.closed ? node.points.length : node.points.length - 1
   for (let i = 0; i < count; i++) {
-    const near = pointToSegment(world, node.points[i], node.points[(i + 1) % node.points.length])
+    const a = node.points[i]
+    const b = node.points[(i + 1) % node.points.length]
+    const bulge = node.bulges?.[i] ?? 0
+    // What is under the pointer is the arc itself, not the straight line between its ends.
+    const run = bulge ? bulgePoints(a, b, bulge) : [a, b]
+    let near = Infinity
+    for (let j = 0; j + 1 < run.length; j++) near = Math.min(near, pointToSegment(world, run[j], run[j + 1]))
     if (!best || near < best.near) best = { i, near }
   }
   if (!best || best.near > reach) return null

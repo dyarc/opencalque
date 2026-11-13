@@ -75,7 +75,24 @@ export function dimensionStylePatch(doc: Document, node: Dimension, styleId: str
 }
 
 /** What of a radius or angle dimension a dimension style can define, under the same names. */
-export const MEASURE_STYLE_PROPERTIES = ['style', 'size', 'font', 'textColor', 'markerSize', 'unit', 'decimals', 'showUnit', 'decimal'] as const
+export const MEASURE_STYLE_PROPERTIES = [
+  'style',
+  'startMarker',
+  'endMarker',
+  'markerSize',
+  'extension',
+  'extensionGap',
+  'size',
+  'font',
+  'textColor',
+  'textPosition',
+  'textRotation',
+  'verticalText',
+  'unit',
+  'decimals',
+  'showUnit',
+  'decimal',
+] as const
 
 /** A radius or angle dimension, so far as its style is concerned. */
 export type MeasureNode = { dimensionStyle?: string } & Record<string, unknown>
