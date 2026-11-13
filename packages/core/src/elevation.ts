@@ -583,6 +583,35 @@ function paintOrder(layers: Layer[]): Layer[] {
 }
 
 /** The smallest convex outline around points (Andrew's monotone chain), counter-clockwise. */
+/**
+ * Where the upright edges of a plan outline show from the front: the corners with an edge turned
+ * towards the viewer, nearer than any other corner that projects to the same place. Corners at the
+ * back, and those the front of the shape hides, are left out.
+ */
+function visibleCorners(outline: Vec2[], front: Vec2, along: (p: Vec2) => number, off: (p: Vec2) => number): number[] {
+  if (outline.length < 3) return []
+  const area = outline.reduce((sum, p, i) => sum + p.x * outline[(i + 1) % outline.length].y - outline[(i + 1) % outline.length].x * p.y, 0)
+  const turn = area >= 0 ? 1 : -1
+  const facing = (a: Vec2, b: Vec2) => {
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    return (dy * turn) * front.x + (-dx * turn) * front.y > 1e-9
+  }
+  // The nearer corner for each place along the view, of those with a front-facing side.
+  const near = new Map<number, { s: number; depth: number }>()
+  for (let i = 0; i < outline.length; i++) {
+    const before = outline[(i + outline.length - 1) % outline.length]
+    const here = outline[i]
+    const after = outline[(i + 1) % outline.length]
+    if (!facing(before, here) && !facing(here, after)) continue
+    const s = Math.round(along(here) * 1000) / 1000
+    const depth = off(here)
+    const found = near.get(s)
+    if (!found || depth > found.depth) near.set(s, { s, depth })
+  }
+  return [...near.values()].map((found) => found.s).sort((a, b) => a - b)
+}
+
 function convexHull(points: Vec2[]): Vec2[] {
   const sorted = [...points].sort((p, q) => p.x - q.x || p.y - q.y)
   if (sorted.length < 3) return sorted
@@ -725,11 +754,11 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
     if (to - from < 1e-6) continue
     // A solid the line crosses is cut, at the cut's weight; one beyond it falls away with distance.
     const cut = clipLine(node.a, d, length, outline) !== null
-    // Its face is the width it spans, and its edges are where its plan's corners stand: each makes a
-    // vertical line between its top and its bottom, so a zigzag or a polygon keeps its shape.
-    const corners = [...new Set(outline.map((p) => Math.round(along(p) * 1000) / 1000))].sort((a, b) => a - b)
+    // Its face is the width it spans, and its visible edges are where the corners of its front
+    // side stand: each makes a vertical line between its top and its bottom. A corner turned away
+    // is behind the face and stays hidden, as it would in looking at it.
     const prims: Primitive[] = [{ kind: 'path', points: box(from, to, low, high), closed: true, fill: view.cutFill ?? WALL_GREY, own: true }]
-    for (const s of corners) if (s > from + 1e-6 && s < to - 1e-6) prims.push({ kind: 'path', points: [at(s, low), at(s, high)] })
+    for (const s of visibleCorners(outline, front, along, off)) if (s > from + 1e-6 && s < to - 1e-6) prims.push({ kind: 'path', points: [at(s, low), at(s, high)] })
     layers.push({ from, to, depth: cut ? () => 0 : depthOn(outline), prims })
     // A sunken pit has a floor of its own, between its depth below the top and its underside.
     if (leaf.type === 'rect' && leaf.recess) {
