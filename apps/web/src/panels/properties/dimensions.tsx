@@ -1,4 +1,4 @@
-import { applyOps, dimensionStylePatch, newDimensionStyle, styledDimension, type Document, type NodeOf, type Node, type Op, newId } from '@opencalque/core'
+import { applyOps, dimensionStylePatch, measureStylePatch, newDimensionStyle, newMeasureStyle, styledDimension, styledMeasure, type Document, type NodeOf, type Node, type Op, newId } from '@opencalque/core'
 import { showPanel } from '../../dock'
 import { t } from '../../i18n'
 import { apply, useStore } from '../../store'
@@ -35,24 +35,34 @@ function DimensionStyleChoice(props: { value: string; label: string; onChange: (
   )
 }
 
-/** The operation that adds a style made from how a dimension looks, with its id. */
-function newStyleOp(doc: Document, dimension: Partial<NodeOf<'dimension'>>): { op: Op; id: string } {
-  const id = newId('dimstyle')
-  const name = t('Dimension style {n}', { n: Object.keys(doc.dimensionStyles ?? {}).length + 1 })
-  return { id, op: { op: 'add_dimension_style', dimensionStyle: { id, name, ...newDimensionStyle(styledDimension(doc, dimension)) } } }
+type StyledDimension = NodeOf<'dimension'> | NodeOf<'radialDimension'> | NodeOf<'angleDimension'>
+
+/** The look a new style made from this dimension defines: a linear dimension's, or a measuring one's. */
+function styleLookOf(doc: Document, node: StyledDimension): Record<string, unknown> {
+  return node.type === 'dimension' ? newDimensionStyle(styledDimension(doc, node)) : newMeasureStyle(styledMeasure(doc, node))
 }
 
-/** The style of the selected dimensions. */
-export function SelectedDimensionStyle({ dimensions }: { dimensions: NodeOf<'dimension'>[] }) {
+/** The patch that puts one dimension in a style, whatever kind of dimension it is. */
+const stylePatchOf = (doc: Document, node: StyledDimension, styleId: string | null): Record<string, unknown> =>
+  node.type === 'dimension' ? dimensionStylePatch(doc, node, styleId) : measureStylePatch(doc, node, styleId)
+
+/** The operation that adds a style made from how a dimension looks, with its id. */
+function newStyleOp(doc: Document, dimension: StyledDimension): { op: Op; id: string } {
+  const id = newId('dimstyle')
+  const name = t('Dimension style {n}', { n: Object.keys(doc.dimensionStyles ?? {}).length + 1 })
+  return { id, op: { op: 'add_dimension_style', dimensionStyle: { id, name, ...styleLookOf(doc, dimension) } } }
+}
+
+/** The style of the selected dimensions, whatever kind they are. */
+export function SelectedDimensionStyle({ dimensions }: { dimensions: StyledDimension[] }) {
   const current = dimensions.every((d) => d.dimensionStyle === dimensions[0].dimensionStyle) ? (dimensions[0].dimensionStyle ?? '') : 'mixed'
   const give = (value: string) => {
     const { doc } = useStore.getState()
     if (value === 'new') {
-      // Made from the first of them, and given to them all.
       const made = newStyleOp(doc, dimensions[0])
       const after = applyOps(doc, [made.op])
-      if (apply([made.op, ...dimensions.map((d): Op => ({ op: 'update_node', id: d.id, patch: dimensionStylePatch(after, d, made.id) }))])) showPanel('dimensionStyles')
-    } else apply(dimensions.map((d): Op => ({ op: 'update_node', id: d.id, patch: dimensionStylePatch(doc, d, value || null) })))
+      if (apply([made.op, ...dimensions.map((d): Op => ({ op: 'update_node', id: d.id, patch: stylePatchOf(after, d, made.id) }))])) showPanel('dimensionStyles')
+    } else apply(dimensions.map((d): Op => ({ op: 'update_node', id: d.id, patch: stylePatchOf(doc, d, value || null) })))
   }
   return <DimensionStyleChoice value={current} label={t('Dimension style')} onChange={give} />
 }
@@ -77,7 +87,7 @@ export function DimensionTool() {
     const { doc } = useStore.getState()
     const settings = { ...template, dimensionStyle: style || undefined } as Partial<NodeOf<'dimension'>>
     if (value === 'new') {
-      const made = newStyleOp(doc, { unit: unit(), ...settings })
+      const made = newStyleOp(doc, { unit: unit(), ...settings } as never)
       if (!apply([made.op])) return
       update(() => dimensionStylePatch(useStore.getState().doc, settings, made.id))
       showPanel('dimensionStyles')

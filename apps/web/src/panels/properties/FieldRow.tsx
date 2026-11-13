@@ -208,7 +208,8 @@ function layerChoice(doc: Document, nodes: Node[], field: FieldSpec): LayerOptio
 function TypedRow(props: { node: Node; nodes: Node[]; field: FieldSpec; update: Update }) {
   const { node, nodes, field, update } = props
   const styles = useStore((s) => s.doc.dimensionStyles)
-  const style = nodes.length === 1 && node.type === 'dimension' && node.dimensionStyle ? styles?.[node.dimensionStyle] : undefined
+  const styledType = node.type === 'dimension' || node.type === 'radialDimension' || node.type === 'angleDimension'
+  const style = nodes.length === 1 && styledType && node.dimensionStyle ? styles?.[node.dimensionStyle] : undefined
   const fromStyle = style ? read(style, field.path) : undefined
   if (fromStyle === undefined) return <FieldRow {...props} />
   const own = read(node, field.path) !== undefined

@@ -55,3 +55,33 @@ describe('measuring dimensions', () => {
     expect(turned.nodes.r).toMatchObject({ angle: 180 })
   })
 })
+
+describe('measuring dimensions in a style', () => {
+  const styled = (): Document =>
+    applyOps(createDocument('Plan'), [
+      { op: 'add_dimension_style', dimensionStyle: { id: 'std', name: 'Office', style: { stroke: '#c00' }, markerSize: 40, size: 200, font: 'serif', textColor: '#0a0' } } as never,
+      add({ type: 'radialDimension', id: 'r', centre: { x: 0, y: 0 }, radius: 1000, angle: 0, dimensionStyle: 'std' }),
+      add({ type: 'angleDimension', id: 'a', vertex: { x: 0, y: 0 }, from: { x: 1000, y: 0 }, to: { x: 0, y: 1000 }, radius: 500, dimensionStyle: 'std' }),
+    ])
+
+  it('takes what its dimension style defines, as a linear dimension does', () => {
+    const doc = styled()
+    const text = (id: string) => {
+      const drawn = nodePrimitives(doc.nodes[id] as NodeOf<'radialDimension'>, { doc, registry, depth: 0 })
+      return drawn.find((prim) => prim.kind === 'text') as { size?: number; stroke?: string; font?: string; text: string }
+    }
+    expect(text('r')).toMatchObject({ size: 200, stroke: '#0a0', font: 'serif' })
+    expect(text('a')).toMatchObject({ size: 200, stroke: '#0a0', font: 'serif' })
+    // The arrow comes from the style too.
+    const drawn = nodePrimitives(doc.nodes.r as NodeOf<'radialDimension'>, { doc, registry, depth: 0 })
+    const arrow = drawn.find((prim) => prim.kind === 'path' && prim.closed) as { stroke?: string }
+    expect(arrow.stroke).toBe('#c00')
+  })
+
+  it('keeps its look when the style it was in is removed', () => {
+    const without = applyOps(styled(), [{ op: 'remove_dimension_style', id: 'std' }])
+    const node = without.nodes.r as NodeOf<'radialDimension'>
+    expect(node.dimensionStyle).toBeUndefined()
+    expect(node).toMatchObject({ size: 200, font: 'serif', textColor: '#0a0' })
+  })
+})

@@ -177,7 +177,8 @@ export function checkIntegrity(doc: Document): string[] {
     if (!isOrderKey(node.order)) problems.push(`Node ${key}: "${node.order}" is not an order key`)
     if (node.layer !== undefined && !doc.layers[node.layer]) problems.push(`Node ${key}: unknown layer "${node.layer}"`)
     if (node.type === 'wall' && node.material !== undefined && !doc.materials?.[node.material]) problems.push(`Node ${key}: unknown material "${node.material}"`)
-    if (node.type === 'dimension' && node.dimensionStyle !== undefined && !doc.dimensionStyles?.[node.dimensionStyle]) problems.push(`Node ${key}: unknown dimension style "${node.dimensionStyle}"`)
+    const styled = node.type === 'dimension' || node.type === 'radialDimension' || node.type === 'angleDimension'
+    if (styled && node.dimensionStyle !== undefined && !doc.dimensionStyles?.[node.dimensionStyle]) problems.push(`Node ${key}: unknown dimension style "${node.dimensionStyle}"`)
     if (node.type === 'room' && node.material !== undefined && !doc.materials?.[node.material]) problems.push(`Node ${key}: unknown material "${node.material}"`)
     if (isContainer(node)) {
       if (node.parent !== null) problems.push(`Node ${key}: a ${node.type} cannot have a parent`)

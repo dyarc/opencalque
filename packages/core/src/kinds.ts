@@ -1,7 +1,7 @@
 import { childrenOf, isVisible, rootOf } from './document'
 import { add, applyTransform, besidePath, bulgePoints, centroid, dist, inverseTransform, len, mid, norm, parallelPath, perp, rotate, scale, sub, type Bounds, type Vec2, ellipseArc, smoothPoints, unionBounds } from './geometry'
 import { fadeColor, resolveColor } from './colors'
-import { DIMENSION_MARKER_SIZE, DIMENSION_TEXT_SIZE, styledDimension } from './dimensions'
+import { DIMENSION_MARKER_SIZE, DIMENSION_TEXT_SIZE, styledDimension, styledMeasure } from './dimensions'
 import { fillFields } from './fields'
 import { formatFeetInches } from './imperial'
 import { applyModifiers, movedModifiers, HATCH_INK, HATCH_WEIGHT, patternStrokes } from './modifiers'
@@ -675,7 +675,7 @@ function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindCon
   return [
     { kind: 'path', points: [node.centre, at] },
     { kind: 'path', points: [at, end] },
-    ...dimensionMarker('arrow', at, dir, dir, MEASURE_ARROW, markers),
+    ...dimensionMarker('arrow', at, dir, dir, node.markerSize ?? MEASURE_ARROW, markers),
     // The centre, marked with a small cross.
     { kind: 'path', points: [sub(node.centre, cross), add(node.centre, cross)], ...markers },
     { kind: 'path', points: [{ x: node.centre.x, y: node.centre.y - cross.y }, { x: node.centre.x, y: node.centre.y + cross.y }], ...markers },
@@ -715,8 +715,8 @@ function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindConte
   const label = node.text ?? `${(Math.round(value * 10) / 10).toString().replace('.', decimal)}°`
   return [
     { kind: 'path', points },
-    ...dimensionMarker('arrow', points[0], tangent(a1, -sign), tangent(a1, -sign), MEASURE_ARROW, markers),
-    ...dimensionMarker('arrow', points[points.length - 1], tangent(a2, sign), tangent(a2, sign), MEASURE_ARROW, markers),
+    ...dimensionMarker('arrow', points[0], tangent(a1, -sign), tangent(a1, -sign), node.markerSize ?? MEASURE_ARROW, markers),
+    ...dimensionMarker('arrow', points[points.length - 1], tangent(a2, sign), tangent(a2, sign), node.markerSize ?? MEASURE_ARROW, markers),
     { kind: 'text', x: textAt.x, y: textAt.y, text: label, size, rotation, align: 'center', font: node.font, own: true, stroke: node.textColor ?? line?.stroke },
   ]
 }
@@ -1060,7 +1060,7 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     }),
   },
   radialDimension: {
-    primitives: (node, ctx) => radialDimensionPrimitives(node, ctx),
+    primitives: (node, ctx) => radialDimensionPrimitives(styledMeasure(ctx.doc, node), ctx),
     move: (node, d) => ({ centre: add(node.centre, d) }),
     snapPoints: (node) => [node.centre],
     snapLines: () => [],
@@ -1072,7 +1072,7 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     }),
   },
   angleDimension: {
-    primitives: (node, ctx) => angleDimensionPrimitives(node, ctx),
+    primitives: (node, ctx) => angleDimensionPrimitives(styledMeasure(ctx.doc, node), ctx),
     move: (node, d) => ({ vertex: add(node.vertex, d), from: add(node.from, d), to: add(node.to, d) }),
     snapPoints: (node) => [node.vertex],
     snapLines: () => [],

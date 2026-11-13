@@ -73,3 +73,67 @@ export function dimensionStylePatch(doc: Document, node: Dimension, styleId: str
   }
   return patch
 }
+
+/** What of a radius or angle dimension a dimension style can define, under the same names. */
+export const MEASURE_STYLE_PROPERTIES = ['style', 'size', 'font', 'textColor', 'markerSize', 'unit', 'decimals', 'showUnit', 'decimal'] as const
+
+/** A radius or angle dimension, so far as its style is concerned. */
+export type MeasureNode = { dimensionStyle?: string } & Record<string, unknown>
+
+/**
+ * A radius or angle dimension with what a style defines filled in where it says nothing itself,
+ * property by property, and within its line ("style") part by part. The properties a style may
+ * define that only a linear dimension has are left alone.
+ */
+export function withMeasureStyle<N extends MeasureNode>(node: N, style: Record<string, unknown>): N {
+  const out: Record<string, unknown> = { ...node }
+  for (const key of MEASURE_STYLE_PROPERTIES) {
+    const given = style[key]
+    if (given === undefined) continue
+    const own = node[key]
+    out[key] = own === undefined ? given : typeof given === 'object' && !Array.isArray(given) ? { ...given, ...(own as object) } : own
+  }
+  return out as N
+}
+
+/** A radius or angle dimension as drawn: with what its dimension style defines, when it has one. */
+export function styledMeasure<N extends MeasureNode>(doc: Document, node: N): N {
+  const style = node.dimensionStyle === undefined ? undefined : doc.dimensionStyles?.[node.dimensionStyle]
+  return style ? withMeasureStyle(node, style) : node
+}
+
+/** What a measuring dimension gives itself among the properties a style could define. */
+export function measureLookOf(node: MeasureNode): Record<string, unknown> {
+  const look: Record<string, unknown> = {}
+  for (const key of MEASURE_STYLE_PROPERTIES) if (node[key] !== undefined) look[key] = node[key]
+  const { stroke, strokeWidth, dash } = (node.style as Record<string, unknown> | undefined) ?? {}
+  const line = Object.fromEntries(Object.entries({ stroke, strokeWidth, dash }).filter(([, value]) => value !== undefined))
+  if (Object.keys(line).length > 0) look.style = line
+  else delete look.style
+  return look
+}
+
+/** What a new style made from a measuring dimension defines: its text size, arrow size and its own look. */
+export function newMeasureStyle(node: MeasureNode): Record<string, unknown> {
+  return { markerSize: DIMENSION_MARKER_SIZE, size: DIMENSION_TEXT_SIZE, ...measureLookOf(node) }
+}
+
+/**
+ * The patch that puts a measuring dimension in a style, or in none, so that it changes only where
+ * the new style says something, as `dimensionStylePatch` does for a linear dimension.
+ */
+export function measureStylePatch(doc: Document, node: MeasureNode, styleId: string | null): Record<string, unknown> {
+  const style = styleId === null ? undefined : doc.dimensionStyles?.[styleId]
+  const drawn = styledMeasure(doc, node)
+  const patch: Record<string, unknown> = node.dimensionStyle === (styleId ?? undefined) ? {} : { dimensionStyle: styleId }
+  for (const key of MEASURE_STYLE_PROPERTIES) {
+    let value: unknown = drawn[key]
+    const given = style?.[key]
+    if (given !== undefined) {
+      const parts = typeof given === 'object' && value ? Object.entries(value).filter(([part]) => !(part in given)) : []
+      value = parts.length > 0 ? Object.fromEntries(parts) : undefined
+    }
+    if (JSON.stringify(value) !== JSON.stringify(node[key])) patch[key] = value ?? null
+  }
+  return patch
+}

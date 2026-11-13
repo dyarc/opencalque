@@ -1,4 +1,4 @@
-import { add, dist, hitTest, newId, norm, scale, sub, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
+import { add, bulgeArc, dist, hitTest, newId, norm, scale, sub, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
 import { t } from '../../i18n'
 import { formatLength } from '../../units'
 import { cancel, commit, layerHere, preview, useStore } from '../../store'
@@ -25,11 +25,27 @@ function nodeUnder(c: Canvas, world: Vec2): Node | null {
   return (hit && (base ?? doc).nodes[hit.id]) || null
 }
 
-/** The centre and radius of a circular arc or a circle under the pointer. */
-function arcUnder(c: Canvas, world: Vec2): { centre: Vec2; radius: number } | null {
+/** The centre and radius of a circular arc or circle under the pointer, whether an arc of its own or a stretch of a polyline. */
+function arcUnder(c: Canvas, world: Vec2): { node: Node; centre: Vec2; radius: number } | null {
   const node = nodeUnder(c, world)
-  if (!node || node.type !== 'ellipse' || Math.abs(node.rx - node.ry) > 1e-6) return null
-  return { centre: { x: node.cx, y: node.cy }, radius: node.rx }
+  if (!node) return null
+  if (node.type === 'ellipse') {
+    if (Math.abs(node.rx - node.ry) > 1e-6) return null
+    return { node, centre: { x: node.cx, y: node.cy }, radius: node.rx }
+  }
+  if (node.type !== 'polyline' || !node.bulges?.some((bulge) => bulge)) return null
+  const reach = REACH / get().view.zoom
+  let best: { i: number; near: number } | null = null
+  const count = node.closed ? node.points.length : node.points.length - 1
+  for (let i = 0; i < count; i++) {
+    const near = pointToSegment(world, node.points[i], node.points[(i + 1) % node.points.length])
+    if (!best || near < best.near) best = { i, near }
+  }
+  if (!best || best.near > reach) return null
+  const bulge = node.bulges?.[best.i] ?? 0
+  if (!bulge) return null
+  const arc = bulgeArc(node.points[best.i], node.points[(best.i + 1) % node.points.length], bulge)
+  return arc ? { node, centre: { x: arc.cx, y: arc.cy }, radius: arc.r } : null
 }
 
 /** The two ends of the stretch of a line or polyline clicked, and which stretch it is. */
@@ -58,12 +74,20 @@ const pointToSegment = (p: Vec2, a: Vec2, b: Vec2): number => {
   return dist(p, { x: a.x + t * d.x, y: a.y + t * d.y })
 }
 
+/** The style chosen for the dimensions drawn next, when this drawing has it. */
+function styleOfTool(): Record<string, unknown> {
+  const { dimensionTemplate, doc } = get()
+  const id = dimensionTemplate.dimensionStyle
+  return typeof id === 'string' && doc.dimensionStyles?.[id] ? { dimensionStyle: id } : {}
+}
+
 const radialNode = (g: GestureOf<'radiusDimension'>, at: Vec2): Record<string, unknown> => ({
   id: g.id,
   type: 'radialDimension',
   parent: get().scope,
   ...layerHere(),
   ...currentStyle(),
+  ...styleOfTool(),
   centre: g.centre,
   radius: g.radius,
   angle: (Math.atan2(at.y - g.centre.y, at.x - g.centre.x) * 180) / Math.PI,
@@ -100,6 +124,7 @@ const angleNode = (g: GestureOf<'anglePlace'>, radius: number): Record<string, u
   parent: get().scope,
   ...layerHere(),
   ...currentStyle(),
+  ...styleOfTool(),
   vertex: g.vertex,
   from: g.from,
   to: g.to,
@@ -152,7 +177,25 @@ export const angleDimensionDown: Press = (c, _e, _at, world) => {
   syncStep(c)
 }
 
-export const angleDimensionMove: Move<'angleDimension'> = () => {}
+export const angleDimensionMove: Move<'angleDimension'> = (c, g, _e, _at, world, out) => {
+  const second = stretchUnder(c, world)
+  const candidate = second && !(second.target.node.id === g.first.node.id && second.target.segment === g.first.segment) ? second : null
+  out.lit = candidate?.target.node.id ?? g.first.node.id
+}
+
+/** Before a click: the arc or circle a radius dimension would take. */
+export function radialDimensionHover(c: Canvas, world: Vec2, out: { lit?: string; status?: string }): void {
+  const arc = arcUnder(c, world)
+  if (arc) out.lit = arc.node.id
+  else if (nodeUnder(c, world)) out.status = t('Only arcs and circles can carry a radius dimension')
+}
+
+/** Before a click: the line or stretch an angle dimension would take. */
+export function angleDimensionHover(c: Canvas, world: Vec2, out: { lit?: string; status?: string }): void {
+  const stretch = stretchUnder(c, world)
+  if (stretch) out.lit = stretch.target.node.id
+  else if (nodeUnder(c, world)) out.status = t('Only straight lines and the straight stretches of a polyline can measure an angle')
+}
 
 export const anglePlaceMove: Move<'anglePlace'> = (c, g, _e, _at, world, out) => {
   const radius = angleRadius(g, world)

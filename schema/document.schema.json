@@ -5179,6 +5179,16 @@
                 "description": "Replaces the measured radius when set.",
                 "type": "string"
               },
+              "dimensionStyle": {
+                "description": "The id of a dimension style it is drawn in, among the drawing's \"dimensionStyles\". It takes what the style defines, except where it gives itself a value.",
+                "type": "string",
+                "minLength": 1
+              },
+              "markerSize": {
+                "description": "Length of the arrow, in mm. Defaults to 100.",
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
               "size": {
                 "description": "Text size in mm. Defaults to 150.",
                 "type": "number",
@@ -5474,6 +5484,16 @@
               "text": {
                 "description": "Replaces the measured angle when set.",
                 "type": "string"
+              },
+              "dimensionStyle": {
+                "description": "The id of a dimension style it is drawn in, among the drawing's \"dimensionStyles\". It takes what the style defines, except where it gives itself a value.",
+                "type": "string",
+                "minLength": 1
+              },
+              "markerSize": {
+                "description": "Length of the arrows, in mm. Defaults to 100.",
+                "type": "number",
+                "exclusiveMinimum": 0
               },
               "size": {
                 "description": "Text size in mm. Defaults to 150.",

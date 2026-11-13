@@ -144,7 +144,9 @@ function Selection({ nodes }: { nodes: Node[] }) {
         )}
         {nodes.every((n) => n.type === 'wall') && <WallMaterial walls={nodes as NodeOf<'wall'>[]} />}
         {nodes.every((n) => n.type === 'wall') && <WallLine walls={nodes as NodeOf<'wall'>[]} />}
-        {nodes.every((n) => n.type === 'dimension') && <SelectedDimensionStyle dimensions={nodes as NodeOf<'dimension'>[]} />}
+        {nodes.every((n) => n.type === 'dimension' || n.type === 'radialDimension' || n.type === 'angleDimension') && (
+          <SelectedDimensionStyle dimensions={nodes as (NodeOf<'dimension'> | NodeOf<'radialDimension'> | NodeOf<'angleDimension'>)[]} />
+        )}
         {single && node.type === 'wall' && <WallEnds wall={node} />}
         {single && node.type === 'wall' && <WallCurve wall={node} />}
         {single && node.type === 'table' && <TableSettings node={node} />}

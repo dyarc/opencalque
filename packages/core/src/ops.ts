@@ -1,7 +1,7 @@
 import { generateKeyBetween } from 'fractional-indexing'
 import * as z from 'zod'
 import { withoutColorRef } from './colors'
-import { withDimensionStyle } from './dimensions'
+import { withDimensionStyle, withMeasureStyle } from './dimensions'
 import { componentUses, holdsChildren, isContainer, isOrderKey, layersOf, newId, orderAfter, rootOf } from './document'
 import {
   AssetSchema,
@@ -268,7 +268,7 @@ function checkNode(d: Document, node: Node): void {
     throw new OpError(`Node ${node.id}: an instance has no style; it looks as its component is drawn. Change the shapes inside the component, or put the instance on a layer of another colour.`)
   }
   if (node.type === 'image' && !d.assets?.[node.asset]) throw new OpError(`Unknown asset "${node.asset}"`)
-  if (node.type === 'dimension' && node.dimensionStyle !== undefined && !d.dimensionStyles?.[node.dimensionStyle]) throw new OpError(`Unknown dimension style "${node.dimensionStyle}"`)
+  if ((node.type === 'dimension' || node.type === 'radialDimension' || node.type === 'angleDimension') && node.dimensionStyle !== undefined && !d.dimensionStyles?.[node.dimensionStyle]) throw new OpError(`Unknown dimension style "${node.dimensionStyle}"`)
   if (node.type === 'room' && node.material !== undefined && !d.materials?.[node.material]) throw new OpError(`Unknown material "${node.material}"`)
   if (node.type === 'wall' && node.material !== undefined && !d.materials?.[node.material]) throw new OpError(`Wall ${node.id}: unknown material "${node.material}"`)
   if (node.type === 'elevation' && d.nodes[node.line]?.type !== 'viewline') throw new OpError(`Node ${node.id}: unknown view line "${node.line}"; a view is drawn from a viewline of the drawing`)
@@ -382,9 +382,13 @@ function applyOp(d: Document, op: Op, batch: Batch): void {
       d.dimensionStyles = rest
       // Its dimensions keep how they look, as what referred to a removed colour does: what the style gave them becomes their own.
       for (const n of Object.values(d.nodes)) {
-        if (n.type !== 'dimension' || n.dimensionStyle !== op.id) continue
-        const { dimensionStyle: __, ...plain } = withDimensionStyle(n, style)
-        d.nodes[n.id] = plain
+        if (n.type === 'dimension' && n.dimensionStyle === op.id) {
+          const { dimensionStyle: __, ...plain } = withDimensionStyle(n, style)
+          d.nodes[n.id] = plain
+        } else if ((n.type === 'radialDimension' || n.type === 'angleDimension') && n.dimensionStyle === op.id) {
+          const { dimensionStyle: __, ...plain } = withMeasureStyle(n, style)
+          d.nodes[n.id] = plain
+        }
       }
       return
     }
