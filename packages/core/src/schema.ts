@@ -262,6 +262,17 @@ export const NodeSchema = z
           .array(z.array(Vec2Schema).min(3))
           .optional()
           .describe('Openings cut out of the rectangle, each an outline in its own space: x to the right and y down from its top-left corner, before its turn. The fill stops at them and their edges are drawn.'),
+        recess: z
+          .object({
+            x: z.number(),
+            y: z.number(),
+            width: z.number().positive(),
+            height: z.number().positive(),
+            top: z.number().describe("The pit floor, in mm above the slab's bottom face."),
+            bottom: z.number().describe("The underside of the sunken box, in mm above the slab's bottom face."),
+          })
+          .optional()
+          .describe('A sunken pit cut into the slab, in its own space like an opening; its floor is at "top" and its underside at "bottom", both from the bottom face of the slab.'),
       })
       .describe('Rectangle with its top-left corner at (x, y), rotated around that corner.'),
     z

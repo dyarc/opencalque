@@ -7,6 +7,7 @@ import { offsetDown, parallelMove } from './offset'
 import { constructionDown, constructionMove } from './construction'
 import { angleDimensionDown, angleDimensionMove, anglePlaceMove, radialDimensionDown, radialDimensionMove } from './dimensions'
 import { painterDown } from './painter'
+import { recessDown } from './recess'
 import { extendDown, filletDown, filletMove } from './fit'
 import { elevationDown, eyedropperDown, placeDown, sectionMove, splitDown, toolHover, trimDown } from './place'
 import { cornerMove, cropMove, dragUp, elevatedMove, endMove, faceMove, handleMove, hover, marqueeMove, marqueeUp, moveMove, pressMove, pressUp, resizeMove, rotateMove, scaleMove, selectDown } from './select'
@@ -43,6 +44,7 @@ export const PRESSES: Partial<Record<Tool, Press>> = {
   radialDimension: radialDimensionDown,
   angleDimension: angleDimensionDown,
   formatPainter: painterDown,
+  recess: recessDown,
   curve: lineDown,
 }
 /** The tools that draw by two points (and a dimension's third), and any not listed above. */

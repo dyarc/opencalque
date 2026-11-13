@@ -51,7 +51,9 @@ export function toDXF(doc: Document, containerId: string, registry: Registry): s
       if (prim.kind === 'path') {
         if (prim.stroke === 'none') continue
         const count = prim.closed ? prim.points.length : prim.points.length - 1
+        const openEnds = prim.openEnds && prim.closed && prim.points.length === 4
         for (let i = 0; i < count; i++) {
+          if (openEnds && i % 2 === 1) continue
           const a = prim.points[i]
           const b = prim.points[(i + 1) % prim.points.length]
           if (prim.union) for (const [from, to] of outsideMass(mass, a, b, of.get(prim))) line(layer, from, to, prim.clip)

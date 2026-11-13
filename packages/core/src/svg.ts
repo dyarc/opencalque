@@ -41,8 +41,9 @@ function stepToSvg({ prim, stroke, fill, widthScale, widthExtra, seam }: PaintSt
     const turn = prim.rotation ? ` transform="rotate(${num(prim.rotation)} ${num(prim.cx)} ${num(prim.cy)})"` : ''
     return `<ellipse cx="${num(prim.cx)}" cy="${num(prim.cy)}" rx="${num(prim.rx)}" ry="${num(prim.ry)}"${paint}${turn}/>`
   }
-  const ring = [prim.points, ...(prim.holes ?? [])]
-  const d = ring.map((points) => points.map((p, i) => `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)}`).join(' ') + (prim.closed ? ' Z' : '')).join(' ')
+  const sides = prim.openEnds && prim.closed && prim.points.length === 4 ? [[prim.points[0], prim.points[1]], [prim.points[2], prim.points[3]]] : null
+  const ring = sides ?? [prim.points, ...(prim.holes ?? [])]
+  const d = ring.map((points) => points.map((p, i) => `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)}`).join(' ') + (prim.closed && !sides ? ' Z' : '')).join(' ')
   return `<path d="${d}"${prim.holes?.length ? ' fill-rule="evenodd"' : ''}${paint}/>`
 }
 

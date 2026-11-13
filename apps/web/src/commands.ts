@@ -330,6 +330,7 @@ const STATIC: Command[] = [
   tool('rect', msg('Rectangle'), 'R'),
   tool('ellipse', msg('Ellipse'), 'O'),
   tool('circle', msg('Circle'), 'C'),
+  { id: 'tool.recess', title: msg('Sunken box'), category: 'Tools', keywords: 'pit recess sink', run: () => setTool('recess') },
   { id: 'tool.column', title: msg('Column'), category: 'Tools', keywords: 'pillar structure', run: () => setTool('column') },
   { id: 'tool.beam', title: msg('Beam'), category: 'Tools', keywords: 'girder structure', run: () => setTool('beam') },
   tool('wall', msg('Wall'), 'W'),

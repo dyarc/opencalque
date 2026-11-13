@@ -7,6 +7,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 ## 1.9.1 — 2026-11-13
 
 ### New
+- Sunken box: a pit cut into a slab, its top and bottom measured from the slab's underside. The tool sits with the doors and windows; it cuts the plan, the fill and the pattern, and the 3D view shows the pit with its floor and walls. A rectangle with no top and bottom has nothing to sink into, and the tool says so.
 - Cut an opening in a shape (`Shift+H`, Object › Cut an opening in the shape): select a rectangle and the smaller rectangles inside it, and they are cut out of its fill, leaving a ring that moves and turns with it. The edges of the opening are drawn, and it is left out of what a click inside it picks.
 - The application is now **AxioDraw** throughout, and a saved drawing is an **`.adg`** file; `.opencalque` and `.opencad` drawings still open, and the file format inside is the same.
 - Slabs, columns and beams: a rectangle can take a top and a bottom height and stands as a slab; the Column tool places a post, and the Beam tool runs a girder between two points, each with its own width and its top and bottom. The 3D view draws them as solids, between those faces.
@@ -26,6 +27,9 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- The Fillet tool rounds walls too, along their centre lines: the two walls are cut back and joined by a curved wall of the same thickness and material, which the 3D view and sections see as a wall.
+- The walls, columns and beams are one group of tools, the 2D shapes and construction lines another, and paper joins text, annotations and dimensions. The sunken box stands with the doors and windows.
+- A beam is drawn by its two long sides, with no short ends to cut the wall it meets. Where two beams of different depths cross, the deeper one runs through and the shallower stops at it; beams of one depth still merge.
 - The pattern of a fill stops at an opening cut in the shape, as its colour does.
 - The Beam tool holds its direction with Shift and shows its length as it is drawn, as a line does. Beams of different heights that cross show the higher one running through, the lower one stopping at it.
 - The Beam tool shows the snap it would take for its first point, and beams of one height and depth that cross are drawn as one shape, their outlines running into each other.

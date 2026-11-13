@@ -389,8 +389,18 @@ function viewFields(doc: Document): FieldSpec[] {
   return [line, ...(FIELDS.elevation ?? [])]
 }
 
+/** The fields of a sunken box, shown once a rectangle has one. */
+const RECESS_FIELDS: FieldSpec[] = [
+  { ...len('recess.top', msg('Pit floor'), undefined, msg('Sunken box')), optional: true },
+  { ...len('recess.bottom', msg('Underside'), undefined, msg('Sunken box')), optional: true },
+  { ...len('recess.width', msg('Width'), undefined, msg('Sunken box')), optional: true },
+  { ...len('recess.height', msg('Depth'), undefined, msg('Sunken box')), optional: true },
+]
+
 export function fieldsOf(node: Node, doc: Document): FieldSpec[] {
-  const fields = node.type === 'room' ? roomFields(node, doc) : node.type === 'elevation' ? viewFields(doc) : (FIELDS[node.type] ?? [])
+  const base = node.type === 'room' ? roomFields(node, doc) : node.type === 'elevation' ? viewFields(doc) : (FIELDS[node.type] ?? [])
+  // A sunken box is a part of the rectangle it is cut into: its fields appear only once it has one.
+  const fields = node.type === 'rect' && node.recess ? [...base, ...RECESS_FIELDS] : base
   // A placement looks as its component is drawn: it has no look of its own to set.
   if (node.type === 'instance') return fields
   if (node.type !== 'parametric') return drawnSolid(doc, node.parent) ? fields.map(placedFill) : fields

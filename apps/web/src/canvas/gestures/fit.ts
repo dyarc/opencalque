@@ -57,7 +57,7 @@ function targetOf(c: Canvas, world: Vec2): FilletTarget | null {
   const found = under(c, world, canFillet)
   if (!found || !canFillet(found)) return null
   const node = found
-  if (node.type === 'line') return { node, at: world }
+  if (node.type === 'line' || node.type === 'wall') return { node, at: world }
   let best: { segment: number; distance: number } | null = null
   for (let i = 0; i < node.points.length; i++) {
     const distance = distToSegment(world, node.points[i], node.points[(i + 1) % node.points.length])

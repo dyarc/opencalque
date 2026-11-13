@@ -5,15 +5,17 @@ import { t } from './i18n'
  * each step of using one (`hintsFor`). What a tool does on the drawing is in `canvas/gestures/`
  * (`PRESSES`, and the gestures it starts); its command and shortcut are in `commands.ts` (`tool(…)`).
  */
-export type Tool = 'select' | 'hand' | 'line' | 'construction' | 'curve' | 'arc' | 'rect' | 'ellipse' | 'circle' | 'column' | 'beam' | 'wall' | 'dimension' | 'radialDimension' | 'angleDimension' | 'measure' | 'angle' | 'split' | 'trim' | 'extend' | 'fillet' | 'offset' | 'rotate' | 'move' | 'calibrate' | 'eyedropper' | 'formatPainter' | 'text' | 'annotation' | 'gridline' | 'paper' | 'room' | 'divider' | 'elevation' | 'place'
+export type Tool = 'select' | 'hand' | 'line' | 'construction' | 'curve' | 'arc' | 'rect' | 'ellipse' | 'circle' | 'column' | 'beam' | 'recess' | 'wall' | 'dimension' | 'radialDimension' | 'angleDimension' | 'measure' | 'angle' | 'split' | 'trim' | 'extend' | 'fillet' | 'offset' | 'rotate' | 'move' | 'calibrate' | 'eyedropper' | 'formatPainter' | 'text' | 'annotation' | 'gridline' | 'paper' | 'room' | 'divider' | 'elevation' | 'place'
 
 /** The plain shapes, which share one toolbar button. */
 // A paper is drawn as a rectangle is, by its corners: it is offered with the shapes.
-export const SHAPE_TOOLS: Tool[] = ['line', 'construction', 'curve', 'arc', 'rect', 'ellipse', 'circle', 'column', 'beam', 'paper']
+export const SHAPE_TOOLS: Tool[] = ['line', 'construction', 'curve', 'arc', 'rect', 'ellipse', 'circle']
 /** The tools for naming spaces, and for the views of their walls, which share another. */
 export const ROOM_TOOLS: Tool[] = ['room', 'divider', 'elevation']
+/** The structural tools: a wall, and the post and beam that stand with it. */
+export const STRUCTURE_TOOLS: Tool[] = ['wall', 'column', 'beam']
 /** The tools for writing on the drawing, which share a third. */
-export const TEXT_TOOLS: Tool[] = ['text', 'annotation', 'dimension', 'radialDimension', 'angleDimension', 'gridline']
+export const TEXT_TOOLS: Tool[] = ['text', 'annotation', 'dimension', 'radialDimension', 'angleDimension', 'gridline', 'paper']
 /** The tools that work on the lines of what is drawn: cutting them in two or a stretch away, carrying them on, making two meet, or copying them alongside. */
 export const CUT_TOOLS: Tool[] = ['split', 'trim', 'extend', 'fillet', 'offset']
 /** The tools that turn or move the selection, which share the button with the flips. */
@@ -64,6 +66,8 @@ export function hintsFor(tool: Tool, step: number, opening: boolean, selected = 
       if (step === 0) return [['', t('Click the first line')], ['Esc', t('cancels')]]
       if (step === 1) return [['', t('Click the second line')], ['Esc', t('cancels')]]
       return [['', t('Click where the angle arc goes')], ['Esc', t('cancels')]]
+    case 'recess':
+      return [['', t('Click a rectangle with a top and a bottom to sink a pit into it')], ['Esc', t('cancels')]]
     case 'column':
       return [['', t('Click where the column stands')], ['0-9', t('type its size')], ['Esc', t('cancels')]]
     case 'beam':

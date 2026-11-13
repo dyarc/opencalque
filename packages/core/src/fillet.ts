@@ -12,8 +12,8 @@ import { cross, dot, tidy } from './walls/course'
  * the arc is an ellipse of its own, as it always was.
  */
 
-/** A node a stretch of which can be filleted: a line, or a polyline that is not a curve. */
-export type FilletNode = NodeOf<'line'> | NodeOf<'polyline'>
+/** A node a stretch of which can be filleted: a line, a polyline that is not a curve, or a wall. */
+export type FilletNode = NodeOf<'line'> | NodeOf<'polyline'> | NodeOf<'wall'>
 
 /** What is filleted: the node, where it was clicked, and for a polyline the segment clicked. */
 export interface FilletTarget {
@@ -23,15 +23,15 @@ export interface FilletTarget {
   segment?: number
 }
 
-/** What can be filleted: a straight line, or a polyline that is not a curve. */
-export const canFillet = (node: Node): node is FilletNode => node.type === 'line' || (node.type === 'polyline' && !node.smooth)
+/** What can be filleted: a straight line, a wall, or a polyline that is not a curve. */
+export const canFillet = (node: Node): node is FilletNode => node.type === 'line' || node.type === 'wall' || (node.type === 'polyline' && !node.smooth)
 
 const point = (p: Vec2): Vec2 => ({ x: tidy(p.x), y: tidy(p.y) })
 
 /** The two ends of the stretch of `target`, and the patch that puts one of them elsewhere. */
 function stretch(target: FilletTarget): { a: Vec2; b: Vec2; patch: (end: 0 | 1, p: Vec2) => Record<string, unknown> } | null {
   const node = target.node
-  if (node.type === 'line') return { a: node.a, b: node.b, patch: (end, p) => (end === 0 ? { a: p } : { b: p }) }
+  if (node.type === 'line' || node.type === 'wall') return { a: node.a, b: node.b, patch: (end, p) => (end === 0 ? { a: p } : { b: p }) }
   const index = target.segment
   if (index === undefined || !Number.isInteger(index) || index < 0 || index >= node.points.length) return null
   const next = (index + 1) % node.points.length
@@ -44,7 +44,7 @@ function stretch(target: FilletTarget): { a: Vec2; b: Vec2; patch: (end: 0 | 1, 
 
 /** Whether the stretch clicked of `target` is a straight one: an arc is no line to cut back. */
 function straight(target: FilletTarget): boolean {
-  return target.node.type === 'line' || !(target.node.bulges?.[target.segment ?? 0] ?? 0)
+  return target.node.type === 'line' || target.node.type === 'wall' || !(target.node.bulges?.[target.segment ?? 0] ?? 0)
 }
 
 /**
@@ -116,7 +116,7 @@ export function filletOps(first: FilletTarget, second: FilletTarget, radius: num
   // Anything else gives up a free end: a line either end, an open polyline its first or its last point.
   const free = (target: FilletTarget, a: { stays: 0 | 1 }) => {
     const node = target.node
-    if (node.type === 'line') return true
+    if (node.type === 'line' || node.type === 'wall') return true
     if (node.closed) return false
     const index = target.segment
     if (index === undefined) return false
@@ -131,12 +131,35 @@ export function filletOps(first: FilletTarget, second: FilletTarget, radius: num
   ]
   if (radius === 0) return ops
   if (!arc) return null
+  const parent = first.node.parent
+  const layer = first.node.layer ? { layer: first.node.layer } : {}
+  const style = first.node.style ? { style: first.node.style } : {}
+  if (first.node.type === 'wall' && second.node.type === 'wall') {
+    // A wall's rounding is a curved wall between the two tangent points, so it keeps its thickness
+    // and its material, and stands in the 3D view and in sections as the walls it joins do.
+    const bulge = bulgeOf(ends[0], ends[1], sub(centre, scale(halfway, radius)))
+    if (bulge === null) return null
+    const wall = {
+      id: arcId,
+      type: 'wall',
+      parent,
+      ...layer,
+      ...style,
+      a: ends[0],
+      b: ends[1],
+      thickness: first.node.thickness,
+      ...(first.node.material ? { material: first.node.material } : {}),
+      ...(first.node.justify ? { justify: first.node.justify } : {}),
+      bulge,
+    } as NodeInput
+    return [...ops, { op: 'add_node', node: wall }]
+  }
   const node = {
     id: arcId,
     type: 'ellipse',
-    parent: first.node.parent,
-    ...(first.node.layer ? { layer: first.node.layer } : {}),
-    ...(first.node.style ? { style: first.node.style } : {}),
+    parent,
+    ...layer,
+    ...style,
     cx: tidy(arc.cx),
     cy: tidy(arc.cy),
     rx: radius,

@@ -243,7 +243,12 @@ function pageContent(doc: Document, paper: Paper, registry: Registry, resources:
         alpha(filled?.a ?? 1, edge?.a ?? 1)
         if (filled) out.push(`${n(filled.r)} ${n(filled.g)} ${n(filled.b)} rg`)
         if (edge) out.push(`${n(edge.r)} ${n(edge.g)} ${n(edge.b)} RG ${n(weight)} w${widthExtra > 0 ? ' 1 j' : ''}${inked && prim.dash ? ` [${prim.dash.map((d) => n(d * WEIGHT * 1.5)).join(' ')}] 0 d` : ''}`)
-        if (prim.kind === 'ellipse') {
+        const openEnds = prim.kind === 'path' && prim.openEnds && prim.closed && prim.points.length === 4
+        if (openEnds && prim.kind === 'path') {
+          // Its two long sides, with no short ends: a beam meets a wall without cutting it.
+          outline([prim.points[0], prim.points[1]], false)
+          outline([prim.points[2], prim.points[3]], false)
+        } else if (prim.kind === 'ellipse') {
           // Four curves; 0.5523 is how far their handles reach for a quarter of a circle.
           const k = 0.5523
           const point = (x: number, y: number) => at({ x: prim.cx + rotate({ x: x * prim.rx, y: y * prim.ry }, prim.rotation ?? 0).x, y: prim.cy + rotate({ x: x * prim.rx, y: y * prim.ry }, prim.rotation ?? 0).y })
@@ -255,7 +260,7 @@ function pageContent(doc: Document, paper: Paper, registry: Registry, resources:
           for (const hole of prim.holes ?? []) outline(hole, true)
         }
         const odd = prim.kind === 'path' && prim.holes?.length
-        out.push(filled && edge ? (odd ? 'B*' : 'B') : filled ? (odd ? 'f*' : 'f') : 'S')
+        out.push(openEnds ? 'S' : filled && edge ? (odd ? 'B*' : 'B') : filled ? (odd ? 'f*' : 'f') : 'S')
       }
     }
     out.push('Q')

@@ -2,6 +2,7 @@ import { InstanceBar } from './InstanceBar'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { rootOf, type Document } from '@opencalque/core'
 import {
+  ArrowDownToLine,
   ArrowRightToLine,
   Box,
   BrickWall,
@@ -44,7 +45,6 @@ import {
   AlignStartHorizontal,
   AlignStartVertical,
   ArrowDown,
-  ArrowDownToLine,
   ArrowUp,
   ArrowUpToLine,
   BringToFront,
@@ -69,7 +69,7 @@ import type { ScopeStep } from './scopePath'
 import { registry, useExtensions } from './extensions'
 import { leaveTo, returnTo, trailAhead } from './navigation'
 import { redo, setTool, undo, useStore } from './store'
-import { CUT_TOOLS, hintsFor, MEASURE_TOOLS, ROOM_TOOLS, SHAPE_TOOLS, TEXT_TOOLS, TRANSFORM_TOOLS, type Hint, type Tool } from './tools'
+import { CUT_TOOLS, hintsFor, MEASURE_TOOLS, ROOM_TOOLS, SHAPE_TOOLS, STRUCTURE_TOOLS, TEXT_TOOLS, TRANSFORM_TOOLS, type Hint, type Tool } from './tools'
 import { TextEditor } from './TextEditor'
 import { ClearanceEditor } from './ClearanceEditor'
 import { IconButton, labelOf, TypeIcon } from './ui'
@@ -89,6 +89,7 @@ const ICONS: Partial<Record<Tool, [title: string, icon: LucideIcon]>> = {
   circle: [msg('Circle: click its centre, then a point it goes through'), CircleDot],
   wall: [msg('Wall'), BrickWall],
   column: [msg('Column: a post standing from the floor to its top'), Box],
+  recess: [msg('Sunken box: a pit cut into a slab, its floor and underside measured from the slab\'s bottom'), ArrowDownToLine],
   beam: [msg('Beam: a girder running between two points, between its bottom and its top'), Minus],
   dimension: [msg('Dimension: annotate a distance on the drawing'), RulerDimensionLine],
   radialDimension: [msg('Radius dimension: R and the radius of an arc or a circle'), CircleDot],
@@ -380,16 +381,18 @@ function Toolbar() {
   const measureTool = useStore((s) => s.measureTool)
   const cutTool = useStore((s) => s.cutTool)
   const transformTool = useStore((s) => s.transformTool)
+  const tool = useStore((s) => s.tool)
   return (
     <div className="toolbar">
       <ToolButton id="select" />
       <ToolButton id="hand" />
       <hr />
-      <ToolGroup tools={SHAPE_TOOLS} current={shapeTool} more={t('More shapes')} />
-      <ToolButton id="wall" />
+      <ToolGroup tools={SHAPE_TOOLS} current={shapeTool} more={t('More 2D shapes')} />
+      <ToolGroup tools={STRUCTURE_TOOLS} current={tool} more={t('Wall, column or beam')} />
       <ToolGroup tools={ROOM_TOOLS} current={roomTool} more={t('Room divider, elevation or section')} />
       <PlaceButton kind="arch.door" icon={DoorOpen} />
       <PlaceButton kind="arch.window" icon={Grid2x2} />
+      <ToolButton id="recess" />
       <CommandButton command="warehouse.components" title={t('Object library: stairs, furniture and every other object')} onClick={() => executeById('warehouse.components')}>
         <LibraryBig size={18} />
       </CommandButton>
@@ -400,7 +403,7 @@ function Toolbar() {
       <ArrangeMenu />
       <ToolButton id="formatPainter" />
       <ToolGroup tools={MEASURE_TOOLS} current={measureTool} more={t('Measure an angle')} />
-      <ToolGroup tools={TEXT_TOOLS} current={textTool} more={t('Annotation, dimension, grid line')} />
+      <ToolGroup tools={TEXT_TOOLS} current={textTool} more={t('Text, annotation, dimension, grid line or paper')} />
       <hr />
       <CommandButton command="edit.undo" title={t('Undo')} onClick={undo} disabled={!canUndo}>
         <Undo2 size={18} />

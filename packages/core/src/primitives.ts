@@ -70,6 +70,8 @@ export interface PathPrim extends PrimStyle {
   closed?: boolean
   /** Openings cut out of a closed path, in the same space as its points; the fill stops at them and their edges are stroked. */
   holes?: Vec2[][]
+  /** A closed four-sided band whose short ends are not drawn: the two long sides of a beam. */
+  openEnds?: boolean
   /**
    * Paths with a union key are painted together (`paintOrder`): their fills, then the outline of
    * the whole, centred on its edges, with what lies inside it left out (`mergedOutlines`). Those

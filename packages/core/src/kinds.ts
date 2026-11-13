@@ -172,7 +172,17 @@ const moveHandleAB = (_: unknown, index: number, p: Vec2) => (index === 0 ? { a:
 /** The four corners of a rectangle, turned with it, from its top-left corner round. */
 /** A rectangle's openings, in its own unrotated space, brought into the drawing. */
 export function rectHoles(node: NodeOf<'rect'>): Vec2[][] {
-  return (node.holes ?? []).map((hole) => hole.map((p) => add(rotate(p, node.rotation ?? 0), node)))
+  const holes = (node.holes ?? []).map((hole) => hole.map((p) => add(rotate(p, node.rotation ?? 0), node)))
+  if (node.recess) {
+    const { x, y, width, height } = node.recess
+    holes.push([
+      { x, y },
+      { x: x + width, y },
+      { x: x + width, y: y + height },
+      { x, y: y + height },
+    ].map((p) => add(rotate(p, node.rotation ?? 0), node)))
+  }
+  return holes
 }
 
 export function rectCorners(node: NodeOf<'rect'>): Vec2[] {
@@ -877,11 +887,13 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
       const higher = Object.values(ctx.doc.nodes).filter(
         (other): other is NodeOf<'beam'> => other.type === 'beam' && other.id !== node.id && other.parent === node.parent && above(other, node),
       )
-      if (higher.length === 0) return [{ kind: 'path', points: band, closed: true, union: beamUnion(node) }]
+      if (higher.length === 0) return [{ kind: 'path', points: band, closed: true, openEnds: true, union: beamUnion(node) }]
       const through = higher.map(beamBand)
       const runs: Vec2[][] = []
       let run: Vec2[] | null = null
       for (let i = 0; i < band.length; i++) {
+        // Only the long sides: a beam's ends are open, so they never cut across a wall.
+        if (i % 2 === 1) continue
         const a = band[i]
         const b = band[(i + 1) % band.length]
         const pieces = cutOpenings([a, b], through)
@@ -907,7 +919,7 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     transform: (node, t) => ({ ...transformAB(node, t), width: t.length(node.width) }),
   },
   rect: {
-    primitives: (node) => [{ kind: 'path', points: rectCorners(node), holes: node.holes?.length ? rectHoles(node) : undefined, closed: true }],
+    primitives: (node) => [{ kind: 'path', points: rectCorners(node), holes: node.holes?.length || node.recess ? rectHoles(node) : undefined, closed: true }],
     // Its corners run clockwise on screen: a positive distance is inwards.
     parallel: (node, distance) => {
       const [width, height] = [node.width - 2 * distance, node.height - 2 * distance]
@@ -1365,13 +1377,13 @@ function beamBand(node: NodeOf<'beam'>): Vec2[] {
   return [add(node.a, scale(across, half)), add(node.b, scale(across, half)), add(node.b, scale(across, -half)), add(node.a, scale(across, -half))]
 }
 
-/** The height of a beam's top, the way the plan decides which beam runs through another. */
-const beamTop = (node: NodeOf<'beam'>) => node.top ?? node.bottom ?? 0
+/** A beam's depth: the distance between its top and its bottom. The deeper beam runs through a shallower one. */
+const beamDepth = (node: NodeOf<'beam'>) => Math.abs((node.top ?? 0) - (node.bottom ?? 0))
 
-/** Whether `one` stands above `two`: its top face higher, or its underside higher when the tops meet. */
+/** Whether `one` runs through `two`: it is deeper, or, as deep, its top face is higher. */
 function above(one: NodeOf<'beam'>, two: NodeOf<'beam'>): boolean {
-  const [top, other] = [beamTop(one), beamTop(two)]
-  return top > other + 1e-6 || (Math.abs(top - other) <= 1e-6 && (one.bottom ?? 0) > (two.bottom ?? 0) + 1e-6)
+  const [deep, other] = [beamDepth(one), beamDepth(two)]
+  return deep > other + 1e-6 || (Math.abs(deep - other) <= 1e-6 && (one.top ?? 0) > (two.top ?? 0) + 1e-6)
 }
 
 /** Beams of one height and depth that cross are one mass: their outlines run into each other. */

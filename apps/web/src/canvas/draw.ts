@@ -414,6 +414,7 @@ function paintWhole(ctx: CanvasRenderingContext2D, { prim, stroke, fill, widthSc
   }
   ctx.beginPath()
   const holes = prim.kind === 'path' ? prim.holes : undefined
+  const openEnds = prim.kind === 'path' && prim.openEnds && prim.closed && prim.points.length === 4
   if (prim.kind === 'ellipse') {
     ctx.ellipse(prim.cx, prim.cy, prim.rx, prim.ry, ((prim.rotation ?? 0) * Math.PI) / 180, 0, Math.PI * 2)
   } else {
@@ -435,6 +436,14 @@ function paintWhole(ctx: CanvasRenderingContext2D, { prim, stroke, fill, widthSc
     }
   }
   if (stroke && prim.stroke !== 'none') {
+    if (openEnds && prim.kind === 'path') {
+      // The two long sides only: a beam's ends are open, so its cap does not cut the wall it meets.
+      ctx.beginPath()
+      ctx.moveTo(prim.points[0].x, prim.points[0].y)
+      ctx.lineTo(prim.points[1].x, prim.points[1].y)
+      ctx.moveTo(prim.points[2].x, prim.points[2].y)
+      ctx.lineTo(prim.points[3].x, prim.points[3].y)
+    }
     ctx.strokeStyle = ink(prim.stroke ?? 'black', true)
     ctx.lineWidth = ((prim.strokeWidth ?? 1) * widthScale + widthExtra) / zoom
     // Merged outlines turn sharply at joints; a mitre there would spike out past the corner.

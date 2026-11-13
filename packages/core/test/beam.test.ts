@@ -17,14 +17,14 @@ describe('beams of one height', () => {
 })
 
 describe('beams of different heights', () => {
-  it('breaks the lower beam at the higher one, which runs through', () => {
-    const doc = applyOps(createDocument('Plan'), [beam('low', [0, 0], [2000, 0], 2500, 2300), beam('high', [1000, -1000], [1000, 1000], 2800, 2600)])
-    const low = nodePrimitives(doc.nodes.low, { doc, registry, depth: 0 })
-    const high = nodePrimitives(doc.nodes.high, { doc, registry, depth: 0 })
-    // The higher beam is whole; the lower one is drawn in runs, none of which crosses under it.
-    expect(high.every((prim) => prim.kind === 'path' && prim.closed)).toBe(true)
-    expect(low.some((prim) => prim.kind === 'path' && !prim.closed)).toBe(true)
-    for (const prim of low) {
+  it('breaks the thinner beam at the deeper one, which runs through', () => {
+    // Both at the same top, so only their depth decides: the deeper beam runs through.
+    const doc = applyOps(createDocument('Plan'), [beam('deep', [0, 0], [2000, 0], 2500, 2300), beam('thin', [1000, -1000], [1000, 1000], 2500, 2400)])
+    const deep = nodePrimitives(doc.nodes.deep, { doc, registry, depth: 0 })
+    const thin = nodePrimitives(doc.nodes.thin, { doc, registry, depth: 0 })
+    expect(deep.every((prim) => prim.kind === 'path' && prim.closed)).toBe(true)
+    expect(thin.some((prim) => prim.kind === 'path' && !prim.closed)).toBe(true)
+    for (const prim of thin) {
       if (prim.kind !== 'path') continue
       for (let i = 0; i < prim.points.length - 1; i++) {
         const mid = { x: (prim.points[i].x + prim.points[i + 1].x) / 2, y: (prim.points[i].y + prim.points[i + 1].y) / 2 }

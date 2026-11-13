@@ -1,5 +1,5 @@
 import { rootOf } from './document'
-import { perp, norm, sub, add, scale } from './geometry'
+import { perp, norm, sub, add, scale, rotate } from './geometry'
 import { leavesOf, isVisible } from './document'
 import { roomAt } from './rooms'
 import type { Registry } from './registry'
@@ -74,7 +74,8 @@ export function axonometricFaces(doc: Document, root: string, registry: Registry
         })
       }
     } else if (node.type === 'rect' && node.top !== undefined && node.bottom !== undefined) {
-      faces.push(...prism(rectCorners(node), Math.min(node.top, node.bottom), Math.max(node.top, node.bottom)))
+      const [bottom, top] = [Math.min(node.top, node.bottom), Math.max(node.top, node.bottom)]
+      faces.push(...(node.recess ? slabWithRecess(node, bottom, top) : prism(rectCorners(node), bottom, top)))
     } else if (node.type === 'column' && node.top !== undefined && node.bottom !== undefined) {
       faces.push(...prism(rectCorners(node as never), Math.min(node.top, node.bottom), Math.max(node.top, node.bottom)))
     } else if (node.type === 'beam' && node.top !== undefined && node.bottom !== undefined) {
@@ -106,6 +107,52 @@ export function axoDepth(p: Vec3, turn: number): number {
   const x = p.x * Math.cos(angle) - p.y * Math.sin(angle)
   const y = p.x * Math.sin(angle) + p.y * Math.cos(angle)
   return x + y + p.z
+}
+
+/** The faces of a slab with a sunken pit: its top around the pit, the pit walls and its floor. */
+function slabWithRecess(node: NodeOf<'rect'>, bottom: number, top: number): AxoFace[] {
+  const r = node.recess!
+  const [w, h] = [node.width, node.height]
+  const local = (x: number, y: number): Vec2 => add(rotate({ x, y }, node.rotation ?? 0), node)
+  const parts = [
+    { x: 0, y: 0, width: w, height: r.y },
+    { x: 0, y: r.y + r.height, width: w, height: h - (r.y + r.height) },
+    { x: 0, y: r.y, width: r.x, height: r.height },
+    { x: r.x + r.width, y: r.y, width: w - (r.x + r.width), height: r.height },
+  ].filter((part) => part.width > 1e-6 && part.height > 1e-6)
+  const faces: AxoFace[] = parts.map((part) => ({
+    points: [local(part.x, part.y), local(part.x + part.width, part.y), local(part.x + part.width, part.y + part.height), local(part.x, part.y + part.height)].map((p): Vec3 => ({ x: p.x, y: p.y, z: top })),
+    normal: { x: 0, y: 0 },
+    light: 1,
+    kind: 'top',
+  }))
+  faces.push(...prism(rectCorners(node), bottom, top).filter((face) => face.kind !== 'top'))
+  // The floor of the pit and the walls around it, from the top of the slab down to that floor.
+  const floor = bottom + r.top
+  if (top - floor > 1e-6) {
+    const hole = [local(r.x, r.y), local(r.x + r.width, r.y), local(r.x + r.width, r.y + r.height), local(r.x, r.y + r.height)]
+    faces.push({ points: hole.map((p): Vec3 => ({ x: p.x, y: p.y, z: floor })), normal: { x: 0, y: 0 }, light: 1, kind: 'floor' })
+    for (let i = 0; i < hole.length; i++) {
+      const a = hole[i]
+      const b = hole[(i + 1) % hole.length]
+      const side = Math.hypot(b.x - a.x, b.y - a.y)
+      if (side < 1e-6) continue
+      // Facing into the pit, the other way from the slab's outside.
+      const normal = { x: -(b.y - a.y) / side, y: (b.x - a.x) / side }
+      faces.push({
+        points: [
+          { x: a.x, y: a.y, z: floor },
+          { x: b.x, y: b.y, z: floor },
+          { x: b.x, y: b.y, z: top },
+          { x: a.x, y: a.y, z: top },
+        ],
+        normal,
+        light: light(normal, 0),
+        kind: 'side',
+      })
+    }
+  }
+  return faces
 }
 
 /** The faces of a solid standing between `bottom` and `top` over a plan outline. */

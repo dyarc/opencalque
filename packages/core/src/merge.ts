@@ -178,6 +178,11 @@ export function mergedOutlines(merged: Primitive[]): PathPrim[] {
     const runs: Vec2[][] = []
     let whole = true
     for (let i = 0; i < count; i++) {
+      // A beam's short ends are not drawn, even where its long sides merge with another's.
+      if (prim.openEnds && prim.closed && prim.points.length === 4 && i % 2 === 1) {
+        whole = false
+        continue
+      }
       const a = prim.points[i]
       const b = prim.points[(i + 1) % prim.points.length]
       const parts = outsideMass(mass, a, b, of.get(prim))
