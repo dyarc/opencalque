@@ -128,7 +128,7 @@ function slabWithRecess(node: NodeOf<'rect'>, bottom: number, top: number): AxoF
   }))
   faces.push(...prism(rectCorners(node), bottom, top).filter((face) => face.kind !== 'top'))
   // The floor of the pit and the walls around it, from the top of the slab down to that floor.
-  const floor = bottom + r.top
+  const floor = top - r.top
   if (top - floor > 1e-6) {
     const hole = [local(r.x, r.y), local(r.x + r.width, r.y), local(r.x + r.width, r.y + r.height), local(r.x, r.y + r.height)]
     faces.push({ points: hole.map((p): Vec3 => ({ x: p.x, y: p.y, z: floor })), normal: { x: 0, y: 0 }, light: 1, kind: 'floor' })

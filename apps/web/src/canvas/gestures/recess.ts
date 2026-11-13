@@ -29,8 +29,9 @@ export const recessDown: Press = (_c, _e, _at, world) => {
     useStore.setState({ status: t('This slab is too thin or too small for a sunken pit') })
     return
   }
-  const top = thickness - Math.min(50, thickness / 2)
-  const bottom = top - Math.max(100, thickness / 2)
+  // Measured down from the top of the slab: 50 mm sinks the pit 50 mm.
+  const top = 50
+  const bottom = top + Math.max(100, thickness / 2)
   if (apply([{ op: 'update_node', id: slab.id, patch: { recess: { x: clamp(local.x - size / 2, 0, slab.width - size), y: clamp(local.y - size / 2, 0, slab.height - size), width: size, height: size, top, bottom } } }])) {
     select([slab.id])
     useStore.setState({ status: t('Sunken pit cut') })

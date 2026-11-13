@@ -274,11 +274,17 @@ export function viewOfFace(face: { a: Vec2; b: Vec2 }, depth = ELEVATION_DEPTH):
  * face as drawn (`faceStretch`): an inside face from corner to corner of the room, not into the
  * walls it meets. Null when no straight wall is within `reach` of `p`.
  */
+/**
+ * A curved wall seen in an elevation or a section is taken as the straight wall along its chord:
+ * the views have no way of unfolding a curve, and this shows it, with its height and openings, in
+ * the place it takes.
+ */
+const chordWall = (wall: Wall): Wall => (wall.bulge ? { ...wall, bulge: undefined } : wall)
+
 export function wallFaceAt(doc: Document, containerId: string, p: Vec2, reach: number): { wall: Wall; face: Face; a: Vec2; b: Vec2 } | null {
   let wall: Wall | null = null
   let nearest = Infinity
   for (const w of wallsIn(doc, containerId)) {
-    if (w.bulge) continue
     const distance = distToBody(p, w)
     if (distance <= reach && distance < nearest) {
       wall = w
@@ -286,9 +292,10 @@ export function wallFaceAt(doc: Document, containerId: string, p: Vec2, reach: n
     }
   }
   if (!wall) return null
-  const course = courseOf(wall)
+  const straight = chordWall(wall)
+  const course = courseOf(straight)
   const face: Face = course.project(p).across >= middleAcross(wall) ? 'right' : 'left'
-  const [from, to] = faceStretch(doc, wall, face)
+  const [from, to] = faceStretch(doc, straight, face)
   const start = course.offset(from, faceAcross(wall, face))
   const end = course.offset(to, faceAcross(wall, face))
   // Its right face is to the right of the wall's own line, so seen the way the wall runs; its left face the other way round.
@@ -298,8 +305,8 @@ export function wallFaceAt(doc: Document, containerId: string, p: Vec2, reach: n
 
 /** Which face of a straight wall the line from `a` to `b` lies on, facing the side it is seen from, if any. */
 function faceUnder(wall: Wall, a: Vec2, b: Vec2): Face | null {
-  if (wall.bulge || dist(a, b) < 1e-6 || dist(wall.a, wall.b) < 1e-6) return null
-  const course = courseOf(wall)
+  if (dist(a, b) < 1e-6 || dist(wall.a, wall.b) < 1e-6) return null
+  const course = courseOf(chordWall(wall))
   if (Math.abs(cross(course.dir(0), norm(sub(b, a)))) > 1e-3) return null
   // Seen from its right, the line is on the face whose outside is that way.
   const face: Face = dot(viewer(a, b), perp(course.dir(0))) > 0 ? 'right' : 'left'
@@ -638,15 +645,16 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
   // Between the line and the far side, or `slack` past it (a door's place is the middle of its wall, behind the face).
   const between = (p: Vec2, slack = 0) => off(p) <= ON_FACE + slack && off(p) >= -deep - ON_FACE - slack
   for (const wall of walls) {
-    if (wall.bulge || dist(wall.a, wall.b) < 1e-6) continue
-    const course = courseOf(wall)
+    if (dist(wall.a, wall.b) < 1e-6) continue
+    const straight = chordWall(wall)
+    const course = courseOf(straight)
     const turn = Math.abs(cross(course.dir(0), d))
     if (turn > FACE_TURN) continue
     for (const face of ['right', 'left'] as Face[]) {
       const outward = perp(course.dir(0))
       if (dot(outward, front) * (face === 'right' ? 1 : -1) <= 0) continue
       const across = faceAcross(wall, face)
-      const [p, q] = faceStretch(doc, wall, face).map((t) => course.offset(t, across))
+      const [p, q] = faceStretch(doc, straight, face).map((t) => course.offset(t, across))
       // The part of the face between the line and the far side.
       const [op, oq] = [off(p), off(q)]
       const [lo, hi] = [-deep - ON_FACE, ON_FACE]
@@ -703,8 +711,8 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
   const start = { x: node.a.x - d.x * reach, y: node.a.y - d.y * reach }
   const cutAt = new Map<string, { taken: [number, number]; crossing: [number, number] }>()
   for (const wall of node.walls === false ? [] : walls) {
-    if (along0.has(wall.id) || wall.bulge) continue
-    const course = courseOf(wall)
+    if (along0.has(wall.id)) continue
+    const course = courseOf(chordWall(wall))
     const sides = wallSides(wall)
     const outline = [course.offset(0, -sides.left), course.offset(course.length, -sides.left), course.offset(course.length, sides.right), course.offset(0, sides.right)]
     const crossing = clipLine(start, d, length + 2 * reach, outline)
@@ -716,7 +724,7 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
   const area = seenArea(node)
   const inWay: WayPiece[] = []
   for (const wall of node.walls === false ? [] : walls) {
-    if (seen.has(wall.id) || wall.bulge) continue
+    if (seen.has(wall.id)) continue
     const inside = clipConvex(wallOutline(wall, doc), area)
     if (inside.length < 3) continue
     const ss = inside.map(along)
@@ -869,7 +877,7 @@ export function elevationMovePatch(view: Elevation, doc: Document, registry: Reg
     if (!on) return { x: tidy(object.x + d.x * ds), y: tidy(object.y + d.y * ds), z: Math.max(0, tidy((heightAboveFloor(object, registry) ?? 0) + dh)) }
     const course = courseOf(on.wall)
     const way = dot(course.dir(on.along), d) >= 0 ? 1 : -1
-    const [from, to] = on.wall.bulge ? [0, course.length] : faceStretch(doc, on.wall, on.face)
+    const [from, to] = faceStretch(doc, chordWall(on.wall), on.face)
     const along = Math.max(from, Math.min(to, on.along + way * ds))
     const z = Math.max(0, tidy((heightAboveFloor(object, registry) ?? 0) + dh))
     return { ...mountAt(object, mount, on.wall, on.face, along), z }

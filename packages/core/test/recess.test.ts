@@ -37,3 +37,14 @@ describe('a sunken box in a slab', () => {
     expect(faces.some((face) => face.kind === 'side' && face.points.some((p) => p.z === -50) && face.points.some((p) => p.z === 0))).toBe(true)
   })
 })
+
+describe('a pit measured down from the top', () => {
+  it('sinks as deep as it says', () => {
+    const doc = applyOps(createDocument('Plan'), [
+      { op: 'add_node', node: { id: 'slab', type: 'rect', parent: 'page_1', layer: 'layer_1', x: 0, y: 0, width: 4000, height: 3000, top: 0, bottom: -100, recess: { x: 1000, y: 1000, width: 1000, height: 1000, top: 500, bottom: 600 } } } as never,
+    ])
+    const faces = axonometricFaces(doc, 'page_1', registry)
+    expect(faces.some((face) => face.kind === 'floor' && face.points.every((p) => p.z === -500))).toBe(true)
+    expect(faces.some((face) => face.kind === 'side' && face.points.some((p) => p.z === -500) && face.points.some((p) => p.z === 0))).toBe(true)
+  })
+})

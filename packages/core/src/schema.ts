@@ -268,11 +268,11 @@ export const NodeSchema = z
             y: z.number(),
             width: z.number().positive(),
             height: z.number().positive(),
-            top: z.number().describe("The pit floor, in mm above the slab's bottom face."),
-            bottom: z.number().describe("The underside of the sunken box, in mm above the slab's bottom face."),
+            top: z.number().describe("How far the pit floor is below the slab's top face, in mm."),
+            bottom: z.number().describe("How far the underside of the sunken box is below the slab's top face, in mm."),
           })
           .optional()
-          .describe('A sunken pit cut into the slab, in its own space like an opening; its floor is at "top" and its underside at "bottom", both from the bottom face of the slab.'),
+          .describe('A sunken pit cut into the slab, in its own space like an opening; "top" and "bottom" are how far its floor and underside are below the top face of the slab.'),
       })
       .describe('Rectangle with its top-left corner at (x, y), rotated around that corner.'),
     z

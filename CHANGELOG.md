@@ -27,6 +27,9 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- A sunken pit's floor and underside are now measured down from the top of the slab, so a depth of 500 sinks it 500; its depth is edited as "Sunken by".
+- Radius dimensions take curved walls, and angle dimensions take walls, along their centre lines.
+- A curved wall shows in elevations and sections by its chord, with its height and openings, instead of disappearing.
 - The toolbar keeps working when a door, a window or a view is chosen: it shows the wall in the structure group instead of asking for a picture it does not have.
 - A sunken pit has four corner grips, and X and Y fields, to move and size it; the wall fillet's curve is now the rise a wall expects at its middle, so it is a true arc and not a nearly straight wall.
 - The Fillet tool rounds walls too, along their centre lines: the two walls are cut back and joined by a curved wall of the same thickness and material, which the 3D view and sections see as a wall.

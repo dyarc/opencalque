@@ -1172,7 +1172,9 @@ export const ja: Record<string, string> = {
   "Sink a pit into a rectangle that has a top and a bottom": "上面と下面のある長方形に穴を沈めます",
   "This slab is too thin or too small for a sunken pit": "このスラブは薄すぎるか小さすぎて穴を掘れません",
   "Sunken pit cut": "沈み込み穴を掘りました",
-  "Pit floor": "穴の床",
   "Underside": "下面",
   "Click a rectangle with a top and a bottom to sink a pit into it": "上面と下面のある長方形をクリックして穴を沈めます",
+  "Sunken by": "沈み込み",
+  "Only arcs, circles and curved walls can carry a radius dimension": "半径寸法を付けられるのは円弧・円・曲がった壁だけです",
+  "Only straight lines, walls and straight stretches of a polyline can measure an angle": "角度を測れるのは直線・壁・ポリラインの直線部分だけです",
 }

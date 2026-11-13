@@ -1172,7 +1172,9 @@ export const fr: Record<string, string> = {
   "Sink a pit into a rectangle that has a top and a bottom": "Creusez une fosse dans un rectangle ayant un dessus et un dessous",
   "This slab is too thin or too small for a sunken pit": "Cette dalle est trop fine ou trop petite pour une fosse",
   "Sunken pit cut": "Fosse creusée",
-  "Pit floor": "Fond de la fosse",
   "Underside": "Dessous",
   "Click a rectangle with a top and a bottom to sink a pit into it": "Cliquez sur un rectangle ayant un dessus et un dessous pour y creuser une fosse",
+  "Sunken by": "Enfoncement",
+  "Only arcs, circles and curved walls can carry a radius dimension": "Seuls les arcs, les cercles et les murs courbes peuvent porter une cote de rayon",
+  "Only straight lines, walls and straight stretches of a polyline can measure an angle": "Seules les lignes droites, les murs et les segments droits d’une polyligne peuvent mesurer un angle",
 }

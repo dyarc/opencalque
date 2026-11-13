@@ -393,7 +393,7 @@ function viewFields(doc: Document): FieldSpec[] {
 const RECESS_FIELDS: FieldSpec[] = [
   { ...len('recess.x', msg('X'), undefined, msg('Sunken box')), optional: true },
   { ...len('recess.y', msg('Y'), undefined, msg('Sunken box')), optional: true },
-  { ...len('recess.top', msg('Pit floor'), undefined, msg('Sunken box')), optional: true },
+  { ...len('recess.top', msg('Sunken by'), undefined, msg('Sunken box')), optional: true },
   { ...len('recess.bottom', msg('Underside'), undefined, msg('Sunken box')), optional: true },
   { ...len('recess.width', msg('Width'), undefined, msg('Sunken box')), optional: true },
   { ...len('recess.height', msg('Depth'), undefined, msg('Sunken box')), optional: true },

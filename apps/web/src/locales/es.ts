@@ -1172,7 +1172,9 @@ export const es: Record<string, string> = {
   "Sink a pit into a rectangle that has a top and a bottom": "Hunde un hueco en un rectángulo con cara superior e inferior",
   "This slab is too thin or too small for a sunken pit": "Esta losa es demasiado fina o pequeña para un hueco",
   "Sunken pit cut": "Hueco hundido recortado",
-  "Pit floor": "Fondo del hueco",
   "Underside": "Cara inferior",
   "Click a rectangle with a top and a bottom to sink a pit into it": "Haz clic en un rectángulo con cara superior e inferior para hundirle un hueco",
+  "Sunken by": "Hundido",
+  "Only arcs, circles and curved walls can carry a radius dimension": "Solo arcos, círculos y muros curvos pueden llevar una cota de radio",
+  "Only straight lines, walls and straight stretches of a polyline can measure an angle": "Solo las líneas rectas, los muros y los tramos rectos de una polilínea pueden medir un ángulo",
 }

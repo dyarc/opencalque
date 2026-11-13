@@ -1172,7 +1172,9 @@ export const ko: Record<string, string> = {
   "Sink a pit into a rectangle that has a top and a bottom": "위와 아래가 있는 사각형에 구덩이를 파십시오",
   "This slab is too thin or too small for a sunken pit": "이 슬래브는 너무 얇거나 작아 구덩이를 팔 수 없습니다",
   "Sunken pit cut": "구덩이를 팠습니다",
-  "Pit floor": "구덩이 바닥",
   "Underside": "밑면",
   "Click a rectangle with a top and a bottom to sink a pit into it": "위와 아래가 있는 사각형을 클릭해 구덩이를 파십시오",
+  "Sunken by": "내려간 깊이",
+  "Only arcs, circles and curved walls can carry a radius dimension": "반지름 치수는 호, 원, 곡선 벽에만 붙일 수 있습니다",
+  "Only straight lines, walls and straight stretches of a polyline can measure an angle": "각도는 직선, 벽, 폴리라인의 직선 구간만 측정할 수 있습니다",
 }

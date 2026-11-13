@@ -226,9 +226,9 @@ describe('elevations of every kind of wall', () => {
     expect(prims.some((p) => p.kind === 'path' && (p.texture || p.fill === '#efc7b4'))).toBe(false)
   })
 
-  it('show nothing of a curved wall, and nothing at all for a line of no length', () => {
+  it('show a curved wall along its chord, and nothing at all for a line of no length', () => {
     const curved = applyOps(plan(), [{ op: 'update_node', id: 'w', patch: { bulge: 400 } }])
-    expect(wallFaceAt(curved, 'page_1', { x: 3000, y: -2000 }, 3000)?.wall.id).not.toBe('w')
+    expect(wallFaceAt(curved, 'page_1', { x: 3000, y: -2000 }, 3000)?.wall.id).toBe('w')
     expect(view(looking(plan(), [100, 100], [100, 100]))).toEqual([])
   })
 

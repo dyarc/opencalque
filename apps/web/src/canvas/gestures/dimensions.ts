@@ -1,4 +1,4 @@
-import { add, bulgeArc, bulgePoints, dist, hitTest, newId, norm, scale, sub, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
+import { add, bulgeArc, bulgePoints, dist, hitTest, newId, norm, scale, sub, wallArc, type FilletTarget, type Node, type Vec2 } from '@opencalque/core'
 import { t } from '../../i18n'
 import { formatLength } from '../../units'
 import { cancel, commit, layerHere, preview, useStore } from '../../store'
@@ -33,6 +33,10 @@ function arcUnder(c: Canvas, world: Vec2): { node: Node; centre: Vec2; radius: n
     if (Math.abs(node.rx - node.ry) > 1e-6) return null
     return { node, centre: { x: node.cx, y: node.cy }, radius: node.rx }
   }
+  if (node.type === 'wall') {
+    const arc = wallArc(node)
+    return arc && arc.radius > 0 ? { node, centre: arc.centre, radius: arc.radius } : null
+  }
   if (node.type !== 'polyline' || !node.bulges?.some((bulge) => bulge)) return null
   const reach = REACH / get().view.zoom
   let best: { i: number; near: number } | null = null
@@ -58,7 +62,7 @@ function arcUnder(c: Canvas, world: Vec2): { node: Node; centre: Vec2; radius: n
 function stretchUnder(c: Canvas, world: Vec2): { target: FilletTarget; a: Vec2; b: Vec2 } | null {
   const node = nodeUnder(c, world)
   if (!node) return null
-  if (node.type === 'line') return { target: { node, at: world }, a: node.a, b: node.b }
+  if (node.type === 'line' || node.type === 'wall') return { target: { node, at: world }, a: node.a, b: node.b }
   if (node.type !== 'polyline' || node.smooth) return null
   let best: { segment: number; near: number } | null = null
   for (let i = 0; i < node.points.length; i++) {
@@ -112,7 +116,7 @@ export const radialDimensionDown: Press = (c, _e, _at, world) => {
   }
   const arc = arcUnder(c, world)
   if (!arc) {
-    useStore.setState({ status: t('Only arcs and circles can carry a radius dimension') })
+    useStore.setState({ status: t('Only arcs, circles and curved walls can carry a radius dimension') })
     return
   }
   c.gesture = { kind: 'radiusDimension', id: newId(), centre: arc.centre, radius: arc.radius }
@@ -178,7 +182,7 @@ export const angleDimensionDown: Press = (c, _e, _at, world) => {
     return
   }
   const first = stretchUnder(c, world)
-  if (!first) return void useStore.setState({ status: t('Only straight lines and the straight stretches of a polyline can measure an angle') })
+  if (!first) return void useStore.setState({ status: t('Only straight lines, walls and straight stretches of a polyline can measure an angle') })
   c.gesture = { kind: 'angleDimension', first: first.target, a: first.a, b: first.b }
   syncStep(c)
 }

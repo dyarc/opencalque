@@ -319,7 +319,7 @@ A path primitive may carry `holes`, outlines in the same space as its points (`P
 
 ### Sunken pits
 
-A rectangle with a `recess` has a pit cut into it. The pit is in the rectangle's own unrotated space, like `holes`; `rectHoles` adds it as an opening, so the fill, the pattern, the hit test and the 2D exports stop at it, and it moves and turns with the slab. The pit's floor and underside are in `recess.top` and `recess.bottom`, from the slab's bottom face. `axonometricFaces` builds its top as four parts around the pit (`slabWithRecess`), its floor at that height, and the four inner walls from the floor up to the top of the slab. A slab with no top and bottom has no pit: the tool refuses one.
+A rectangle with a `recess` has a pit cut into it. The pit is in the rectangle's own unrotated space, like `holes`; `rectHoles` adds it as an opening, so the fill, the pattern, the hit test and the 2D exports stop at it, and it moves and turns with the slab. The pit's floor and underside are in `recess.top` and `recess.bottom`, how far below the slab's top face they are. `axonometricFaces` builds its top as four parts around the pit (`slabWithRecess`), its floor at that height, and the four inner walls from the floor up to the top of the slab. A slab with no top and bottom has no pit: the tool refuses one.
 
 ### Slabs, columns and beams
 

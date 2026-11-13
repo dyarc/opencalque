@@ -1172,7 +1172,9 @@ export const zh: Record<string, string> = {
   "Sink a pit into a rectangle that has a top and a bottom": "请点击一个有顶面和底面的矩形来挖下沉坑",
   "This slab is too thin or too small for a sunken pit": "这块板太薄或太小，无法挖下沉坑",
   "Sunken pit cut": "已挖下沉坑",
-  "Pit floor": "坑底",
   "Underside": "底面",
   "Click a rectangle with a top and a bottom to sink a pit into it": "点击一个有顶面和底面的矩形，在里面挖下沉坑",
+  "Sunken by": "下沉深度",
+  "Only arcs, circles and curved walls can carry a radius dimension": "只有圆弧、圆和弧形墙可以标注半径",
+  "Only straight lines, walls and straight stretches of a polyline can measure an angle": "只有直线、墙和连续线的直线段可以标注角度",
 }

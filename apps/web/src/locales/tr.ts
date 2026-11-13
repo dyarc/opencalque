@@ -1172,7 +1172,9 @@ export const tr: Record<string, string> = {
   "Sink a pit into a rectangle that has a top and a bottom": "Üstü ve altı olan bir dikdörtgene çukur açın",
   "This slab is too thin or too small for a sunken pit": "Bu döşeme çukur için çok ince veya çok küçük",
   "Sunken pit cut": "Çukur açıldı",
-  "Pit floor": "Çukur tabanı",
   "Underside": "Alt yüz",
   "Click a rectangle with a top and a bottom to sink a pit into it": "Çukur açmak için üstü ve altı olan bir dikdörtgeni tıklayın",
+  "Sunken by": "Çökme",
+  "Only arcs, circles and curved walls can carry a radius dimension": "Yarıçap ölçüsü yalnızca yaylara, dairelere ve kavisli duvarlara verilebilir",
+  "Only straight lines, walls and straight stretches of a polyline can measure an angle": "Açıyı yalnızca düz çizgiler, duvarlar ve bir çoklu çizginin düz bölümleri ölçebilir",
 }
