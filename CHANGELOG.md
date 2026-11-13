@@ -29,6 +29,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- Construction lines can be offset like other lines, and the Offset tool lights one under the pointer before it is clicked.
 - Keyboard shortcuts of one to three letters are command words now, not bare keys; a chord with Ctrl, Alt or Shift still runs at once. The shortcut labels show the Space that confirms a word.
 - A closed polygon, slab, beam or column seen in an elevation or a section is drawn as an opaque front face that hides what is behind it, as a wall does: its outline only, with no edge inside the face or at its back showing through.
 - A section's cut lines are the heaviest and darkest; lines beyond fall away in three steps, 0.25, 0.18 and 0.13 mm, thinner and lighter with distance, from a cut weight of 0.35 mm by default.
