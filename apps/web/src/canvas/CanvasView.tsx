@@ -12,7 +12,7 @@ import { surroundings } from '../surroundings'
 import { apply, commit, preview, select, setTool, useStore } from '../store'
 import { useTheme } from '../theme'
 import { formatLength, formatNumber, unitSuffix } from '../units'
-import { toWorld } from '../view'
+import { toWorld, wheelNavigation } from '../view'
 import { trackedPoints } from './aim'
 import { DARK_AROUND_CANVAS, DARK_CANVAS, drawScene, LIGHT_CANVAS, MAX_LINKED_WALLS, onPictureReady, onRepaint, type Overlay, type SizeLabel, type WallLinks } from './draw'
 import { drawing } from './drawing'
@@ -426,11 +426,8 @@ export function CanvasView() {
     const canvas = canvasRef.current!
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
-      const { view } = get()
-      const at = local(c, e)
-      const zoom = Math.min(20, Math.max(0.002, view.zoom * Math.exp(-e.deltaY * 0.0015)))
-      const world = toWorld(at, view)
-      useStore.setState({ view: { zoom, x: at.x - world.x * zoom, y: at.y - world.y * zoom } })
+      const { view, viewport } = get()
+      useStore.setState({ view: wheelNavigation(view, local(c, e), e, viewport.height) })
     }
     canvas.addEventListener('wheel', onWheel, { passive: false })
     return () => canvas.removeEventListener('wheel', onWheel)

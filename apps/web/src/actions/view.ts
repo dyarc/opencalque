@@ -2,14 +2,13 @@ import { boundsOf, buildScene, nodePrimitives, rootOf, sceneBounds, type Bounds 
 import { registry } from '../extensions'
 import { editComponent } from '../navigation'
 import { useStore } from '../store'
+import { MAX_ZOOM, MIN_ZOOM } from '../view'
 
 /* Where the drawing is looked at: zooming, and coming back to the view left when going inside a component from a list. */
 
 const get = useStore.getState
 
-/** How far the view zooms out and in, in screen pixels per millimetre. */
-export const MIN_ZOOM = 0.002
-export const MAX_ZOOM = 20
+export { MAX_ZOOM, MIN_ZOOM }
 
 /** Zooms to `zoom` pixels per millimetre around the centre of the canvas, within the limits. */
 export const zoomTo = (zoom: number): void => zoomBy(zoom / get().view.zoom)

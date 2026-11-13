@@ -4,6 +4,11 @@ What changed in each version of OpenCalque. The app shows this list under About,
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
+## 1.9.1 — 2026-11-13
+
+### Improved
+- The wheel moves the view the way a trackpad moves it elsewhere: two fingers scroll to pan the drawing, side to side as well as up and down, and pinching zooms about the pointer. A mouse wheel pans too; Ctrl-wheel (⌘-wheel) zooms.
+
 ## 1.9.0 — 2026-11-11
 
 ### New
