@@ -20,7 +20,8 @@ export interface SplitPlace {
 }
 
 /** What can be cut in two: a wall, a line, a room divider, or a polyline that is not closed. */
-export const canSplit = (node: Node): boolean => node.type === 'wall' || node.type === 'line' || node.type === 'divider' || (node.type === 'polyline' && !node.closed)
+export const canSplit = (node: Node): boolean =>
+  node.type === 'wall' || node.type === 'line' || node.type === 'divider' || (node.type === 'polyline' && !node.closed && !node.bulges?.some((bulge) => bulge))
 
 /** The points of what can be cut, as a run of straight stretches, or a course for a wall. */
 function along(node: Node): { length: number; at(s: number): Vec2; dir(s: number): Vec2; project(p: Vec2): number } | null {

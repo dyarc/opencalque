@@ -1112,10 +1112,10 @@ export const de: Record<string, string> = {
   "Explode": "Zerlegen",
   "Join": "Verbinden",
   "Nothing here can be exploded": "Hier lässt sich nichts zerlegen",
-  "Split into {n} lines": "In {n} Linien zerlegt",
   "Nothing to join here: the lines do not meet end to end": "Nichts zu verbinden: Die Linien treffen nicht Ende an Ende aufeinander",
   "Joined into {n} shapes": "Zu {n} Formen verbunden",
   "Joined into {n} shapes; {count} lines were left as they were": "Zu {n} Formen verbunden; {count} Linien blieben unverändert",
   "These lines cannot be filleted here": "Diese Linien lassen sich hier nicht abrunden",
   "Only straight lines and polylines can be filleted": "Nur gerade Linien und Polylinien lassen sich abrunden",
+  "Split into {n} pieces": "In {n} Teile zerlegt",
 }

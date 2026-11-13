@@ -1,5 +1,5 @@
 import { childrenOf, isVisible, rootOf } from './document'
-import { add, applyTransform, besidePath, centroid, dist, inverseTransform, len, mid, norm, parallelPath, perp, rotate, scale, sub, type Bounds, type Vec2, ellipseArc, smoothPoints, unionBounds } from './geometry'
+import { add, applyTransform, besidePath, bulgePoints, centroid, dist, inverseTransform, len, mid, norm, parallelPath, perp, rotate, scale, sub, type Bounds, type Vec2, ellipseArc, smoothPoints, unionBounds } from './geometry'
 import { fadeColor, resolveColor } from './colors'
 import { DIMENSION_MARKER_SIZE, DIMENSION_TEXT_SIZE, styledDimension } from './dimensions'
 import { fillFields } from './fields'
@@ -142,6 +142,26 @@ export interface NodeKind<N> {
   parallel?(node: N, distance: number): Record<string, unknown> | null
   /** How far `p` is from the node, signed as `parallel` takes a distance. */
   beside?(node: N, p: Vec2): number
+}
+
+/**
+ * The points a polyline is drawn through: its own, with the arcs its `bulges` describe laid in
+ * between them every degree and a half (their ends exactly on the points). A curve through the
+ * points that is not a bulge is smoothed as before.
+ */
+export function polylinePath(node: NodeOf<'polyline'>): Vec2[] {
+  if (!node.bulges?.some((bulge) => bulge)) return node.smooth ? smoothPoints(node.points, !!node.closed) : node.points
+  const count = node.closed ? node.points.length : node.points.length - 1
+  const points: Vec2[] = []
+  for (let i = 0; i < count; i++) {
+    const a = node.points[i]
+    const b = node.points[(i + 1) % node.points.length]
+    const arc = bulgePoints(a, b, node.bulges?.[i] ?? 0)
+    points.push(...(i === 0 ? arc : arc.slice(1)))
+  }
+  // A closed line comes back to its first point by being closed, not by repeating it.
+  if (node.closed && points.length > 1) points.pop()
+  return points
 }
 
 const moveXY = (node: { x: number; y: number }, d: Vec2) => ({ x: node.x + d.x, y: node.y + d.y })
@@ -709,16 +729,25 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     snapCorners: false,
   },
   polyline: {
-    primitives: (node) => [{ kind: 'path', points: node.smooth ? smoothPoints(node.points, node.closed) : node.points, closed: node.closed }, ...(node.closed ? [] : endMarkers(node.points, node))],
+    primitives: (node) => [{ kind: 'path', points: polylinePath(node), closed: node.closed }, ...(node.closed ? [] : endMarkers(node.points, node))],
     move: (node, d) => ({ points: node.points.map((p) => add(p, d)) }),
     handles: (node) => node.points,
     moveHandle: (node, index, p) => ({ points: node.points.map((q, i) => (i === index ? p : q)) }),
-    transform: (node, t) => ({ points: node.points.map((p) => t.point(p)), ...markerSize(node, t) }),
+    // Its corners are the points to snap to; the points laid along an arc are not.
+    snapPoints: (node) => node.points,
+    transform: (node, t) => ({
+      points: node.points.map((p) => t.point(p)),
+      // A mirror turns the way an arc bows round.
+      ...(t.mirror && node.bulges ? { bulges: node.bulges.map((b) => -b) } : {}),
+      ...markerSize(node, t),
+    }),
+    // A copy alongside a line with arcs would have to bend them: not made.
     parallel: (node, distance) => {
+      if (node.bulges?.some((b) => b)) return null
       const points = parallelPath(node.points, !!node.closed, distance, node.smooth)
       return points && { points }
     },
-    beside: (node, p) => besidePath(node.smooth ? smoothPoints(node.points, node.closed) : node.points, !!node.closed, p),
+    beside: (node, p) => besidePath(node.bulges?.some((b) => b) ? polylinePath(node) : node.smooth ? smoothPoints(node.points, node.closed) : node.points, !!node.closed, p),
     centre: (node) => (node.closed ? centroid(node.smooth ? smoothPoints(node.points, true) : node.points) : null),
   },
   rect: {

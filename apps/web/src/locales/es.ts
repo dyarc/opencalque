@@ -1112,10 +1112,10 @@ export const es: Record<string, string> = {
   "Explode": "Descomponer",
   "Join": "Unir",
   "Nothing here can be exploded": "Aquí no hay nada que descomponer",
-  "Split into {n} lines": "Descompuesto en {n} líneas",
   "Nothing to join here: the lines do not meet end to end": "Nada que unir: las líneas no se tocan extremo con extremo",
   "Joined into {n} shapes": "Unido en {n} formas",
   "Joined into {n} shapes; {count} lines were left as they were": "Unido en {n} formas; {count} líneas quedaron como estaban",
   "These lines cannot be filleted here": "Estas líneas no se pueden redondear aquí",
   "Only straight lines and polylines can be filleted": "Solo se pueden redondear líneas rectas y polilíneas",
+  "Split into {n} pieces": "Descompuesto en {n} piezas",
 }

@@ -90,7 +90,7 @@ export function explodeSelection(): void {
   const result = explodeOps(get().doc, get().selection)
   if (!result || !apply(result.ops)) return void toast(t('Nothing here can be exploded'))
   select(result.ids)
-  toast(t('Split into {n} lines', { n: result.ids.length }))
+  toast(t('Split into {n} pieces', { n: result.ids.length }))
 }
 
 /** Whether two or more selected objects are lines or open polylines, to be joined. */

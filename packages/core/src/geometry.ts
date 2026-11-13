@@ -417,6 +417,57 @@ export function besidePath(points: Vec2[], closed: boolean, p: Vec2): number {
 }
 
 /** The points of an arc of an ellipse, clockwise on screen from one angle to another (a whole turn when they are equal). */
+/**
+ * The circle an arc bulging by `bulge` lies on: the part from `a` to `b`, the arc on the left of
+ * that direction when `bulge` is positive and on the right when negative, as the screen is drawn
+ * (Y grows downward). `bulge` is the tangent of a quarter of the arc's included angle, as CAD
+ * polylines keep it: 0 is a straight stretch, 0.414 a quarter circle, 1 a half circle.
+ * @returns the centre, radius and the angles it starts and ends at, or null for a straight stretch.
+ */
+export function bulgeArc(a: Vec2, b: Vec2, bulge: number): { cx: number; cy: number; r: number; from: number; to: number; start: number; sweep: number } | null {
+  const chord = dist(a, b)
+  if (chord < 1e-9 || Math.abs(bulge) < 1e-12) return null
+  const sweep = (4 * Math.atan(bulge) * 180) / Math.PI
+  if (Math.abs(sweep) >= 360 - 1e-6) return null
+  const r = chord / (2 * Math.sin(Math.abs((sweep * Math.PI) / 180) / 2))
+  const across = perp(norm(sub(b, a)))
+  // Left of a to b on the screen is the other way round from what `perp` gives.
+  const left = { x: -across.x, y: -across.y }
+  const centre = add(mid(a, b), scale(left, -(chord / 2) / Math.tan((sweep * Math.PI) / 360)))
+  const angle = (p: Vec2) => (Math.atan2(p.y - centre.y, p.x - centre.x) * 180) / Math.PI
+  const [start, end] = [angle(a), angle(b)]
+  // `from` and `to` always run the short way round (a positive sweep, as an ellipse arc is drawn);
+  // the way it is actually walked from `a` to `b` is `start` and the sign of `sweep`.
+  return { cx: centre.x, cy: centre.y, r, from: sweep > 0 ? start : end, to: sweep > 0 ? end : start, start, sweep }
+}
+
+/**
+ * The points an arc bulging by `bulge` passes through, from `a` to `b`, about every `stepDeg`
+ * degrees: enough of them to draw it, its ends exactly where they are.
+ */
+export function bulgePoints(a: Vec2, b: Vec2, bulge: number, stepDeg = 1.5): Vec2[] {
+  const arc = bulgeArc(a, b, bulge)
+  if (!arc) return [a, b]
+  const steps = Math.max(2, Math.ceil(Math.abs(arc.sweep) / stepDeg))
+  const points: Vec2[] = [a]
+  for (let i = 1; i < steps; i++) {
+    const angle = ((arc.start + (arc.sweep * i) / steps) * Math.PI) / 180
+    points.push({ x: arc.cx + arc.r * Math.cos(angle), y: arc.cy + arc.r * Math.sin(angle) })
+  }
+  points.push(b)
+  return points
+}
+
+/** The bulge of the arc from `a` to `b` that passes through `through`, or null when they are in line. */
+export function bulgeOf(a: Vec2, b: Vec2, through: Vec2): number | null {
+  const arc = arcThrough(a, b, through)
+  if (!arc) return null
+  const sweep = (((arc.to - arc.from) % 360) + 360) % 360
+  const d = sub(b, a)
+  const side = d.x * (through.y - (a.y + b.y) / 2) - d.y * (through.x - (a.x + b.x) / 2)
+  // Positive is the arc on the left of a to b (see bulgeArc); cross(d, left) is negative.
+  return (side < 0 ? 1 : -1) * Math.tan(((sweep * Math.PI) / 180) / 4)
+}
 export function ellipseArc(e: { cx: number; cy: number; rx: number; ry: number; rotation?: number; from: number; to: number }): Vec2[] {
   const sweep = (((e.to - e.from) % 360) + 360) % 360 || 360
   const steps = Math.max(8, Math.ceil(sweep / 4))

@@ -236,6 +236,12 @@ export const NodeSchema = z
         points: z.array(Vec2Schema).min(2),
         closed: z.boolean().optional(),
         smooth: z.boolean().optional().describe('Drawn as a curve flowing through the points instead of straight segments.'),
+        bulges: z
+          .array(z.number())
+          .optional()
+          .describe(
+            "Arcs between the points, one per stretch: the tangent of a quarter of the stretch's included angle, positive for an arc on the left of the way it runs on screen (Y grows downward), negative on the right, 0 for a straight stretch. A stretch is one from each point to the next, and, when closed, from the last back to the first; a missing entry is straight. Left out, every stretch is straight.",
+          ),
         startMarker: tip.describe("Symbol at the first point of an open polyline. Defaults to 'none'."),
         endMarker: tip.describe("Symbol at its last point. Defaults to 'none'."),
         markerSize,

@@ -1112,10 +1112,10 @@ export const tr: Record<string, string> = {
   "Explode": "Parçala",
   "Join": "Birleştir",
   "Nothing here can be exploded": "Burada parçalanacak bir şey yok",
-  "Split into {n} lines": "{n} çizgiye parçalandı",
   "Nothing to join here: the lines do not meet end to end": "Birleştirilecek bir şey yok: çizgiler uç uca değmiyor",
   "Joined into {n} shapes": "{n} şekle birleştirildi",
   "Joined into {n} shapes; {count} lines were left as they were": "{n} şekle birleştirildi; {count} çizgi olduğu gibi bırakıldı",
   "These lines cannot be filleted here": "Bu çizgiler burada yuvarlatılamaz",
   "Only straight lines and polylines can be filleted": "Yalnızca düz çizgiler ve çoklu çizgiler yuvarlatılabilir",
+  "Split into {n} pieces": "{n} parçaya ayrıldı",
 }

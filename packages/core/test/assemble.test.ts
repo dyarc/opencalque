@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyOps, createDocument, explodeOps, joinOps, type Document, type NodeOf, type Op } from '../src'
+import { applyOps, createDocument, explodeOps, joinOps, parseDocument, serializeDocument, type Document, type NodeOf, type Op } from '../src'
 
 const add = (node: Record<string, unknown>): Op => ({ op: 'add_node', node: { parent: 'page_1', ...node } }) as Op
 const line = (id: string, ax: number, ay: number, bx: number, by: number, more: Record<string, unknown> = {}) => add({ type: 'line', id, a: { x: ax, y: ay }, b: { x: bx, y: by }, ...more })
@@ -17,6 +17,30 @@ describe('exploding', () => {
     expect(lines).toHaveLength(4)
     expect(new Set(lines.map((node) => JSON.stringify([(node as NodeOf<'line'>).a, (node as NodeOf<'line'>).b])))).toHaveLength(4)
     for (const piece of lines) expect(piece).toMatchObject({ type: 'line', style: { stroke: '#c00' } })
+  })
+
+  it('draws an arc inside a polyline as an arc, not as its chord', () => {
+    const doc = applyOps(createDocument('Plan'), [polyline('p', [[0, 0], [1000, 0], [1000, 1000]], { bulges: [Math.tan(Math.PI / 8), 0] })])
+    const out = explodeOps(doc, ['p'])!
+    const after = applyOps(doc, out.ops)
+    const pieces = out.ids.map((id) => after.nodes[id])
+    expect(pieces.map((node) => node.type).sort()).toEqual(['ellipse', 'line'])
+    const arc = pieces.find((node) => node.type === 'ellipse') as NodeOf<'ellipse'>
+    expect(arc.rx).toBeCloseTo(1000 / (2 * Math.sin(Math.PI / 4)), 6)
+    expect(arc.from).not.toBeUndefined()
+  })
+
+  it('keeps its arcs through a save and read, and says the version that knows them', () => {
+    const doc = applyOps(createDocument('Plan'), [polyline('p', [[0, 0], [1000, 0], [1000, 1000]], { bulges: [Math.tan(Math.PI / 8), 0] })])
+    const text = serializeDocument(doc)
+    expect(JSON.parse(text).version).toBe(4)
+    const read = parseDocument(JSON.parse(text))
+    expect((read.nodes.p as NodeOf<'polyline'>).bulges).toEqual([Math.tan(Math.PI / 8), 0])
+  })
+
+  it('leaves a line with an arc out of joining, where its points alone would lose the arc', () => {
+    const doc = applyOps(createDocument('Plan'), [polyline('p', [[0, 0], [1000, 0], [1000, 1000]], { bulges: [Math.tan(Math.PI / 8), 0] }), line('l', 1000, 1000, 2000, 1000)])
+    expect(joinOps(doc, ['p', 'l'])).toBeNull()
   })
 
   it('draws an open polyline as its segments, and a rectangle as its four sides', () => {

@@ -1112,10 +1112,10 @@ export const ja: Record<string, string> = {
   "Explode": "分解",
   "Join": "結合",
   "Nothing here can be exploded": "ここに分解できるものはありません",
-  "Split into {n} lines": "{n} 本の線に分解しました",
   "Nothing to join here: the lines do not meet end to end": "結合できるものがありません。線の端どうしが接していません",
   "Joined into {n} shapes": "{n} 個の図形に結合しました",
   "Joined into {n} shapes; {count} lines were left as they were": "{n} 個の図形に結合しました。{count} 本の線はそのままです",
   "These lines cannot be filleted here": "この位置ではこの線を丸められません",
   "Only straight lines and polylines can be filleted": "直線と連続線だけを丸められます",
+  "Split into {n} pieces": "{n} 個に分解しました",
 }

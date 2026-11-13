@@ -1,5 +1,5 @@
 import { newId } from './document'
-import { dist, smoothPoints, type Vec2 } from './geometry'
+import { bulgeArc, dist, smoothPoints, type Vec2 } from './geometry'
 import { rectCorners } from './kinds'
 import type { NodeInput, Op } from './ops'
 import type { Document, Node, NodeOf } from './schema'
@@ -31,7 +31,8 @@ export interface JoinResult {
 export const canExplode = (node: Node): node is NodeOf<'polyline'> | NodeOf<'rect'> => node.type === 'polyline' || node.type === 'rect'
 
 /** What can be joined: a line, or a polyline that lies open. */
-export const canJoin = (node: Node): node is NodeOf<'line'> | NodeOf<'polyline'> => node.type === 'line' || (node.type === 'polyline' && !node.smooth && !node.closed)
+export const canJoin = (node: Node): node is NodeOf<'line'> | NodeOf<'polyline'> =>
+  node.type === 'line' || (node.type === 'polyline' && !node.smooth && !node.closed && !node.bulges?.some((bulge) => bulge))
 
 /** The lines a polyline or a rectangle is drawn as, in order, in its layer and its look. */
 export function explodeOps(doc: Document, ids: string[]): ExplodeResult | null {
@@ -40,35 +41,43 @@ export function explodeOps(doc: Document, ids: string[]): ExplodeResult | null {
   for (const id of ids) {
     const node = doc.nodes[id]
     if (!node || !canExplode(node)) continue
-    const paths: [Vec2, Vec2][] = []
+    const pieces: { id: string; node: Record<string, unknown> }[] = []
+    const cut = (a: Vec2, b: Vec2, bulge = 0) => {
+      if (dist(a, b) <= 1e-9) return
+      const common = {
+        id: '',
+        parent: node.parent,
+        order: node.order,
+        ...(node.layer ? { layer: node.layer } : {}),
+        ...(node.style ? { style: node.style } : {}),
+      }
+      const arc = bulge ? bulgeArc(a, b, bulge) : null
+      if (!arc) {
+        pieces.push({ id: newId(), node: { ...common, type: 'line', a, b } })
+        return
+      }
+      pieces.push({
+        id: newId(),
+        node: { ...common, type: 'ellipse', cx: arc.cx, cy: arc.cy, rx: arc.r, ry: arc.r, from: arc.from, to: arc.to },
+      })
+    }
     if (node.type === 'polyline') {
-      const points = node.smooth ? smoothPoints(node.points, !!node.closed) : node.points
-      const count = node.closed ? points.length : points.length - 1
-      for (let i = 0; i < count; i++) paths.push([points[i], points[(i + 1) % points.length]])
+      const count = node.closed ? node.points.length : node.points.length - 1
+      if (node.bulges?.some((bulge) => bulge)) {
+        for (let i = 0; i < count; i++) cut(node.points[i], node.points[(i + 1) % node.points.length], node.bulges?.[i] ?? 0)
+      } else {
+        const points = node.smooth ? smoothPoints(node.points, !!node.closed) : node.points
+        for (let i = 0; i < count; i++) cut(points[i], points[(i + 1) % points.length])
+      }
     } else {
       const corners = rectCorners(node)
-      for (let i = 0; i < 4; i++) paths.push([corners[i], corners[(i + 1) % 4]])
+      for (let i = 0; i < 4; i++) cut(corners[i], corners[(i + 1) % 4])
     }
-    const pieces = paths
-      .filter(([a, b]) => dist(a, b) > 1e-9)
-      .map(([a, b]) => ({
-        id: newId(),
-        node: {
-          id: '',
-          type: 'line' as const,
-          parent: node.parent,
-          order: node.order,
-          ...(node.layer ? { layer: node.layer } : {}),
-          ...(node.style ? { style: node.style } : {}),
-          a,
-          b,
-        },
-      }))
     if (pieces.length === 0) continue
     ops.push({ op: 'remove_node', id })
     for (const piece of pieces) {
       piece.node.id = piece.id
-      ops.push({ op: 'add_node', node: piece.node as NodeInput })
+      ops.push({ op: 'add_node', node: piece.node as unknown as NodeInput })
       made.push(piece.id)
     }
   }

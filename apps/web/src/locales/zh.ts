@@ -1112,10 +1112,10 @@ export const zh: Record<string, string> = {
   "Explode": "炸开",
   "Join": "合并",
   "Nothing here can be exploded": "这里没有可以炸开的对象",
-  "Split into {n} lines": "已炸开为 {n} 条线",
   "Nothing to join here: the lines do not meet end to end": "没有可以合并的：这些线的端点没有相接",
   "Joined into {n} shapes": "已合并为 {n} 个图形",
   "Joined into {n} shapes; {count} lines were left as they were": "已合并为 {n} 个图形；{count} 条线保持原样",
   "These lines cannot be filleted here": "这些线在这里无法倒圆角",
   "Only straight lines and polylines can be filleted": "只有直线和连续线可以倒圆角",
+  "Split into {n} pieces": "已炸开为 {n} 个对象",
 }

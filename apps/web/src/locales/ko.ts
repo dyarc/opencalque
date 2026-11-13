@@ -1112,10 +1112,10 @@ export const ko: Record<string, string> = {
   "Explode": "분해",
   "Join": "결합",
   "Nothing here can be exploded": "여기에는 분해할 것이 없습니다",
-  "Split into {n} lines": "{n}개의 선으로 분해했습니다",
   "Nothing to join here: the lines do not meet end to end": "결합할 것이 없습니다. 선의 끝이 서로 닿지 않습니다",
   "Joined into {n} shapes": "{n}개의 도형으로 결합했습니다",
   "Joined into {n} shapes; {count} lines were left as they were": "{n}개의 도형으로 결합했습니다. {count}개의 선은 그대로 두었습니다",
   "These lines cannot be filleted here": "여기에서는 이 선을 둥글게 할 수 없습니다",
   "Only straight lines and polylines can be filleted": "직선과 폴리라인만 둥글게 할 수 있습니다",
+  "Split into {n} pieces": "{n}개로 분해했습니다",
 }
