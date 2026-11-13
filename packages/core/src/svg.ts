@@ -68,7 +68,8 @@ export function toSVG(doc: Document, containerId: string, registry: Registry, op
     }
     return drawn
   }
-  const body = paintOrder(scene.flatMap((item) => item.prims)).map(clipped)
+  // Construction lines are guides to draw against: they cross the whole view and are never printed.
+  const body = paintOrder(scene.flatMap((item) => item.prims.filter((p) => !p.guide))).map(clipped)
   const defs = clips.size > 0 ? [`<defs>${[...clips].map(([points, id]) => `<clipPath id="${id}"><polygon points="${points}"/></clipPath>`).join('')}</defs>`] : []
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box.map(num).join(' ')}" font-family="sans-serif">`,

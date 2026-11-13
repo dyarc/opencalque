@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyEdit, applyOps, createDocument, elevationItemAt, elevationMovePatch, elevationPrimitives, NewerFormatError, parseDocument, Registry, serializeDocument, shownInElevations, splitWallOps, transformOps, wallFaceAt, type Document, type NodeOf, type Op, type Primitive } from '../src'
+import { applyEdit, applyOps, createDocument, elevationItemAt, elevationMovePatch, elevationPrimitives, FORMAT_VERSION, NewerFormatError, parseDocument, Registry, serializeDocument, shownInElevations, splitWallOps, transformOps, wallFaceAt, type Document, type NodeOf, type Op, type Primitive } from '../src'
 import { viewNodes, viewOps, type ViewSpec } from './view-nodes'
 
 /*
@@ -130,7 +130,7 @@ describe('elevations', () => {
     expect(JSON.parse(serializeDocument(plan())).version).toBe(3)
     const without = applyOps(plan(), [{ op: 'remove_node', id: 'e' }])
     expect(JSON.parse(serializeDocument(without)).version).toBe(2)
-    expect(parseDocument(JSON.parse(serializeDocument(without))).version).toBe(3)
+    expect(parseDocument(JSON.parse(serializeDocument(without))).version).toBe(FORMAT_VERSION)
     expect(parseDocument(JSON.parse(serializeDocument(plan()))).nodes.e).toEqual(plan().nodes.e)
   })
 })
@@ -280,8 +280,8 @@ describe('elevations follow every edit of their wall', () => {
 describe('drawings with elevations from other versions', () => {
   it('are refused by a version that reads only up to version 2, which a drawing without one still is', () => {
     const json = JSON.parse(serializeDocument(plan()))
-    expect(() => parseDocument({ ...json, version: 4 })).toThrow(NewerFormatError)
-    // A drawing of version 2 with no elevation opens, and is of version 3 once read.
+    expect(() => parseDocument({ ...json, version: FORMAT_VERSION + 1 })).toThrow(NewerFormatError)
+    // A drawing of version 2 with no elevation opens, and is of the current version once read.
     const old = JSON.parse(serializeDocument(applyOps(plan(), [{ op: 'remove_node', id: 'e' }])))
     expect(old.version).toBe(2)
     expect(parseDocument(old).nodes.door).toBeDefined()

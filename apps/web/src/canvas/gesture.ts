@@ -33,6 +33,8 @@ export type Gesture =
    * one continues: where it began, how many are drawn, and when the last one was finished.
    */
   | { kind: 'draw'; id: string; start: Vec2; press: (Vec2 & { time: number }) | null; origin: Vec2; segments: number; since: number }
+  /** A construction line being placed parallel to a stretch of what is under the pointer: that stretch's two points. */
+  | { kind: 'construction'; id: string; a: Vec2; b: Vec2 }
   /** A dimension whose two points are set; the pointer now chooses how far its line stands off. */
   | { kind: 'offset'; id: string; a: Vec2; b: Vec2 }
   /** An arc whose two ends are set; the pointer now chooses a point it goes through. */

@@ -41,11 +41,13 @@ export function toDXF(doc: Document, containerId: string, registry: Registry): s
   // meets another, the line is a line of its own, drawn over the walls; a wall stacked over one of
   // another material shows its outline across it (`outsideMass`).
   const scene = buildScene(doc, containerId, registry)
-  const { mass, of } = unionMass(scene.flatMap((item) => item.prims))
+  // Construction lines are guides to draw against: they cross the whole view and are never exported.
+  const { mass, of } = unionMass(scene.flatMap((item) => item.prims.filter((prim) => !prim.guide)))
 
   for (const item of scene) {
     const layer = layerName(item.node.layer ? doc.layers[item.node.layer]?.name : undefined)
     for (const prim of item.prims) {
+      if (prim.guide) continue
       if (prim.kind === 'path') {
         if (prim.stroke === 'none') continue
         const count = prim.closed ? prim.points.length : prim.points.length - 1

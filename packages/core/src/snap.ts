@@ -109,12 +109,13 @@ export function snapTo(scene: SceneItem[], at: Vec2, reach: number, options: Sna
     for (const q of snapPointsOf(item)) offer(q, 'point')
     const centre = kindOf(item.node).centre?.(item.node)
     if (centre) offer(centre, 'centre')
-    if (!item.bounds || !boundsContainPoint(item.bounds, at, reach)) continue
+    const guide = item.prims.some((prim) => prim.guide)
+    if (!guide && (!item.bounds || !boundsContainPoint(item.bounds, at, reach))) continue
     for (const line of snapLinesOf(item)) {
       for (let i = 0; i + 1 < line.length; i++) {
         const [a, b] = [line[i], line[i + 1]]
         if (dist(nearestOn(at, a, b).at, at) > reach) continue
-        near.push({ a, b, corners: [isCorner(line, i), isCorner(line, i + 1)] })
+        near.push({ a, b, corners: kindOf(item.node).snapCorners === false ? [false, false] : [isCorner(line, i), isCorner(line, i + 1)] })
       }
     }
   }

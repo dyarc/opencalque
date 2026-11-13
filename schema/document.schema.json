@@ -8,7 +8,7 @@
     },
     "version": {
       "type": "number",
-      "const": 3
+      "const": 4
     },
     "id": {
       "type": "string",
@@ -1227,6 +1227,224 @@
             ],
             "additionalProperties": false,
             "description": "A straight line from a to b, optionally with an arrow or another symbol at either end."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Id of the page, component or group this node is directly inside. Null for pages and components."
+              },
+              "order": {
+                "type": "string",
+                "description": "Fractional index giving the z-order among siblings (plain string comparison, later = on top). A key of the fractional-indexing package, such as \"a0\", \"a1\" or \"a0V\"; leave it out when adding a node to put it on top."
+              },
+              "layer": {
+                "description": "Id of the layer the node is on. A node inside a component has none: what a component holds is drawn on the layer of each of its instances.",
+                "type": "string",
+                "minLength": 1
+              },
+              "visible": {
+                "description": "Defaults to true.",
+                "type": "boolean"
+              },
+              "locked": {
+                "description": "Defaults to false.",
+                "type": "boolean"
+              },
+              "style": {
+                "description": "Overrides the look of a node. Unset values fall back to the node kind, then the layer color. An instance has none: it looks as its component is drawn.",
+                "type": "object",
+                "properties": {
+                  "stroke": {
+                    "description": "CSS color of lines and text, or 'none'. Any colour property may instead be a shared colour, \"var(--<id>)\", or \"var(--layer)\": the colour of the node's layer.",
+                    "type": "string"
+                  },
+                  "strokeWidth": {
+                    "description": "Line weight in screen pixels (does not scale with zoom). On paper one pixel prints as 0.25 mm, so 2 is a 0.5 mm line.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "fill": {
+                    "description": "CSS fill color, or 'none', a shared colour \"var(--<id>)\", or \"var(--layer)\" to fill with the colour of the node's layer.",
+                    "type": "string"
+                  },
+                  "pattern": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "description": "Which pattern: 'Lines', 'Cross', 'Planks', 'Tiles', 'Dots' or 'Zigzag'; 'None' for no pattern where one would otherwise be taken from a material."
+                      },
+                      "spacing": {
+                        "description": "Distance between its strokes, in mm. Each pattern has its own when not given.",
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "angle": {
+                        "description": "Degrees its strokes are turned by. Each pattern has its own when not given.",
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "description": "The colour of its strokes. A CSS colour or a shared colour reference.",
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "description": "The weight of its strokes, in screen pixels as in a style. 0.6 when not given.",
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "opacity": {
+                        "description": "How opaque its strokes are, from 0 (not at all) to 1 (the default), on top of the opacity of their colour.",
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false,
+                    "description": "A pattern of strokes drawn over a fill, inside each closed shape: the hatching that tells a material, or a floor."
+                  },
+                  "dash": {
+                    "description": "Dash pattern in screen pixels.",
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "modifiers": {
+                "description": "Modifiers applied to what this node draws, one after the other in this order. On a group or an instance they apply to everything it holds.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "The kind of modifier: 'crop', or one registered by an extension. Unknown kinds are kept and skipped."
+                    },
+                    "enabled": {
+                      "description": "Defaults to true. A modifier that is switched off stays in the list.",
+                      "type": "boolean"
+                    },
+                    "params": {
+                      "description": "Parameters of the kind. Missing ones use the kind defaults.",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    },
+                    "frame": {
+                      "description": "Where the modifier sits on the drawing: positions among its parameters are relative to it. It follows the node when the node is moved, turned or scaled.",
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        },
+                        "rotation": {
+                          "type": "number"
+                        },
+                        "flipX": {
+                          "type": "boolean"
+                        },
+                        "scale": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "additionalProperties": false,
+                  "description": "A non-destructive change to how a node is drawn; the node itself is not altered. 'crop' shows only what is inside the rectangle that starts at its frame and has params.width and params.height."
+                }
+              },
+              "meta": {
+                "description": "Free-form data for extensions and tools.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "type": {
+                "type": "string",
+                "const": "construction"
+              },
+              "a": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
+              },
+              "b": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "parent",
+              "order",
+              "type",
+              "a",
+              "b"
+            ],
+            "additionalProperties": false,
+            "description": "A construction line: an endless dashed guide running both ways through a and b, to draw against. It is drawn across the view, never printed or exported, and nothing snaps to its ends, which are at no place in the drawing."
           },
           {
             "type": "object",

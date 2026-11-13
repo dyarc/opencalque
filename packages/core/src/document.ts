@@ -212,8 +212,10 @@ export function serializeDocument(doc: Document): string {
   const used = new Set(Object.values(doc.nodes).flatMap((n) => (n.type === 'image' ? [n.asset] : [])))
   const assets = Object.fromEntries(Object.entries(doc.assets ?? {}).filter(([id]) => used.has(id)))
   const { assets: _, ...rest } = doc
-  // A drawing with no elevation nor view line holds nothing version 2 did not know, and says it is of version 2,
-  // so that the versions of the app before elevations (1.8 and earlier) still open it.
-  const version = Object.values(doc.nodes).some((n) => n.type === 'elevation' || n.type === 'viewline') ? doc.version : Math.min(doc.version, 2)
+  // A drawing says the oldest version that knows everything it holds, so that older apps open it and
+  // refuse it only when it really has something they cannot draw: construction lines need version 4,
+  // elevations and view lines version 3, and anything else opens in the versions before elevations (1.8).
+  const nodes = Object.values(doc.nodes)
+  const version = nodes.some((n) => n.type === 'construction') ? 4 : nodes.some((n) => n.type === 'elevation' || n.type === 'viewline') ? 3 : 2
   return JSON.stringify(used.size > 0 ? { ...rest, version, assets } : { ...rest, version }, null, 2) + '\n'
 }

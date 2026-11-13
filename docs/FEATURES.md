@@ -8,6 +8,7 @@ Last updated: 2026-11-11 (after 1.8.0).
 
 ### Drawing
 - Lines, rectangles, ellipses and arcs (an ellipse with a start and an end angle), polylines and polygons, straight or curved through their points, text. The Curved line tool draws the curve as its points are clicked; the Arc tool draws an arc by its two ends and a point it goes through, or a typed radius; the Circle tool a circle by its centre and a point it goes through, or a typed radius.
+- **Construction lines**: an endless dashed guide through two points, or parallel to a line at an offset typed or given by the pointer; picked and snapped to along its length, on its layer, never printed.
 - **Extend**: the end of a line, a polyline or a wall clicked runs straight on to the next thing in its way (for a wall, the next wall), and again to the one after. **Fillet**: two lines clicked meet at their corner, each cut back or carried on to it, or are joined by an arc of a typed radius.
 - **Offset**: a parallel copy of a wall, a line, a polyline, a curve, a rectangle, a circle or an arc, at a typed distance or where the pointer says. A wall's copy is a wall like it, its line that far from the first, a curved one round the same centre.
 - **Selecting by a box**, as in CAD: dragged to the right it takes what is wholly inside it; dragged to the left, green and dashed, what it touches, by what is drawn rather than by the box around it.

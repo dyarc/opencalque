@@ -181,6 +181,9 @@ export function shape(tool: Tool, id: string, a: Vec2, b: Vec2, offset = 0): Nod
     case 'wall':
       // Of the material chosen for the tool, when this drawing has it: the setting outlives the drawing.
       return { ...common, type: 'wall', a, b, thickness: wallThickness, ...(wallMaterial && doc.materials?.[wallMaterial] ? { material: wallMaterial } : {}) }
+    case 'construction':
+      // An endless guide through the two points clicked: only its direction is kept.
+      return { ...common, type: 'construction', a, b }
     case 'divider':
       return { id, parent: scope, ...layerHere(), type: 'divider', a, b }
     case 'annotation':

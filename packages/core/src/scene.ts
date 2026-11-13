@@ -79,7 +79,9 @@ function templateSheet(doc: Document, componentId: string): SceneItem | null {
 }
 
 export function boundsOf(prims: Primitive[]): Bounds | null {
-  return prims.reduce<Bounds | null>((b, p) => unionBounds(b, primitiveBounds(p)), null)
+  // A guide is nowhere in the drawing: fitting the view, framing a selection and measuring what is
+  // on a page leave out construction lines, which cross all of it.
+  return prims.reduce<Bounds | null>((b, p) => (p.guide ? b : unionBounds(b, primitiveBounds(p))), null)
 }
 
 export function sceneBounds(scene: SceneItem[]): Bounds | null {
@@ -93,7 +95,9 @@ const isSolid = (item: SceneItem) => item.node.type === 'instance' || item.node.
 export function hitTest(scene: SceneItem[], p: Vec2, tolerance: number): SceneItem | null {
   for (let i = scene.length - 1; i >= 0; i--) {
     const item = scene[i]
-    if (item.locked || !item.bounds || !boundsContainPoint(item.bounds, p, tolerance)) continue
+    // A guide has no size to test the point against: its line is looked at directly.
+    const guide = item.prims.some((prim) => prim.guide)
+    if (item.locked || (!guide && (!item.bounds || !boundsContainPoint(item.bounds, p, tolerance)))) continue
     const solid = isSolid(item)
     if (item.prims.some((prim) => distToPrimitive(prim, p) <= tolerance || (solid && insidePrimitive(prim, p)))) return item
   }

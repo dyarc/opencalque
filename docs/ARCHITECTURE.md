@@ -308,6 +308,10 @@ A `gridline` is a line `a`-`b` with a bubble (a circle of diameter `size`, 800 m
 
 The tool is in `TEXT_TOOLS` (G), a two-point shape (`TWO_POINT`, `shape()` in `canvas/shapes.ts`) whose end is held to 45° steps by Shift and takes a typed length and angle, as a line does.
 
+### Construction lines
+
+A `construction` node is an endless dashed guide through `a` and `b`: `constructionEnds` (`kinds.ts`) draws it `CONSTRUCTION_REACH` (a kilometre) either way, so that it crosses any view. Its path is a **guide primitive** (`PrimStyle.guide`): `boundsOf` leaves guide primitives out, so fitting the view, framing a selection, resizing a component and measuring a page ignore it, while the canvas paints it, `hitTest` and `snapTo` look at its line without a box to test against, and `toSVG`, `toPDF` and `toDXF` drop it. That holds inside a group or a component too, where the item's node is no construction line. It is picked and snapped to along its line, and nowhere at its ends (`snapCorners: false`): they are no place in the drawing. It sits on its layer like a line — its dashes are the kind's, overridden by a `dash` of its own style. It needs format version 4, which drawings without one do not say. Only its direction is kept, so its two points and their distance mean nothing. The tool (`Q`, with the shapes) takes a line under the pointer for its direction, the pointer's side and distance (or a distance typed in the quick bar) for its offset, and places it on click; away from lines it draws through two clicked points.
+
 ### Rooms (`rooms.ts`)
 
 A `room` node is a point and a name; **its outline is not stored**. `roomAt(doc, parent, point)` finds the space the walls and dividers around the point enclose, every time the room is drawn, so a room follows its walls and can never go stale. This is the same idea as openings and papers: tied by position, not by reference.

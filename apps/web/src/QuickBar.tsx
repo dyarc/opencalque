@@ -39,6 +39,7 @@ const SIZES: Partial<Record<Tool, Size[]>> = {
   fillet: bend,
   paper: box,
   line: run,
+  construction: run,
   curve: span,
   offset: [{ which: 'a', label: msg('Distance'), kind: 'length' }],
   arc: span,
@@ -53,7 +54,7 @@ const SIZES: Partial<Record<Tool, Size[]>> = {
  * make closed shapes, which take its fill too (the line tool closes a polygon). Line weights and
  * kinds of line are set afterwards, in the properties.
  */
-const INKED: Tool[] = ['rect', 'ellipse', 'circle', 'line', 'curve', 'arc', 'wall', 'gridline']
+const INKED: Tool[] = ['rect', 'ellipse', 'circle', 'line', 'construction', 'curve', 'arc', 'wall', 'gridline']
 const FILLED: Tool[] = ['rect', 'ellipse', 'circle', 'line', 'curve']
 
 /**
@@ -130,10 +131,12 @@ export function QuickBar() {
   const wallThickness = useStore((s) => s.wallThickness)
   const wallJustify = useStore((s) => s.wallJustify)
   const paperScale = useStore((s) => s.paperScale)
+  const step = useStore((s) => s.drawStep)
   // The rotate tool takes an angle once its base line is set, at its second step.
-  const started = useStore((s) => s.drawStep > (s.tool === 'rotate' ? 1 : 0))
+  const started = step > (tool === 'rotate' ? 1 : 0)
   const bending = useStore((s) => s.tool === 'arc' && s.drawStep >= 2)
-  const sizes = bending ? bend : SIZES[tool]
+  // A construction line taken from a line asks for its offset alone; through two points, for a length and an angle.
+  const sizes = tool === 'construction' && step === 3 ? [{ which: 'a' as const, label: msg('Offset'), kind: 'length' as const }] : bending ? bend : SIZES[tool]
   if (!sizes) return null
   // A length or an angle means nothing before there is a point to measure it from. A
   // width and a height do: typed first, they make a box that one click places. So does the

@@ -297,6 +297,7 @@ const STATIC: Command[] = [
   tool('select', msg('Select'), 'V'),
   tool('hand', msg('Pan'), 'H'),
   tool('line', msg('Line'), 'L'),
+  tool('construction', msg('Construction line'), 'Q'),
   tool('curve', msg('Curved line'), 'Shift+L'),
   tool('arc', msg('Arc'), 'Shift+O'),
   // Listed before the rectangle tool so that R rotates while an object is being placed.

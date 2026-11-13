@@ -6,7 +6,7 @@ z.config({ jitless: true })
 export const FORMAT = 'opencalque'
 /** What `format` was before the project was renamed. Such drawings are still read. */
 export const FORMER_FORMAT = 'opencad'
-export const FORMAT_VERSION = 3
+export const FORMAT_VERSION = 4
 
 const Id = z.string().min(1)
 
@@ -224,6 +224,11 @@ export const NodeSchema = z
     z
       .object({ ...base, type: z.literal('line'), a: Vec2Schema, b: Vec2Schema, startMarker: tip.describe("Symbol at a. Defaults to 'none'."), endMarker: tip.describe("Symbol at b. Defaults to 'none'."), markerSize })
       .describe('A straight line from a to b, optionally with an arrow or another symbol at either end.'),
+    z
+      .object({ ...base, type: z.literal('construction'), a: Vec2Schema, b: Vec2Schema })
+      .describe(
+        'A construction line: an endless dashed guide running both ways through a and b, to draw against. It is drawn across the view, never printed or exported, and nothing snaps to its ends, which are at no place in the drawing.',
+      ),
     z
       .object({
         ...base,

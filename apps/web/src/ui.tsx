@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { BrickWall, ChevronDown, MoveHorizontal, ScanEye, Circle, Hexagon, Component, File, Group, Image, Lock, LockOpen, MessageSquare, Minus, RulerDimensionLine, Shapes, SeparatorVertical, Spline, Square, SquareDashed, StickyNote, Table, Type, type LucideIcon } from 'lucide-react'
+import { BrickWall, ChevronDown, MoveHorizontal, ScanEye, Circle, Hexagon, Component, File, Group, Image, Lock, LockOpen, MessageSquare, Minus, RulerDimensionLine, Shapes, SeparatorVertical, Slash, Spline, Square, SquareDashed, StickyNote, Table, Type, type LucideIcon } from 'lucide-react'
 import type { Document, Node } from '@opencalque/core'
 import { GridLine } from './icons'
 import { msg, t } from './i18n'
@@ -14,6 +14,7 @@ const TYPE_LABELS: Record<Node['type'], string> = {
   component: msg('Component'),
   group: msg('Group'),
   line: msg('Line'),
+  construction: msg('Construction line'),
   polyline: msg('Polyline'),
   rect: msg('Rectangle'),
   paper: msg('Paper'),
@@ -38,6 +39,7 @@ const TYPE_ICONS: Record<Node['type'], LucideIcon> = {
   component: Component,
   group: Group,
   line: Minus,
+  construction: Slash,
   polyline: Spline,
   rect: Square,
   paper: StickyNote,

@@ -290,4 +290,6 @@ export const MIGRATIONS: ((doc: Raw) => Raw)[] = [
   (doc) => toVersion2(withoutWallTypes(doc)),
   // Version 3 brings elevations and sections (the `viewline` and `elevation` node types) and nothing that changes what was there.
   (doc) => doc,
+  // Version 4 brings construction lines (the `construction` node type) and nothing that changes what was there.
+  (doc) => doc,
 ]

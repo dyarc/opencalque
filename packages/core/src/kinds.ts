@@ -26,6 +26,29 @@ export const DIVIDER_INK = '#8b9099'
 const VIEW_LINE_ARROW = 500
 const VIEW_LINE_HEAD = 180
 
+/** The dashes of a construction line, in mm: a guide to draw against, not a line of the drawing. */
+export const CONSTRUCTION_DASH = [12, 4]
+/** How far either way of the points that set its direction a construction line is drawn, in mm: a kilometre, past any drawing. */
+export const CONSTRUCTION_REACH = 1e6
+
+/**
+ * The two ends a construction line is drawn between: through `a` and `b`, `CONSTRUCTION_REACH`
+ * either way, so that it crosses any view of the drawing. Null when `a` and `b` are the same place,
+ * which gives no direction.
+ * @param node - the construction line's own two points.
+ * @returns the ends of the endless line as drawn, or null.
+ */
+export function constructionEnds(node: { a: Vec2; b: Vec2 }): [Vec2, Vec2] | null {
+  const d = sub(node.b, node.a)
+  const length = Math.hypot(d.x, d.y)
+  if (length < 1e-9) return null
+  const unit = { x: d.x / length, y: d.y / length }
+  return [
+    { x: node.a.x - unit.x * CONSTRUCTION_REACH, y: node.a.y - unit.y * CONSTRUCTION_REACH },
+    { x: node.b.x + unit.x * CONSTRUCTION_REACH, y: node.b.y + unit.y * CONSTRUCTION_REACH },
+  ]
+}
+
 /**
  * A view line on the plan, as the mark of a section is drawn: a line of dashes and dots from end to
  * end, and at each end an arrow the way its views look, filled.
@@ -91,6 +114,12 @@ export interface NodeKind<N> {
    * a kind does not say.
    */
   snapLines?(node: N, drawn: Vec2[][]): Vec2[][]
+  /**
+   * Whether the ends of its lines are corners to snap to, and a line's middle one to offer. False
+   * for a line with no ends in the drawing, such as a construction line, which is snapped onto
+   * along its length and nowhere in particular. Defaults to true.
+   */
+  snapCorners?: boolean
   /**
    * The centre of a shape, snapped to as such (as a CAD program's centre and geometric centre):
    * of a circle or an arc, a rectangle, a closed polygon or curve. Null or absent where a node has
@@ -660,6 +689,24 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
       return path && { a: path[0], b: path[1] }
     },
     beside: (node, p) => besidePath([node.a, node.b], false, p),
+  },
+  construction: {
+    primitives: (node) => {
+      const ends = constructionEnds(node)
+      return ends ? [{ kind: 'path', points: ends, dash: CONSTRUCTION_DASH, guide: true }] : []
+    },
+    move: moveAB,
+    transform: transformAB,
+    // Its ends are nowhere in the drawing: there is nothing to drag, and no point to snap to. Its
+    // line, though, is one to snap onto along its whole length.
+    handles: () => [],
+    snapPoints: () => [],
+    snapLines: (node) => {
+      const ends = constructionEnds(node)
+      return ends ? [ends] : []
+    },
+    // It has no ends in the drawing to snap to, and no middle to offer: only its line.
+    snapCorners: false,
   },
   polyline: {
     primitives: (node) => [{ kind: 'path', points: node.smooth ? smoothPoints(node.points, node.closed) : node.points, closed: node.closed }, ...(node.closed ? [] : endMarkers(node.points, node))],

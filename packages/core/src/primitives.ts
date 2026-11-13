@@ -53,6 +53,11 @@ export interface PrimStyle {
   /** Set on the strokes of a pattern laid on a merged shape (a wall): painted with the merged fills, under their outline, which they would otherwise cross. */
   merged?: boolean
   /**
+   * A guide rather than something drawn in the drawing: a construction line is painted, picked and
+   * snapped to, but gives no size to fit, frame, export or measure (see `boundsOf`).
+   */
+  guide?: boolean
+  /**
    * How much the see-through groups it is in let through, multiplied; set only where there is no
    * fill to fade. The white an object backs such a shape with (`objectBacking`) is faded as much.
    */

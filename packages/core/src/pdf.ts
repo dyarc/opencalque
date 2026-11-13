@@ -263,7 +263,9 @@ function pageContent(doc: Document, paper: Paper, registry: Registry, resources:
 
 /** What is on a sheet, without the sheets themselves: the page is the paper. */
 const sheetPrimitives = (doc: Document, paper: Paper, registry: Registry): Primitive[] =>
-  buildScene(doc, paper.parent!, registry).flatMap((item) => (item.node.type === 'paper' && item.id !== paper.id ? [] : item.prims.filter((p) => p.backdrop !== true)))
+  buildScene(doc, paper.parent!, registry).flatMap((item) =>
+    item.node.type === 'paper' && item.id !== paper.id ? [] : item.prims.filter((p) => p.backdrop !== true && !p.guide),
+  )
 
 /** The papers to export: those given, in that order, or every paper of the document, page by page. */
 function papersOf(doc: Document, paperIds?: string[]): Paper[] {
