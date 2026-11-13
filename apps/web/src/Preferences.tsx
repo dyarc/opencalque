@@ -405,6 +405,12 @@ function DrawingSettings() {
         <Setting label={t('Zoom speed')} hint={t('How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.')}>
           <ZoomSpeed />
         </Setting>
+        <Setting label={t('Wheel and trackpad')} hint={t('Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.')}>
+          <select value={prefs.wheelMode} onChange={(e) => setPrefs({ wheelMode: e.target.value as typeof prefs.wheelMode })}>
+            <option value="trackpad">{t('Trackpad: two fingers pan, a pinch zooms')}</option>
+            <option value="mouse">{t('Mouse: the wheel zooms')}</option>
+          </select>
+        </Setting>
       </Section>
       <Section title={t('Groups and components')}>
         <Setting label={t('Editing inside a group')}>

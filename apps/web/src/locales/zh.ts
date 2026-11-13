@@ -1132,4 +1132,8 @@ export const zh: Record<string, string> = {
   "Click the first line": "点击第一条线",
   "Click the second line": "点击第二条线",
   "Click where the angle arc goes": "点击角度弧要放的位置",
+  "Wheel and trackpad": "滚轮与触摸板",
+  "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "选择滚轮如何移动图纸。触控板滚动平移、捏合缩放；鼠标滚轮以指针为中心缩放，和以前一样。",
+  "Trackpad: two fingers pan, a pinch zooms": "触摸板：双指平移，捏合缩放",
+  "Mouse: the wheel zooms": "鼠标：滚轮缩放",
 }

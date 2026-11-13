@@ -14,14 +14,15 @@ const plan = (): Document =>
 const prims = (doc: Document, id: string) => nodePrimitives(doc.nodes[id] as NodeOf<'radialDimension'>, { doc, registry, depth: 0 })
 
 describe('measuring dimensions', () => {
-  it('writes a radius as R and its value, with a leader from the centre and an arrow at the arc', () => {
+  it('writes a radius as R and its value, on a leader that starts at the arc and runs out to the words', () => {
     const drawn = prims(plan(), 'r')
     const texts = drawn.flatMap((prim) => (prim.kind === 'text' ? [prim.text] : []))
     expect(texts).toEqual(['R 1000'])
-    // The line from the centre to the arc, and on to the words.
+    // A leader out from the arc to the words, and nothing through the centre.
     const paths = drawn.flatMap((prim) => (prim.kind === 'path' ? [prim.points] : []))
-    expect(paths[0]).toEqual([{ x: 0, y: 0 }, { x: 1000, y: 0 }])
-    expect(paths[1][0]).toEqual({ x: 1000, y: 0 })
+    expect(paths[0][0]).toEqual({ x: 1000, y: 0 })
+    expect(paths[0][1].x).toBeGreaterThan(1000)
+    expect(paths.some((points) => points[0].x === 0 && points[0].y === 0 && points[1].x === 1000)).toBe(false)
     // The arrow is filled with the line's colour.
     expect(drawn.some((prim) => prim.kind === 'path' && prim.closed && prim.fill === prim.stroke)).toBe(true)
   })

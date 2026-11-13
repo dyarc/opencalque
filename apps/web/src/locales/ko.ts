@@ -1132,4 +1132,8 @@ export const ko: Record<string, string> = {
   "Click the first line": "첫 번째 선을 클릭",
   "Click the second line": "두 번째 선을 클릭",
   "Click where the angle arc goes": "각도 호를 놓을 위치를 클릭",
+  "Wheel and trackpad": "휠과 트랙패드",
+  "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "휠이 도면을 어떻게 움직일지 선택합니다. 트랙패드는 스크롤로 이동하고 핀치로 확대/축소합니다. 마우스 휠은 포인터를 중심으로 확대/축소합니다(이전과 같음).",
+  "Trackpad: two fingers pan, a pinch zooms": "트랙패드: 두 손가락으로 이동, 핀치로 확대/축소",
+  "Mouse: the wheel zooms": "마우스: 휠로 확대/축소",
 }

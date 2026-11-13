@@ -34,6 +34,8 @@ export interface Prefs {
   showClearances: boolean
   /** How fast a pinch or Ctrl-wheel zooms the drawing, as a multiple of the usual speed. */
   zoomSpeed: number
+  /** What the wheel does: a trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms. */
+  wheelMode: 'trackpad' | 'mouse'
   /** While editing inside a group: the rest of the drawing shown faded around it, to see and snap to, or not shown. */
   editGroups: Surroundings
   /** The same, while editing a component gone into by one of its placements. */
@@ -100,6 +102,7 @@ const DEFAULTS: Prefs = {
   snapToObjects: true,
   showClearances: true,
   zoomSpeed: 1,
+  wheelMode: 'trackpad',
   editGroups: 'faded',
   editComponents: 'alone',
   agentBridge: false,

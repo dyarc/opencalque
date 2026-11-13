@@ -672,12 +672,17 @@ function measureRotation(along: number, node: { textRotation?: 'aligned' | 'hori
   return turned
 }
 
-/** A radius dimension: R and its value, the leader from the centre through the arc and out to the words. */
+/**
+ * A radius dimension: R and its value, on a leader that starts at the arc and runs out to the
+ * words. Nothing is drawn through the centre: the arc is where it is measured, and the centre is
+ * not in the way.
+ */
 function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindContext): Primitive[] {
   const size = node.size ?? DIMENSION_TEXT_SIZE
   const markerSize = node.markerSize ?? MEASURE_ARROW
   const dir = { x: Math.cos((node.angle * Math.PI) / 180), y: Math.sin((node.angle * Math.PI) / 180) }
   const at = add(node.centre, scale(dir, node.radius))
+  const start = add(at, scale(dir, node.extensionGap ?? 0))
   const end = add(node.centre, scale(dir, node.radius + size * 1.8))
   const line = node.style
   const markers = { own: true, stroke: line?.stroke, strokeWidth: line?.strokeWidth }
@@ -687,21 +692,18 @@ function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindCon
     strokeWidth: node.extension?.strokeWidth ?? line?.strokeWidth,
     dash: node.extension?.dash,
   }
-  // The leader's outer stretch is drawn as an extension line, its gap at the arc.
-  const tail = add(at, scale(dir, node.extensionGap ?? 0))
   const label = node.text ?? `R ${dimensionLabel(node, node.radius, ctx.doc.settings ?? {})}`
   const side = node.textPosition === 'below' ? -1 : node.textPosition === 'center' ? 0 : 1
   const textAt = add(add(end, scale(dir, size * (side === 0 ? 0.15 : 0.45))), scale(perp(dir), side * size * 0.5))
   const rotation = measureRotation(node.angle, node)
-  const cross = { x: size * 0.35, y: size * 0.35 }
+  // The leader, and a short tail past the words when extension lines are given a look of their own.
+  const tail = add(end, scale(dir, size * 0.8))
+  const outer = node.extension ? [{ kind: 'path' as const, points: [end, tail], ...extension }] : []
   return [
-    { kind: 'path', points: [node.centre, at] },
-    { kind: 'path', points: [tail, end], ...extension },
-    ...dimensionMarker(node.startMarker ?? 'none', node.centre, scale(dir, -1), dir, markerSize, markers),
+    { kind: 'path', points: [start, end] },
+    ...outer,
+    ...dimensionMarker(node.startMarker ?? 'none', node.extension ? tail : end, dir, dir, markerSize, markers),
     ...dimensionMarker(node.endMarker ?? 'arrow', at, dir, dir, markerSize, markers),
-    // The centre, marked with a small cross.
-    { kind: 'path', points: [sub(node.centre, cross), add(node.centre, cross)], ...markers },
-    { kind: 'path', points: [{ x: node.centre.x, y: node.centre.y - cross.y }, { x: node.centre.x, y: node.centre.y + cross.y }], ...markers },
     { kind: 'text', x: textAt.x, y: textAt.y, text: label, size, rotation, align: 'center', font: node.font, own: true, stroke: node.textColor ?? line?.stroke },
   ]
 }
@@ -732,13 +734,13 @@ function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindConte
     strokeWidth: node.extension?.strokeWidth ?? line?.strokeWidth,
     dash: node.extension?.dash,
   }
-  const gap = node.extensionGap ?? 0
   const over = size * 0.4
-  // The two arms, extended to the arc and a little past it, as a linear dimension's extension lines.
-  const arm = (angle: number): Vec2 => ({ x: node.vertex.x + Math.cos((angle * Math.PI) / 180), y: node.vertex.y + Math.sin((angle * Math.PI) / 180) })
+  // Its arms point out from the vertex; a short line past each end of the arc, when extension lines
+  // are given a look of their own, sets the arc off from what is measured.
+  const arm = (angle: number): Vec2 => ({ x: Math.cos((angle * Math.PI) / 180), y: Math.sin((angle * Math.PI) / 180) })
   const extensionLine = (angle: number): Primitive => ({
     kind: 'path',
-    points: [add(node.vertex, scale(arm(angle), gap)), add(at(angle), scale(arm(angle), over))],
+    points: [add(at(angle), scale(arm(angle), node.extensionGap ?? 0)), add(at(angle), scale(arm(angle), (node.extensionGap ?? 0) + over))],
     ...extension,
   })
   const middle = a1 + delta / 2
@@ -752,8 +754,7 @@ function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindConte
   const value = Math.abs(delta)
   const label = node.text ?? `${(Math.round(value * 10) / 10).toString().replace('.', decimal)}°`
   return [
-    extensionLine(a1),
-    extensionLine(a1 + delta),
+    ...(node.extension ? [extensionLine(a1), extensionLine(a1 + delta)] : []),
     { kind: 'path', points },
     ...dimensionMarker(node.startMarker ?? 'arrow', points[0], tangent(a1, -sign), tangent(a1, -sign), node.markerSize ?? MEASURE_ARROW, markers),
     ...dimensionMarker(node.endMarker ?? 'arrow', points[points.length - 1], tangent(a1 + delta, sign), tangent(a1 + delta, sign), node.markerSize ?? MEASURE_ARROW, markers),

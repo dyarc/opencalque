@@ -1132,4 +1132,8 @@ export const es: Record<string, string> = {
   "Click the first line": "Haz clic en la primera línea",
   "Click the second line": "Haz clic en la segunda línea",
   "Click where the angle arc goes": "Haz clic donde va el arco del ángulo",
+  "Wheel and trackpad": "Rueda y panel táctil",
+  "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "Elige cómo mueve la rueda el dibujo. Un panel táctil desplaza el dibujo y hace zoom al pellizcar; la rueda del ratón hace zoom sobre el puntero, como antes.",
+  "Trackpad: two fingers pan, a pinch zooms": "Panel táctil: dos dedos desplazan, el pellizco hace zoom",
+  "Mouse: the wheel zooms": "Ratón: la rueda hace zoom",
 }

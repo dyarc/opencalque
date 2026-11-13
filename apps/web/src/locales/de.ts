@@ -1132,4 +1132,8 @@ export const de: Record<string, string> = {
   "Click the first line": "Klicken Sie die erste Linie an",
   "Click the second line": "Klicken Sie die zweite Linie an",
   "Click where the angle arc goes": "Klicken Sie, wo der Winkelbogen verlaufen soll",
+  "Wheel and trackpad": "Mausrad und Touchpad",
+  "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "Wählen Sie, wie das Mausrad die Zeichnung bewegt. Ein Touchpad scrollt die Zeichnung und zoomt durch Zusammenziehen; ein Mausrad zoomt um den Zeiger, wie bisher.",
+  "Trackpad: two fingers pan, a pinch zooms": "Touchpad: zwei Finger verschieben, Zusammenziehen zoomt",
+  "Mouse: the wheel zooms": "Maus: Das Rad zoomt",
 }

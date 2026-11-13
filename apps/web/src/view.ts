@@ -47,13 +47,14 @@ const WHEEL_ZOOM = 0.01
  * @param input - the wheel event.
  * @param viewportHeight - the drawing area's height, for a page-based event.
  * @param speed - how fast a zoom goes, as a multiple of the usual speed (Preferences › Zoom speed).
+ * @param mode - what the wheel does: 'trackpad' scrolls and pinches, 'mouse' zooms on the wheel.
  * @returns the view to show.
  */
-export function wheelNavigation(view: View, at: Vec2, input: WheelInput, viewportHeight: number, speed = 1): View {
+export function wheelNavigation(view: View, at: Vec2, input: WheelInput, viewportHeight: number, speed = 1, mode: 'trackpad' | 'mouse' = 'trackpad'): View {
   const unit = input.deltaMode === 1 ? WHEEL_LINE : input.deltaMode === 2 ? viewportHeight : 1
   const dx = input.deltaX * unit
   const dy = input.deltaY * unit
-  if (input.ctrlKey || input.metaKey) {
+  if (mode === 'mouse' || input.ctrlKey || input.metaKey) {
     const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom * Math.exp(-dy * WHEEL_ZOOM * Math.max(0.05, speed))))
     // The world point under the pointer stays under it.
     return { zoom, x: at.x - ((at.x - view.x) / view.zoom) * zoom, y: at.y - ((at.y - view.y) / view.zoom) * zoom }

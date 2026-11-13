@@ -1132,4 +1132,8 @@ export const tr: Record<string, string> = {
   "Click the first line": "Birinci çizgiyi tıklayın",
   "Click the second line": "İkinci çizgiyi tıklayın",
   "Click where the angle arc goes": "Açı yayının geçeceği yeri tıklayın",
+  "Wheel and trackpad": "Tekerlek ve dokunmatik yüzey",
+  "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "Tekerleğin çizimi nasıl hareket ettireceğini seçin. Dokunmatik yüzey kaydırarak gezinir ve iki parmakla yakınlaştırır; fare tekerleği imlecin çevresinde yakınlaştırır (eskisi gibi).",
+  "Trackpad: two fingers pan, a pinch zooms": "Dokunmatik yüzey: iki parmak gezinir, kıstırma yakınlaştırır",
+  "Mouse: the wheel zooms": "Fare: tekerlek yakınlaştırır",
 }

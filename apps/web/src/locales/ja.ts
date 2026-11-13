@@ -1132,4 +1132,8 @@ export const ja: Record<string, string> = {
   "Click the first line": "1 本目の線をクリック",
   "Click the second line": "2 本目の線をクリック",
   "Click where the angle arc goes": "角度の円弧を置く位置をクリック",
+  "Wheel and trackpad": "ホイールとタッチパッド",
+  "Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.": "ホイールで図面をどう動かすかを選びます。タッチパッドはスクロールで移動し、ピンチで拡大縮小します。マウスホイールはポインターを中心に拡大縮小します（従来どおり）。",
+  "Trackpad: two fingers pan, a pinch zooms": "タッチパッド：2 本指で移動、ピンチで拡大縮小",
+  "Mouse: the wheel zooms": "マウス：ホイールで拡大縮小",
 }

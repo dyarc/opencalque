@@ -54,3 +54,13 @@ test('a faster zoom speed zooms further, in proportion, and one is the speed wit
   expect(once).toEqual(slow)
   expect(Math.log(twice.zoom)).toBeCloseTo(2 * Math.log(once.zoom), 9)
 })
+
+test('a mouse wheel zooms when the mouse mode is chosen, as a trackpad pinch does', () => {
+  const at = { x: 300, y: 200 }
+  const trackpad = wheelNavigation(view, at, wheel({ deltaY: -100 }), 800)
+  expect(trackpad.zoom).toBe(view.zoom)
+  const mouse = wheelNavigation(view, at, wheel({ deltaY: -100 }), 800, 1, 'mouse')
+  expect(mouse.zoom).toBeGreaterThan(view.zoom)
+  // About the pointer, as a pinch is.
+  expect(toWorld(at, mouse).x).toBeCloseTo(toWorld(at, view).x, 9)
+})

@@ -427,7 +427,7 @@ export function CanvasView() {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       const { view, viewport } = get()
-      useStore.setState({ view: wheelNavigation(view, local(c, e), e, viewport.height, usePrefs.getState().zoomSpeed) })
+      useStore.setState({ view: wheelNavigation(view, local(c, e), e, viewport.height, usePrefs.getState().zoomSpeed, usePrefs.getState().wheelMode) })
     }
     canvas.addEventListener('wheel', onWheel, { passive: false })
     return () => canvas.removeEventListener('wheel', onWheel)

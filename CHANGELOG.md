@@ -16,7 +16,10 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 ### Fixed
 - A construction line made through two points stopped at the first point when the pointer had moved over the guide's own preview before the second click: the second click now finishes the line, both ways.
 
+- A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
+
 ### Improved
+- Preferences › Drawing › View has Wheel and trackpad: a mouse wheel zooms about the pointer as it did before, while a trackpad scrolls the drawing and pinches to zoom.
 - The wheel moves the view the way a trackpad moves it elsewhere: two fingers scroll to pan the drawing, side to side as well as up and down, and pinching zooms about the pointer. A mouse wheel pans too; Ctrl-wheel (⌘-wheel) zooms.
 - How fast a pinch, or Ctrl-wheel, zooms is a setting of its own: Preferences › Drawing › View has a slider and a number, from 0.2 to 4 times the usual speed.
 
