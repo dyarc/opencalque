@@ -5,7 +5,7 @@ import { roomAt } from './rooms'
 import type { Registry } from './registry'
 import type { Document, NodeOf } from './schema'
 import { wallOutline } from './walls/outline'
-import { rectCorners } from './kinds'
+import { polylinePath, rectCorners } from './kinds'
 import type { Vec2 } from './geometry'
 
 /*
@@ -78,6 +78,9 @@ export function axonometricFaces(doc: Document, root: string, registry: Registry
       faces.push(...(node.recess ? slabWithRecess(node, bottom, top) : prism(rectCorners(node), bottom, top)))
     } else if (node.type === 'column' && node.top !== undefined && node.bottom !== undefined) {
       faces.push(...prism(rectCorners(node as never), Math.min(node.top, node.bottom), Math.max(node.top, node.bottom)))
+    } else if (node.type === 'polyline' && node.closed && node.top !== undefined && node.bottom !== undefined) {
+      const outline = polylinePath(node)
+      if (outline.length >= 3) faces.push(...prism(outline, Math.min(node.top, node.bottom), Math.max(node.top, node.bottom)))
     } else if (node.type === 'beam' && node.top !== undefined && node.bottom !== undefined) {
       const across = perp(norm(sub(node.b, node.a)))
       const half = node.width / 2

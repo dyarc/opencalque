@@ -7,6 +7,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 ## 1.9.1 — 2026-11-13
 
 ### New
+- A closed polygon has a top and a bottom, as a rectangle does: it stands as a solid between them in the 3D view and in sections, and the fields appear once the line is closed.
 - Sunken box: a pit cut into a slab, its top and bottom measured from the slab's underside. The tool sits with the doors and windows; it cuts the plan, the fill and the pattern, and the 3D view shows the pit with its floor and walls. A rectangle with no top and bottom has nothing to sink into, and the tool says so.
 - Cut an opening in a shape (`Shift+H`, Object › Cut an opening in the shape): select a rectangle and the smaller rectangles inside it, and they are cut out of its fill, leaving a ring that moves and turns with it. The edges of the opening are drawn, and it is left out of what a click inside it picks.
 - The application is now **AxioDraw** throughout, and a saved drawing is an **`.adg`** file; `.opencalque` and `.opencad` drawings still open, and the file format inside is the same.

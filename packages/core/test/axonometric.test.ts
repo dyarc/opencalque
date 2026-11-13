@@ -64,3 +64,14 @@ describe('structural solids in the axonometric view', () => {
     expect(faces.some((face) => face.points.every((p) => p.z === 2400 || p.z === 2700))).toBe(true)
   })
 })
+
+describe('a closed polygon with a top and a bottom', () => {
+  it('stands as a solid between them, as a rectangle does', () => {
+    const doc = applyOps(createDocument('Plan'), [
+      { op: 'add_node', node: { id: 'poly', type: 'polyline', parent: 'page_1', layer: 'layer_1', points: [{ x: 0, y: 0 }, { x: 2000, y: 0 }, { x: 2000, y: 1000 }, { x: 0, y: 1000 }], closed: true, top: 3000, bottom: 2800 } } as never,
+    ])
+    const faces = axonometricFaces(doc, 'page_1', registry)
+    expect(faces.some((face) => face.kind === 'top' && face.points.every((p) => p.z === 3000))).toBe(true)
+    expect(faces.some((face) => face.kind === 'side' && face.points.some((p) => p.z === 2800) && face.points.some((p) => p.z === 3000))).toBe(true)
+  })
+})

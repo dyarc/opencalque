@@ -245,8 +245,10 @@ export const NodeSchema = z
         startMarker: tip.describe("Symbol at the first point of an open polyline. Defaults to 'none'."),
         endMarker: tip.describe("Symbol at its last point. Defaults to 'none'."),
         markerSize,
+        top: z.number().optional().describe('The upper face of the solid a closed polygon stands as, in mm above the floor (z = 0).'),
+        bottom: z.number().optional().describe('The lower face of that solid, in mm above the floor (z = 0).'),
       })
-      .describe('A line through several points; closed, it is a polygon.'),
+      .describe('A line through several points; closed, it is a polygon, and with a top and a bottom it is a solid.'),
     z
       .object({
         ...base,

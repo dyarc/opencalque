@@ -1,5 +1,5 @@
 import { leavesOf, rootOf } from './document'
-import { add, applyTransform, dist, norm, perp, rotate, scale, sub, unionBounds, type Bounds, type Vec2 } from './geometry'
+import { add, applyTransform, bulgePoints, dist, norm, perp, rotate, scale, sub, unionBounds, type Bounds, type Vec2 } from './geometry'
 import type { Op } from './ops'
 import { PRINT_MM_PER_PIXEL, primitiveBounds, transformPrimitive, type Primitive } from './primitives'
 import type { ParametricKind, Registry } from './registry'
@@ -280,6 +280,20 @@ export function viewOfFace(face: { a: Vec2; b: Vec2 }, depth = ELEVATION_DEPTH):
  * the place it takes.
  */
 const chordWall = (wall: Wall): Wall => (wall.bulge ? { ...wall, bulge: undefined } : wall)
+
+/** A closed polyline's outline, its arcs sampled as it is drawn, for seeing it in a view. */
+function polylineOutline(node: NodeOf<'polyline'>): Vec2[] {
+  if (!node.closed || node.smooth) return node.points
+  const points: Vec2[] = []
+  const count = node.points.length
+  for (let i = 0; i < count; i++) {
+    const a = node.points[i]
+    const b = node.points[(i + 1) % count]
+    const bulge = node.bulges?.[i] ?? 0
+    points.push(...(bulge ? bulgePoints(a, b, bulge).slice(0, -1) : [a]))
+  }
+  return points
+}
 
 export function wallFaceAt(doc: Document, containerId: string, p: Vec2, reach: number): { wall: Wall; face: Face; a: Vec2; b: Vec2 } | null {
   let wall: Wall | null = null
@@ -686,7 +700,10 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
   for (const leaf of everythingIn(doc, rootOf(doc, node.parent)?.id ?? '')) {
     let outline: Vec2[] = []
     let [low, high] = [0, 0]
-    if ((leaf.type === 'rect' || leaf.type === 'column') && leaf.top !== undefined && leaf.bottom !== undefined) {
+    if (leaf.type === 'polyline' && leaf.closed && leaf.top !== undefined && leaf.bottom !== undefined) {
+      outline = polylineOutline(leaf)
+      ;[low, high] = [Math.min(leaf.top, leaf.bottom), Math.max(leaf.top, leaf.bottom)]
+    } else if ((leaf.type === 'rect' || leaf.type === 'column') && leaf.top !== undefined && leaf.bottom !== undefined) {
       const [w, h] = leaf.type === 'rect' ? [leaf.width, leaf.height] : [leaf.width, leaf.height]
       outline = [
         { x: 0, y: 0 },
