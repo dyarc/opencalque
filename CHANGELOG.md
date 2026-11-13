@@ -7,6 +7,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 ## 1.9.1 — 2026-11-13
 
 ### New
+- Tools and commands take AutoCAD-style words: type one to three letters (L, REC, DIM…) and press Space. Common aliases are set, and the shortcut settings record a word the same way, shown with a small Space mark.
 - A closed polygon has a top and a bottom, as a rectangle does: it stands as a solid between them in the 3D view and in sections, and the fields appear once the line is closed.
 - Sunken box: a pit cut into a slab, its top and bottom measured from the slab's underside. The tool sits with the doors and windows; it cuts the plan, the fill and the pattern, and the 3D view shows the pit with its floor and walls. A rectangle with no top and bottom has nothing to sink into, and the tool says so.
 - Cut an opening in a shape (`Shift+H`, Object › Cut an opening in the shape): select a rectangle and the smaller rectangles inside it, and they are cut out of its fill, leaving a ring that moves and turns with it. The edges of the opening are drawn, and it is left out of what a click inside it picks.
@@ -28,6 +29,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- Keyboard shortcuts of one to three letters are command words now, not bare keys; a chord with Ctrl, Alt or Shift still runs at once. The shortcut labels show the Space that confirms a word.
 - A closed polygon, slab, beam or column seen in an elevation or a section keeps its silhouette: a vertical line is drawn only where its plan outline turns from a side facing the viewer to one turned away, never for an edge inside the face or at the back.
 - A section's cut lines are the heaviest and darkest; lines beyond fall away in three steps, 0.25, 0.18 and 0.13 mm, thinner and lighter with distance, from a cut weight of 0.35 mm by default.
 - What is cut is filled with the elevation's own Cut fill, and its Cut line weight can be changed, in Properties.
