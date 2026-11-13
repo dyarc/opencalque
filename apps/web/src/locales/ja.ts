@@ -1050,7 +1050,6 @@ export const ja: Record<string, string> = {
   "Click where the copy goes": "コピーを置く位置をクリック",
   "type an exact distance": "正確な距離を入力",
   "Too far: the shape would fold over itself": "遠すぎます：図形が折り重なってしまいます",
-  "Only walls, lines, polylines, curves, rectangles, circles and arcs can be offset": "オフセットできるのは壁、線、ポリライン、曲線、長方形、円、円弧のみです",
   "Editing inside a group": "グループ内の編集",
   "Show the rest of the drawing faded": "図面の残りを淡く表示",
   "Show the group alone": "グループのみを表示",
@@ -1180,4 +1179,5 @@ export const ja: Record<string, string> = {
   "Cut fill": "切断面の塗り",
   "Cut line weight": "切断線の太さ",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "ショートカットをクリックし、1～3 文字入力してスペースキーを押します。Backspace で 1 文字削除、Delete でショートカット削除、Esc で変更しません。",
+  "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "オフセットできるのは壁・線・作図線・ポリライン・曲線・長方形・円・円弧だけです",
 }

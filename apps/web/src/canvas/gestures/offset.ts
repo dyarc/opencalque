@@ -51,7 +51,7 @@ export function offsetHover(c: Canvas, world: Vec2, out: Shown): void {
   const hit = under(c, world, true)
   if (!hit) {
     cancel()
-    if (under(c, world, false)) out.status = t('Only walls, lines, polylines, curves, rectangles, circles and arcs can be offset')
+    if (under(c, world, false)) out.status = t('Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset')
     return
   }
   out.lit = hit.id

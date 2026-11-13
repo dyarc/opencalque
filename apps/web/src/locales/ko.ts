@@ -1050,7 +1050,6 @@ export const ko: Record<string, string> = {
   "Click where the copy goes": "복사본을 놓을 곳을 클릭하세요",
   "type an exact distance": "정확한 거리 입력",
   "Too far: the shape would fold over itself": "너무 멉니다: 도형이 겹쳐 접히게 됩니다",
-  "Only walls, lines, polylines, curves, rectangles, circles and arcs can be offset": "벽, 선, 폴리선, 곡선, 사각형, 원, 호만 간격을 띄울 수 있습니다",
   "Editing inside a group": "그룹 안에서 편집",
   "Show the rest of the drawing faded": "도면의 나머지를 흐리게 표시",
   "Show the group alone": "그룹만 표시",
@@ -1180,4 +1179,5 @@ export const ko: Record<string, string> = {
   "Cut fill": "절단면 채우기",
   "Cut line weight": "절단선 굵기",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "바로가기를 클릭한 뒤 1~3글자를 입력하고 스페이스를 누르십시오. Backspace는 한 글자 삭제, Delete는 바로가기 삭제, Esc는 그대로 둡니다.",
+  "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "간격 띄우기는 벽, 선, 보조선, 폴리선, 곡선, 사각형, 원, 호에만 적용됩니다",
 }

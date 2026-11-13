@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyOps, buildScene, CONSTRUCTION_DASH, constructionEnds, createDocument, hitTest, nodePrimitives, parseDocument, Registry, sceneBounds, serializeDocument, snapTo, toSVG, type Document, type NodeOf } from '../src'
+import { applyOps, buildScene, canOffset, CONSTRUCTION_DASH, constructionEnds, createDocument, hitTest, nodePrimitives, offsetOps, parseDocument, Registry, sceneBounds, serializeDocument, snapTo, toSVG, type Document, type NodeOf } from '../src'
 
 /*
  * Construction lines: endless dashed guides through two points, drawn across the view, never
@@ -83,5 +83,19 @@ describe('a construction line', () => {
     expect(own.length).toBe(1)
     // The ends of the drawn kilometres are no points of the drawing to snap to.
     expect(snapTo(scene, { x: 1e6 + 1000, y: 0 }, 5)).not.toMatchObject({ kind: 'point' })
+  })
+})
+
+describe('offsetting a construction line', () => {
+  it('makes another endless guide parallel to it, at the distance asked', () => {
+    const doc = plan()
+    expect(canOffset(doc.nodes.guide)).toBe(true)
+    const copy = offsetOps(doc, doc.nodes.guide, 500)!
+    const made = applyOps(doc, copy.ops)
+    const node = made.nodes[copy.id]
+    expect(node.type).toBe('construction')
+    expect(Math.abs((node as never as { a: { y: number } }).a.y)).toBeCloseTo(500, 6)
+    const [prim] = nodePrimitives(node, { doc: made, registry, depth: 0 })
+    expect(prim.kind === 'path' && prim.dash).toEqual(CONSTRUCTION_DASH)
   })
 })

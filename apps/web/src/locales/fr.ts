@@ -1050,7 +1050,6 @@ export const fr: Record<string, string> = {
   "Click where the copy goes": "Cliquez où va la copie",
   "type an exact distance": "saisir une distance exacte",
   "Too far: the shape would fold over itself": "Trop loin : la forme se replierait sur elle-même",
-  "Only walls, lines, polylines, curves, rectangles, circles and arcs can be offset": "Seuls les murs, lignes, polylignes, courbes, rectangles, cercles et arcs peuvent être décalés",
   "Editing inside a group": "Modification dans un groupe",
   "Show the rest of the drawing faded": "Afficher le reste du dessin estompé",
   "Show the group alone": "Afficher le groupe seul",
@@ -1180,4 +1179,5 @@ export const fr: Record<string, string> = {
   "Cut fill": "Remplissage de coupe",
   "Cut line weight": "Épaisseur de la ligne de coupe",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Cliquez sur un raccourci, tapez une à trois lettres puis appuyez sur Espace. Retour arrière efface une lettre, Suppr efface le raccourci ; Échap le laisse tel quel.",
+  "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Seuls les murs, lignes, lignes de construction, polylignes, courbes, rectangles, cercles et arcs peuvent être décalés",
 }

@@ -1050,7 +1050,6 @@ export const tr: Record<string, string> = {
   "Click where the copy goes": "Kopyanın gideceği yere tıklayın",
   "type an exact distance": "tam bir mesafe yazın",
   "Too far: the shape would fold over itself": "Çok uzak: şekil kendi üzerine katlanır",
-  "Only walls, lines, polylines, curves, rectangles, circles and arcs can be offset": "Yalnızca duvarlar, çizgiler, çoklu çizgiler, eğriler, dikdörtgenler, daireler ve yaylar ötelenebilir",
   "Editing inside a group": "Bir grubun içinde düzenleme",
   "Show the rest of the drawing faded": "Çizimin geri kalanını soluk göster",
   "Show the group alone": "Yalnızca grubu göster",
@@ -1180,4 +1179,5 @@ export const tr: Record<string, string> = {
   "Cut fill": "Kesit dolgusu",
   "Cut line weight": "Kesit çizgisi kalınlığı",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Bir kısayola tıklayın, bir ile üç harf yazıp boşluk tuşuna basın. Backspace bir harfi, Delete kısayolu siler; Esc olduğu gibi bırakır.",
+  "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Yalnızca duvarlar, çizgiler, inşaat çizgileri, çoklu çizgiler, eğriler, dikdörtgenler, daireler ve yaylar ötelenebilir",
 }

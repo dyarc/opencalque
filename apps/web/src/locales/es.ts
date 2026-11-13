@@ -1050,7 +1050,6 @@ export const es: Record<string, string> = {
   "Click where the copy goes": "Haz clic donde va la copia",
   "type an exact distance": "escribe una distancia exacta",
   "Too far: the shape would fold over itself": "Demasiado lejos: la forma se plegaría sobre sí misma",
-  "Only walls, lines, polylines, curves, rectangles, circles and arcs can be offset": "Solo se pueden desplazar muros, líneas, polilíneas, curvas, rectángulos, círculos y arcos",
   "Editing inside a group": "Edición dentro de un grupo",
   "Show the rest of the drawing faded": "Mostrar el resto del dibujo atenuado",
   "Show the group alone": "Mostrar solo el grupo",
@@ -1180,4 +1179,5 @@ export const es: Record<string, string> = {
   "Cut fill": "Relleno del corte",
   "Cut line weight": "Grosor de la línea de corte",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Haz clic en un atajo, escribe de una a tres letras y pulsa Espacio. Retroceso borra una letra, Supr borra el atajo; Esc lo deja como está.",
+  "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "Solo se pueden desfasar muros, líneas, líneas de construcción, polilíneas, curvas, rectángulos, círculos y arcos",
 }

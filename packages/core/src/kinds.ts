@@ -880,6 +880,12 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     },
     // It has no ends in the drawing to snap to, and no middle to offer: only its line.
     snapCorners: false,
+    // Offset gives another line through a parallel way, as it does for a line.
+    parallel: (node, distance) => {
+      const path = parallelPath([node.a, node.b], false, distance)
+      return path && { a: path[0], b: path[1] }
+    },
+    beside: (node, p) => besidePath([node.a, node.b], false, p),
   },
   polyline: {
     primitives: (node) => [{ kind: 'path', points: polylinePath(node), closed: node.closed }, ...(node.closed ? [] : endMarkers(node.points, node))],

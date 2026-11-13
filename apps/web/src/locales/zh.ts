@@ -1050,7 +1050,6 @@ export const zh: Record<string, string> = {
   "Click where the copy goes": "点击副本要放置的位置",
   "type an exact distance": "输入精确距离",
   "Too far: the shape would fold over itself": "距离过大：图形会折叠到自身",
-  "Only walls, lines, polylines, curves, rectangles, circles and arcs can be offset": "只有墙、直线、多段线、曲线、矩形、圆和圆弧可以偏移",
   "Editing inside a group": "在编组内编辑",
   "Show the rest of the drawing faded": "淡显图纸的其余部分",
   "Show the group alone": "仅显示编组",
@@ -1180,4 +1179,5 @@ export const zh: Record<string, string> = {
   "Cut fill": "剖切填充",
   "Cut line weight": "剖切线宽",
   "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "点击一个快捷键，输入 1–3 个字母后按空格确认。退格删除一个字母，Delete 删除整个快捷键；Esc 保持原样。",
+  "Only walls, lines, construction lines, polylines, curves, rectangles, circles and arcs can be offset": "只有墙、直线、构造线、多段线、曲线、矩形、圆和圆弧可以偏移",
 }
