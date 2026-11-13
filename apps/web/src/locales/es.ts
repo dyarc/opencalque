@@ -487,7 +487,6 @@ export const es: Record<string, string> = {
   "Date": "Fecha",
   "Sheet no.": "N.º de hoja",
   "Holding Alt while drawing or moving turns snapping off for that moment.": "Mantener Alt mientras se dibuja o se mueve desactiva el ajuste durante ese momento.",
-  "Click a shortcut, then press the keys you want for it. Backspace removes it; Esc leaves it as it is.": "Haga clic en un atajo y pulse las teclas que quiera. Retroceso lo quita; Esc lo deja como está.",
   "Search a command or a key…": "Buscar un comando o una tecla…",
   "Back to the default shortcut": "Volver al atajo predeterminado",
   "Eyedropper: copy the look of an object": "Cuentagotas: copiar el aspecto de un objeto",
@@ -1180,4 +1179,5 @@ export const es: Record<string, string> = {
   "Leader": "Línea guía",
   "Cut fill": "Relleno del corte",
   "Cut line weight": "Grosor de la línea de corte",
+  "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Haz clic en un atajo, escribe de una a tres letras y pulsa Espacio. Retroceso borra una letra, Supr borra el atajo; Esc lo deja como está.",
 }

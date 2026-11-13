@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { type NodeOf, type Primitive, dist, lineOf, rootOf, seenArea, shownInElevations, viewsOf, gridlineBubbles, wallEndState, boundsFrame, buildScene, connectedWalls, frameContains, frameGrips, hitTest, kindOf, modifierKind, modifierParams, newId, placedScene, resizeFrame, rotate, sceneBounds, turnedBox, wallEdgeLines, wallLength, wallMiddle } from '@opencalque/core'
 import { t } from '../i18n'
 import { finishTextEdit, zoomToFit } from '../actions'
-import { commandFor, onCommand } from '../commands'
+import { commandFor, handleCommandBuffer, onCommand } from '../commands'
 import { registry, useExtensions } from '../extensions'
 import { editComponent, forgetTrail } from '../navigation'
 import { usePrefs } from '../prefs'
@@ -442,6 +442,8 @@ export function CanvasView() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).closest('input, textarea, select')) return
+      // A command being typed takes its letters, Space and Backspace before the canvas sees them.
+      if (handleCommandBuffer(e)) return
       if (e.ctrlKey || e.metaKey || e.altKey) return
       const s = get()
       // Space with Shift flips what is drawn or selected (a command, which can be given plain Space

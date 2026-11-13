@@ -145,7 +145,7 @@ function storeOverrides(overrides: Record<string, string[]>): void {
   }
 }
 
-const tool = (id: Tool, title: string, key: string): Command => ({ id: `tool.${id}`, title, category: 'Tools', keys: [key], run: () => setTool(id) })
+const tool = (id: Tool, title: string, key: string | string[]): Command => ({ id: `tool.${id}`, title, category: 'Tools', keys: Array.isArray(key) ? key : [key], run: () => setTool(id) })
 
 /** The categories commands are grouped under, listed here so that their names get translated. */
 export const CATEGORIES = [msg('General'), msg('File'), msg('Edit'), msg('Components'), msg('View'), msg('Panels'), msg('Tools'), msg('Pages'), msg('Layers'), msg('Insert'), msg('Extensions')]
@@ -305,10 +305,10 @@ const STATIC: Command[] = [
 
   tool('select', msg('Select'), 'V'),
   tool('hand', msg('Pan'), 'H'),
-  tool('line', msg('Line'), 'L'),
-  tool('construction', msg('Construction line'), 'Q'),
-  tool('curve', msg('Curved line'), 'Shift+L'),
-  tool('arc', msg('Arc'), 'Shift+O'),
+  tool('line', msg('Line'), ['L']),
+  tool('construction', msg('Construction line'), ['Q', 'XL']),
+  tool('curve', msg('Curved line'), ['Shift+L', 'CL']),
+  tool('arc', msg('Arc'), ['Shift+O', 'ARC']),
   // Listed before the rectangle tool so that R rotates while an object is being placed.
   {
     id: 'place.rotate',
@@ -327,34 +327,34 @@ const STATIC: Command[] = [
     when: canFlipSide,
     run: flipSide,
   },
-  tool('rect', msg('Rectangle'), 'R'),
-  tool('ellipse', msg('Ellipse'), 'O'),
+  tool('rect', msg('Rectangle'), ['R', 'REC']),
+  tool('ellipse', msg('Ellipse'), ['O', 'ELL']),
   tool('circle', msg('Circle'), 'C'),
-  { id: 'tool.recess', title: msg('Sunken box'), category: 'Tools', keywords: 'pit recess sink', run: () => setTool('recess') },
-  { id: 'tool.column', title: msg('Column'), category: 'Tools', keywords: 'pillar structure', run: () => setTool('column') },
-  { id: 'tool.beam', title: msg('Beam'), category: 'Tools', keywords: 'girder structure', run: () => setTool('beam') },
-  tool('wall', msg('Wall'), 'W'),
-  tool('dimension', msg('Dimension'), 'D'),
-  tool('measure', msg('Measure'), 'M'),
+  { id: 'tool.recess', title: msg('Sunken box'), category: 'Tools', keys: ['SNK'], keywords: 'pit recess sink', run: () => setTool('recess') },
+  { id: 'tool.column', title: msg('Column'), category: 'Tools', keys: ['COL'], keywords: 'pillar structure', run: () => setTool('column') },
+  { id: 'tool.beam', title: msg('Beam'), category: 'Tools', keys: ['BM'], keywords: 'girder structure', run: () => setTool('beam') },
+  tool('wall', msg('Wall'), ['W', 'WA']),
+  tool('dimension', msg('Dimension'), ['D', 'DIM']),
+  tool('measure', msg('Measure'), ['M', 'DI']),
   tool('angle', msg('Measure an angle'), 'Shift+M'),
-  tool('split', msg('Split'), 'K'),
-  tool('trim', msg('Trim'), 'X'),
-  tool('extend', msg('Extend'), 'J'),
-  tool('fillet', msg('Fillet'), 'Shift+F'),
-  tool('offset', msg('Offset a wall, a line or a shape'), 'Shift+X'),
-  tool('rotate', msg('Rotate'), 'E'),
-  tool('move', msg('Move'), 'Shift+E'),
+  tool('split', msg('Split'), ['K', 'SP']),
+  tool('trim', msg('Trim'), ['X', 'TR']),
+  tool('extend', msg('Extend'), ['J', 'EX']),
+  tool('fillet', msg('Fillet'), ['Shift+F', 'FIL']),
+  tool('offset', msg('Offset a wall, a line or a shape'), ['Shift+X', 'OFF']),
+  tool('rotate', msg('Rotate'), ['E', 'RO']),
+  tool('move', msg('Move'), ['Shift+E', 'MV']),
   tool('eyedropper', msg('Eyedropper: copy the look of an object'), 'I'),
-  tool('formatPainter', msg('Format painter'), 'Shift+I'),
-  tool('text', msg('Text'), 'T'),
-  tool('annotation', msg('Annotation'), 'Shift+T'),
+  tool('formatPainter', msg('Format painter'), ['Shift+I', 'MA']),
+  tool('text', msg('Text'), ['T', 'TE']),
+  tool('annotation', msg('Annotation'), ['Shift+T', 'TX']),
   { id: 'tool.radialDimension', title: msg('Radius dimension'), category: 'Tools', keywords: 'radius arc circle R measure annotate', run: () => setTool('radialDimension') },
   { id: 'tool.angleDimension', title: msg('Angle dimension'), category: 'Tools', keywords: 'angle degrees measure annotate', run: () => setTool('angleDimension') },
-  tool('gridline', msg('Grid line'), 'G'),
-  tool('paper', msg('Paper'), 'F'),
-  tool('room', msg('Room'), 'A'),
-  tool('divider', msg('Room divider'), 'Shift+A'),
-  tool('elevation', msg('Elevation or section'), 'Shift+W'),
+  tool('gridline', msg('Grid line'), ['G', 'GL']),
+  tool('paper', msg('Paper'), ['F', 'PG']),
+  tool('room', msg('Room'), ['A', 'RM']),
+  tool('divider', msg('Room divider'), ['Shift+A', 'DV']),
+  tool('elevation', msg('Elevation or section'), ['Shift+W', 'EV']),
   { id: 'tool.calibrate', title: msg('Set the scale of an imported plan'), category: 'Tools', run: () => setTool('calibrate') },
 
   { id: 'warehouse.components', title: msg('Object library…'), category: 'Insert', global: true, run: () => useWindows.setState({ warehouse: 'components' }) },
@@ -505,6 +505,8 @@ export function formatKey(key: string): string {
   // The key itself may be "+", so only the separators before it are split on.
   const parts = key.match(/[^+]+|\+$/g) ?? [key]
   const shown = parts.map((part) => (isMac ? MAC_MODIFIERS[part] : part === 'Mod' ? 'Ctrl' : undefined) ?? SYMBOLS[part] ?? part)
+  // A command word is typed and then confirmed with Space; show that it is a word, not a bare key.
+  if (/^[A-Z]{1,3}$/.test(key)) return `${key}␣`
   return shown.join(isMac ? '' : '+')
 }
 
@@ -553,6 +555,69 @@ function forTheField(e: KeyboardEvent): boolean {
 }
 
 /** The command a key press runs, if any: one bound to it that applies now. */
+/**
+ * What is typed for a command, as AutoCAD takes it: one to three letters, ended by Space. A letter
+ * on its own does not start a tool, so a shortcut like "L" or "REC" is a word to type and confirm.
+ */
+let typed = ''
+
+/** The letters typed so far, for the hint bar. */
+export const commandBuffer = (): string => typed
+
+/** Letters are taken for a command, not a shortcut, unless a field, a window or the palette has the keys. */
+function takesCommand(e: KeyboardEvent): boolean {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return false
+  if (useCommands.getState().paletteOpen) return false
+  const windows = useWindows.getState()
+  if (windows.preferencesOpen || windows.welcomeOpen || windows.exportOpen || windows.aboutOpen || windows.drawingSettingsOpen || windows.warehouse || windows.question) return false
+  const target = e.target as HTMLElement | null
+  if (target && (target.isContentEditable || /^(input|textarea|select)$/i.test(target.tagName))) return false
+  return true
+}
+
+/**
+ * The typed command, when the key belongs to it. Returns true when it took the key, so the canvas
+ * leaves Space to the command rather than panning with it.
+ */
+export function handleCommandBuffer(e: KeyboardEvent): boolean {
+  if (!takesCommand(e)) return false
+  const letters = /^[a-z]$/i.test(e.key)
+  if (letters) {
+    if (typed.length < 3) typed += e.key.toUpperCase()
+    useStore.setState({ status: `⌨ ${typed}` })
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    return true
+  }
+  if (e.key === 'Backspace' && typed) {
+    typed = typed.slice(0, -1)
+    useStore.setState({ status: typed ? `⌨ ${typed}` : '' })
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    return true
+  }
+  if (e.key === 'Escape' && typed) {
+    typed = ''
+    useStore.setState({ status: '' })
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    return true
+  }
+  if (e.key === ' ' && typed) {
+    const word = typed
+    typed = ''
+    const command = allCommands().find((c) =>
+      keysOf(c, useCommands.getState().overrides).some((key) => key.length <= 3 && /^[A-Z]{1,3}$/.test(key) && key === word),
+    )
+    if (command) execute(command)
+    useStore.setState({ status: '' })
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    return true
+  }
+  return false
+}
+
 export function commandFor(e: KeyboardEvent): Command | null {
   const { overrides, paletteOpen } = useCommands.getState()
   if (paletteOpen) return null
@@ -564,6 +629,8 @@ export function commandFor(e: KeyboardEvent): Command | null {
 
 /** Runs the command bound to a key press, if any. Installed once on the window. */
 export function handleKeyDown(e: KeyboardEvent): void {
+  // A letter on its own is the start of a command, not a shortcut: wait for Space (see `handleCommandBuffer`).
+  if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && /^[a-z]$/i.test(e.key)) return
   const command = commandFor(e)
   if (!command) return
   e.preventDefault()

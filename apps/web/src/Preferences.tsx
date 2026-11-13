@@ -448,29 +448,52 @@ const matches = (command: Command, query: string) => {
 function ShortcutSettings() {
   const overrides = useCommands((s) => s.overrides)
   const [query, setQuery] = useState('')
-  /** Id of the command whose shortcut is being recorded. */
+  /** Id of the command whose shortcut is being recorded, and the letters typed for it so far. */
   const [recording, setRecording] = useState<string | null>(null)
+  const [typed, setTyped] = useState('')
   // `overrides` is a dependency so that the shortcuts shown stay current after a change.
   const commands = useMemo(() => allCommands().filter((c) => matches(c, query)), [query, overrides])
 
   const record = (e: React.KeyboardEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
-    const key = eventKey(e.nativeEvent)
+    const native = e.nativeEvent
+    // A command shortcut is a word of one to three letters, ended by Space; a chord with Ctrl, Alt
+    // or Cmd is still taken at once, as special keys are.
+    if (!native.ctrlKey && !native.metaKey && !native.altKey && /^[a-z]$/i.test(native.key) && !native.key.startsWith('Dead')) {
+      if (typed.length < 3) setTyped(typed + native.key.toUpperCase())
+      return
+    }
+    if (native.key === ' ') {
+      if (typed) commit(id, typed)
+      else setRecording(null)
+      return
+    }
+    if (native.key === 'Backspace') return setTyped(typed.slice(0, -1))
+    if (native.key === 'Delete') return commit(id, null)
+    if (native.key === 'Escape') {
+      setTyped('')
+      return setRecording(null)
+    }
+    const key = eventKey(native)
     if (!key) return
-    if (key === 'Escape') return setRecording(null)
-    if (key === 'Backspace' || key === 'Delete') setShortcut(id, null)
-    else if (RESERVED_KEYS.includes(key)) return toast(t('{key} is reserved and cannot be reassigned', { key: formatKey(key) }))
+    if (RESERVED_KEYS.includes(key)) return toast(t('{key} is reserved and cannot be reassigned', { key: formatKey(key) }))
+    commit(id, key)
+  }
+
+  const commit = (id: string, key: string | null) => {
+    if (key === null) setShortcut(id, null)
     else {
       const taken = setShortcut(id, key)
       if (taken.length > 0) toast(t('{key} was removed from: {commands}', { key: formatKey(key), commands: taken.map((title) => t(title)).join(', ') }))
     }
+    setTyped('')
     setRecording(null)
   }
 
   return (
     <>
-      <p className="hint">{t('Click a shortcut, then press the keys you want for it. Backspace removes it; Esc leaves it as it is.')}</p>
+      <p className="hint">{t('Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.')}</p>
       <div className="shortcut-bar">
         <input placeholder={t('Search a command or a key…')} value={query} onChange={(e) => setQuery(e.target.value)} />
         <button className="text-button" onClick={() => executeById('shortcuts.reset')}>
@@ -498,11 +521,19 @@ function ShortcutSettings() {
               )}
               <button
                 className={`palette-keys${recording === command.id ? ' recording' : ''}`}
-                onClick={() => setRecording(recording === command.id ? null : command.id)}
+                onClick={() => {
+                  setTyped('')
+                  setRecording(recording === command.id ? null : command.id)
+                }}
                 onKeyDown={(e) => recording === command.id && record(e, command.id)}
-                onBlur={() => recording === command.id && setRecording(null)}
+                onBlur={() => {
+                  if (recording === command.id) {
+                    setTyped('')
+                    setRecording(null)
+                  }
+                }}
               >
-                {recording === command.id ? t('Press keys…') : keys.length > 0 ? keys.map(formatKey).join('  ') : t('Set shortcut')}
+                {recording === command.id ? typed || t('Press keys…') : keys.length > 0 ? keys.map(formatKey).join('  ') : t('Set shortcut')}
               </button>
             </div>
           )

@@ -487,7 +487,6 @@ export const tr: Record<string, string> = {
   "Date": "Tarih",
   "Sheet no.": "Pafta no.",
   "Holding Alt while drawing or moving turns snapping off for that moment.": "Çizerken veya taşırken Alt'ı basılı tutmak o an için yakalamayı kapatır.",
-  "Click a shortcut, then press the keys you want for it. Backspace removes it; Esc leaves it as it is.": "Bir kısayola tıklayın, sonra istediğiniz tuşlara basın. Geri tuşu kaldırır; Esc olduğu gibi bırakır.",
   "Search a command or a key…": "Bir komut veya tuş ara…",
   "Back to the default shortcut": "Varsayılan kısayola dön",
   "Eyedropper: copy the look of an object": "Damlalık: bir nesnenin görünümünü kopyala",
@@ -1180,4 +1179,5 @@ export const tr: Record<string, string> = {
   "Leader": "Kılavuz çizgisi",
   "Cut fill": "Kesit dolgusu",
   "Cut line weight": "Kesit çizgisi kalınlığı",
+  "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Bir kısayola tıklayın, bir ile üç harf yazıp boşluk tuşuna basın. Backspace bir harfi, Delete kısayolu siler; Esc olduğu gibi bırakır.",
 }

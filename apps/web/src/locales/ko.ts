@@ -487,7 +487,6 @@ export const ko: Record<string, string> = {
   "Date": "날짜",
   "Sheet no.": "도면 번호",
   "Holding Alt while drawing or moving turns snapping off for that moment.": "그리거나 옮기는 동안 Alt를 누르고 있으면 그동안 스냅이 꺼집니다.",
-  "Click a shortcut, then press the keys you want for it. Backspace removes it; Esc leaves it as it is.": "단축키를 클릭한 다음 원하는 키를 누르세요. Backspace는 삭제, Esc는 그대로 둡니다.",
   "Search a command or a key…": "명령 또는 키 검색…",
   "Back to the default shortcut": "기본 단축키로 되돌리기",
   "Eyedropper: copy the look of an object": "스포이트: 객체의 모양 복사",
@@ -1180,4 +1179,5 @@ export const ko: Record<string, string> = {
   "Leader": "지시선",
   "Cut fill": "절단면 채우기",
   "Cut line weight": "절단선 굵기",
+  "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "바로가기를 클릭한 뒤 1~3글자를 입력하고 스페이스를 누르십시오. Backspace는 한 글자 삭제, Delete는 바로가기 삭제, Esc는 그대로 둡니다.",
 }

@@ -487,7 +487,6 @@ export const ja: Record<string, string> = {
   "Date": "日付",
   "Sheet no.": "図面番号",
   "Holding Alt while drawing or moving turns snapping off for that moment.": "描画中や移動中に Alt を押している間はスナップが解除されます。",
-  "Click a shortcut, then press the keys you want for it. Backspace removes it; Esc leaves it as it is.": "ショートカットをクリックしてから、割り当てたいキーを押します。Backspace で削除、Esc でそのままにします。",
   "Search a command or a key…": "コマンドまたはキーを検索…",
   "Back to the default shortcut": "既定のショートカットに戻す",
   "Eyedropper: copy the look of an object": "スポイト：オブジェクトの見た目をコピー",
@@ -1180,4 +1179,5 @@ export const ja: Record<string, string> = {
   "Leader": "引出線",
   "Cut fill": "切断面の塗り",
   "Cut line weight": "切断線の太さ",
+  "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "ショートカットをクリックし、1～3 文字入力してスペースキーを押します。Backspace で 1 文字削除、Delete でショートカット削除、Esc で変更しません。",
 }

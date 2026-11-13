@@ -487,7 +487,6 @@ export const de: Record<string, string> = {
   "Date": "Datum",
   "Sheet no.": "Blatt-Nr.",
   "Holding Alt while drawing or moving turns snapping off for that moment.": "Alt beim Zeichnen oder Verschieben gedrückt halten schaltet das Einrasten solange aus.",
-  "Click a shortcut, then press the keys you want for it. Backspace removes it; Esc leaves it as it is.": "Klicken Sie auf ein Kürzel und drücken Sie die gewünschten Tasten. Rücktaste entfernt es; Esc lässt es unverändert.",
   "Search a command or a key…": "Befehl oder Taste suchen…",
   "Back to the default shortcut": "Zurück zum Standardkürzel",
   "Eyedropper: copy the look of an object": "Pipette: das Aussehen eines Objekts kopieren",
@@ -1180,4 +1179,5 @@ export const de: Record<string, string> = {
   "Leader": "Führungslinie",
   "Cut fill": "Schnittfüllung",
   "Cut line weight": "Schnittlinienstärke",
+  "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "Klicken Sie eine Tastenkombination an, tippen Sie ein bis drei Buchstaben und drücken Sie die Leertaste. Backspace löscht einen Buchstaben, Entf die Kombination; Esc lässt sie, wie sie ist.",
 }

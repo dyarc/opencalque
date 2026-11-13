@@ -487,7 +487,6 @@ export const zh: Record<string, string> = {
   "Date": "日期",
   "Sheet no.": "图号",
   "Holding Alt while drawing or moving turns snapping off for that moment.": "绘制或移动时按住 Alt 可暂时关闭捕捉。",
-  "Click a shortcut, then press the keys you want for it. Backspace removes it; Esc leaves it as it is.": "点击一个快捷键，然后按下想要的按键。Backspace 删除；Esc 保持不变。",
   "Search a command or a key…": "搜索命令或按键…",
   "Back to the default shortcut": "恢复默认快捷键",
   "Eyedropper: copy the look of an object": "吸管：复制对象的外观",
@@ -1180,4 +1179,5 @@ export const zh: Record<string, string> = {
   "Leader": "引线长度",
   "Cut fill": "剖切填充",
   "Cut line weight": "剖切线宽",
+  "Click a shortcut, then type one to three letters and press Space. Backspace removes a letter, Delete removes the shortcut; Esc leaves it as it is.": "点击一个快捷键，输入 1–3 个字母后按空格确认。退格删除一个字母，Delete 删除整个快捷键；Esc 保持原样。",
 }
