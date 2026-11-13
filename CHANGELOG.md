@@ -30,7 +30,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 
 ### Improved
 - Keyboard shortcuts of one to three letters are command words now, not bare keys; a chord with Ctrl, Alt or Shift still runs at once. The shortcut labels show the Space that confirms a word.
-- A closed polygon, slab, beam or column seen in an elevation or a section keeps its silhouette: a vertical line is drawn only where its plan outline turns from a side facing the viewer to one turned away, never for an edge inside the face or at the back.
+- A closed polygon, slab, beam or column seen in an elevation or a section is drawn as an opaque front face that hides what is behind it, as a wall does: its outline only, with no edge inside the face or at its back showing through.
 - A section's cut lines are the heaviest and darkest; lines beyond fall away in three steps, 0.25, 0.18 and 0.13 mm, thinner and lighter with distance, from a cut weight of 0.35 mm by default.
 - What is cut is filled with the elevation's own Cut fill, and its Cut line weight can be changed, in Properties.
 - Slabs, columns and beams show in a section as the bands their top and bottom make; a sunken pit shows its floor between its depth and its underside.
