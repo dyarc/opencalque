@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { BrickWall, ChevronDown, MoveHorizontal, ScanEye, Circle, Hexagon, Component, File, Group, Image, Lock, LockOpen, MessageSquare, Minus, CircleDot, RulerDimensionLine, Shapes, SeparatorVertical, Slash, Spline, Square, SquareDashed, StickyNote, Table, Triangle, Type, type LucideIcon } from 'lucide-react'
+import { BrickWall, Box, ChevronDown, MoveHorizontal, ScanEye, Circle, Hexagon, Component, File, Group, Image, Lock, LockOpen, MessageSquare, Minus, CircleDot, RulerDimensionLine, Shapes, SeparatorVertical, Slash, Spline, Square, SquareDashed, StickyNote, Table, Triangle, Type, type LucideIcon } from 'lucide-react'
 import { arcOf, type Document, type Node } from '@opencalque/core'
 import { Arc, GridLine } from './icons'
 import { msg, t } from './i18n'
@@ -28,6 +28,8 @@ const TYPE_LABELS: Record<Node['type'], string> = {
   ellipse: msg('Ellipse'),
   text: msg('Text'),
   wall: msg('Wall'),
+  column: msg('Column'),
+  beam: msg('Beam'),
   dimension: msg('Dimension'),
   radialDimension: msg('Radius dimension'),
   angleDimension: msg('Angle dimension'),
@@ -55,6 +57,8 @@ const TYPE_ICONS: Record<Node['type'], LucideIcon> = {
   ellipse: Circle,
   text: Type,
   wall: BrickWall,
+  column: Box,
+  beam: Minus,
   dimension: RulerDimensionLine,
   radialDimension: CircleDot,
   angleDimension: Triangle,

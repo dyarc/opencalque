@@ -46,7 +46,7 @@ export function About() {
         <div className="about-head">
           <Logo size={52} />
           <div>
-            <h2>OpenCalque</h2>
+            <h2>AxioDraw</h2>
             <p>{t('Version {version}', { version: VERSION })}</p>
             <p className="faint">{t('A free, open-source drawing tool for plans and layouts. No account, nothing sent anywhere.')}</p>
             <p className="about-links">

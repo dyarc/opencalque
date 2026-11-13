@@ -233,7 +233,32 @@ const FIELDS: Partial<Record<Node['type'], FieldSpec[]>> = {
   dimension: DIMENSION,
   annotation: ANNOTATION,
   gridline: GRIDLINE,
-  rect: [len('x', msg('X')), len('y', msg('Y')), len('width', msg('W')), len('height', msg('H')), num('rotation', msg('Rotation'), 0), ...SHAPE_STYLE],
+  rect: [
+    len('x', msg('X')),
+    len('y', msg('Y')),
+    len('width', msg('W')),
+    len('height', msg('H')),
+    num('rotation', msg('Rotation'), 0),
+    { ...len('top', msg('Top'), undefined, msg('3D')), optional: true },
+    { ...len('bottom', msg('Bottom'), undefined, msg('3D')), optional: true },
+    ...SHAPE_STYLE,
+  ],
+  column: [
+    len('x', msg('X')),
+    len('y', msg('Y')),
+    len('width', msg('W')),
+    len('height', msg('H')),
+    num('rotation', msg('Rotation'), 0),
+    { ...len('top', msg('Top'), undefined, msg('3D')), optional: true },
+    { ...len('bottom', msg('Bottom'), undefined, msg('3D')), optional: true },
+    ...SHAPE_STYLE,
+  ],
+  beam: [
+    len('width', msg('Width')),
+    { ...len('top', msg('Top'), undefined, msg('3D')), optional: true },
+    { ...len('bottom', msg('Bottom'), undefined, msg('3D')), optional: true },
+    ...stroke(STROKE),
+  ],
   // A paper's size is its format and scale, and where it lies is typed at the top of its panel: it has no geometry section.
   paper: [],
   // Where the name is written is where the room is: its X and Y are the name's.

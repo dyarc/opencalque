@@ -294,4 +294,6 @@ export const MIGRATIONS: ((doc: Raw) => Raw)[] = [
   (doc) => doc,
   // Version 5 brings radius and angle dimensions (the `radialDimension` and `angleDimension` node types) and nothing else.
   (doc) => doc,
+  // Version 6 brings columns and beams (the `column` and `beam` node types) and the top and bottom of a slab.
+  (doc) => doc,
 ]

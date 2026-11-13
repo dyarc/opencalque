@@ -31,8 +31,8 @@ describe('drawings from other versions', () => {
 
   it('names a type of node it does not know', () => {
     const raw = file()
-    raw.nodes.c = { id: 'c', type: 'column', parent: 'page_1', order: 'a1' }
-    expect(() => parseDocument(raw)).toThrow(/node "c" is a "column"/)
+    raw.nodes.c = { id: 'c', type: 'truss', parent: 'page_1', order: 'a1' }
+    expect(() => parseDocument(raw)).toThrow(/node "c" is a "truss"/)
   })
 
   it('says what is wrong with something that is not a drawing', () => {

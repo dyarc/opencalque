@@ -1,9 +1,11 @@
 import { rootOf } from './document'
+import { perp, norm, sub, add, scale } from './geometry'
 import { leavesOf, isVisible } from './document'
 import { roomAt } from './rooms'
 import type { Registry } from './registry'
 import type { Document, NodeOf } from './schema'
 import { wallOutline } from './walls/outline'
+import { rectCorners } from './kinds'
 import type { Vec2 } from './geometry'
 
 /*
@@ -71,6 +73,15 @@ export function axonometricFaces(doc: Document, root: string, registry: Registry
           kind: 'side',
         })
       }
+    } else if (node.type === 'rect' && node.top !== undefined && node.bottom !== undefined) {
+      faces.push(...prism(rectCorners(node), Math.min(node.top, node.bottom), Math.max(node.top, node.bottom)))
+    } else if (node.type === 'column' && node.top !== undefined && node.bottom !== undefined) {
+      faces.push(...prism(rectCorners(node as never), Math.min(node.top, node.bottom), Math.max(node.top, node.bottom)))
+    } else if (node.type === 'beam' && node.top !== undefined && node.bottom !== undefined) {
+      const across = perp(norm(sub(node.b, node.a)))
+      const half = node.width / 2
+      const outline = [add(node.a, scale(across, half)), add(node.b, scale(across, half)), add(node.b, scale(across, -half)), add(node.a, scale(across, -half))]
+      faces.push(...prism(outline, Math.min(node.top, node.bottom), Math.max(node.top, node.bottom)))
     } else if (node.type === 'room') {
       const region = roomAt(doc, node.parent, { x: node.x, y: node.y })
       if (!region || region.outline.length < 3) continue
@@ -95,4 +106,29 @@ export function axoDepth(p: Vec3, turn: number): number {
   const x = p.x * Math.cos(angle) - p.y * Math.sin(angle)
   const y = p.x * Math.sin(angle) + p.y * Math.cos(angle)
   return x + y + p.z
+}
+
+/** The faces of a solid standing between `bottom` and `top` over a plan outline. */
+function prism(outline: Vec2[], bottom: number, top: number): AxoFace[] {
+  if (outline.length < 3 || top - bottom < 1e-6) return []
+  const faces: AxoFace[] = [{ points: outline.map((p): Vec3 => ({ x: p.x, y: p.y, z: top })), normal: { x: 0, y: 0 }, light: 1, kind: 'top' }]
+  for (let i = 0; i < outline.length; i++) {
+    const a = outline[i]
+    const b = outline[(i + 1) % outline.length]
+    const side = Math.hypot(b.x - a.x, b.y - a.y)
+    if (side < 1e-6) continue
+    const normal = { x: (b.y - a.y) / side, y: -(b.x - a.x) / side }
+    faces.push({
+      points: [
+        { x: a.x, y: a.y, z: bottom },
+        { x: b.x, y: b.y, z: bottom },
+        { x: b.x, y: b.y, z: top },
+        { x: a.x, y: a.y, z: top },
+      ],
+      normal,
+      light: light(normal, 0),
+      kind: 'side',
+    })
+  }
+  return faces
 }

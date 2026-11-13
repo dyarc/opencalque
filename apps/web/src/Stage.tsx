@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { rootOf, type Document } from '@opencalque/core'
 import {
   ArrowRightToLine,
+  Box,
   BrickWall,
   ChevronRight,
   ChevronUp,
@@ -87,6 +88,8 @@ const ICONS: Partial<Record<Tool, [title: string, icon: LucideIcon]>> = {
   ellipse: [msg('Ellipse'), Circle],
   circle: [msg('Circle: click its centre, then a point it goes through'), CircleDot],
   wall: [msg('Wall'), BrickWall],
+  column: [msg('Column: a post standing from the floor to its top'), Box],
+  beam: [msg('Beam: a girder running between two points, between its bottom and its top'), Minus],
   dimension: [msg('Dimension: annotate a distance on the drawing'), RulerDimensionLine],
   radialDimension: [msg('Radius dimension: R and the radius of an arc or a circle'), CircleDot],
   angleDimension: [msg('Angle dimension: the angle between two lines'), Triangle],

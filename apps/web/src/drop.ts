@@ -38,7 +38,7 @@ export const importFile = () =>
     if (PLAN_EXTENSIONS.includes(kind)) return placeFloorPlan(file)
     const content = new TextDecoder().decode(file.bytes)
     if (kind === 'dxf') return placeDxf(file.name, content)
-    if (!DRAWING_EXTENSIONS.includes(kind)) return toast(t('{file} is not something OpenCalque can import. Choose a picture, a PDF, a DXF, or a drawing to take its components.', { file: file.name }))
+    if (!DRAWING_EXTENSIONS.includes(kind)) return toast(t('{file} is not something AxioDraw can import. Choose a picture, a PDF, a DXF, or a drawing to take its components.', { file: file.name }))
     const parsed = JSON.parse(content)
     if (isExtension(parsed)) installExtension(parsed)
     else importLibraryFrom(file.name, content)
@@ -86,5 +86,5 @@ export async function openDropped(files: File[], at?: Vec2): Promise<void> {
       } else refused.push(file.name)
     })
   }
-  if (refused.length > 0) toast(t('{file} is not something OpenCalque can open. Drop a picture or a PDF to trace it, or an .opencalque drawing.', { file: refused.join(', ') }))
+  if (refused.length > 0) toast(t('{file} is not something AxioDraw can open. Drop a picture or a PDF to trace it, or an .opencalque drawing.', { file: refused.join(', ') }))
 }

@@ -121,8 +121,9 @@ function pickFile(extensions: string[]): Promise<File | null> {
 
 /** What files are saved as, by extension: the save dialog shows it, and adds the extension to a name typed without one. */
 const SAVED_TYPES: Record<string, { description: string; mime: string }> = {
-  opencalque: { description: 'OpenCalque', mime: 'application/json' },
-  opencad: { description: 'OpenCalque', mime: 'application/json' },
+  adg: { description: 'AxioDraw', mime: 'application/json' },
+  opencalque: { description: 'AxioDraw', mime: 'application/json' },
+  opencad: { description: 'AxioDraw', mime: 'application/json' },
   json: { description: 'JSON', mime: 'application/json' },
   pdf: { description: 'PDF', mime: 'application/pdf' },
   svg: { description: 'SVG', mime: 'image/svg+xml' },

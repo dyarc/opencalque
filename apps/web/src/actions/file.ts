@@ -19,7 +19,7 @@ import { zoomToFit } from './view'
 const get = useStore.getState
 
 /** What a drawing file may be called: the current extension, the one from before the project was renamed, and plain JSON. */
-export const DRAWING_EXTENSIONS = ['opencalque', 'opencad', 'json']
+export const DRAWING_EXTENSIONS = ['adg', 'opencalque', 'opencad', 'json']
 
 const confirmDiscard = () => !isDirty() || window.confirm(t('Discard unsaved changes?'))
 
@@ -46,7 +46,7 @@ export function readDrawing(name: string, text: string): { doc: Document; then: 
   try {
     json = JSON.parse(text)
   } catch {
-    throw new Error(t('{file} is not an OpenCalque drawing: it does not hold JSON text.', { file: name }))
+    throw new Error(t('{file} is not an AxioDraw drawing: it does not hold JSON text.', { file: name }))
   }
   try {
     const { doc, repairs } = readDocument(json)
@@ -57,7 +57,7 @@ export function readDrawing(name: string, text: string): { doc: Document; then: 
     }
     return { doc, then }
   } catch (error) {
-    if (error instanceof NewerFormatError) throw new Error(t('{file} was saved by a newer version of OpenCalque. Update OpenCalque to open it.', { file: name }))
+    if (error instanceof NewerFormatError) throw new Error(t('{file} was saved by a newer version of AxioDraw. Update AxioDraw to open it.', { file: name }))
     throw new Error(t('{file} could not be opened: {reason}', { file: name, reason: (error as Error).message }))
   }
 }
@@ -135,7 +135,7 @@ export const saveDocument = (saveAs = false) =>
     cancel()
     const { doc, file } = get()
     const token = saveAs ? undefined : (file?.token ?? undefined)
-    const stored = await platform.save(serializeDocument(forFile(doc)), file?.name ?? `${baseName()}.opencalque`, token)
+    const stored = await platform.save(serializeDocument(forFile(doc)), file?.name ?? `${baseName()}.adg`, token)
     if (!stored) return
     useStore.setState({ saved: doc, file: stored })
     // Saved under a new name (the first time, or with Save as), the drawing takes that name, which
@@ -341,7 +341,7 @@ export function libraryOps(doc: Document, library: Document, ids: string[], name
   return { ops: [...result.ops, ...named], imported: result.imported }
 }
 
-/** Any OpenCalque document can be used as a library: this copies all of its components in. */
+/** Any AxioDraw document can be used as a library: this copies all of its components in. */
 export const importLibrary = () =>
   guarded(async () => {
     const file = await platform.open(DRAWING_EXTENSIONS)

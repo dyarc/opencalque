@@ -217,7 +217,9 @@ export function serializeDocument(doc: Document): string {
   // refuse it only when it really has something they cannot draw: construction lines need version 4,
   // elevations and view lines version 3, and anything else opens in the versions before elevations (1.8).
   const nodes = Object.values(doc.nodes)
-  const version = nodes.some((n) => n.type === 'radialDimension' || n.type === 'angleDimension')
+  const version = nodes.some((n) => n.type === 'column' || n.type === 'beam' || (n.type === 'rect' && (n.top !== undefined || n.bottom !== undefined)))
+    ? 6
+    : nodes.some((n) => n.type === 'radialDimension' || n.type === 'angleDimension')
     ? 5
     : nodes.some((n) => n.type === 'construction' || (n.type === 'polyline' && n.bulges?.some((bulge) => bulge)))
       ? 4

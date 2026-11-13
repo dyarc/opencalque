@@ -857,6 +857,26 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     beside: (node, p) => besidePath(node.bulges?.some((b) => b) ? polylinePath(node) : node.smooth ? smoothPoints(node.points, node.closed) : node.points, !!node.closed, p),
     centre: (node) => (node.closed ? centroid(node.smooth ? smoothPoints(node.points, true) : node.points) : null),
   },
+  column: {
+    // A column in plan is the rectangle it stands on.
+    primitives: (node) => [{ kind: 'path', points: rectCorners(node as never), closed: true }],
+    move: moveXY,
+    snapPoints: (node) => rectCorners(node as never),
+    transform: transformBox,
+  },
+  beam: {
+    // A beam in plan is the band it runs along, as wide as it is.
+    primitives: (node) => {
+      const across = perp(norm(sub(node.b, node.a)))
+      const half = node.width / 2
+      return [{ kind: 'path', points: [add(node.a, scale(across, half)), add(node.b, scale(across, half)), add(node.b, scale(across, -half)), add(node.a, scale(across, -half))], closed: true }]
+    },
+    move: moveAB,
+    handles: handlesAB,
+    moveHandle: moveHandleAB,
+    snapPoints: handlesAB,
+    transform: (node, t) => ({ ...transformAB(node, t), width: t.length(node.width) }),
+  },
   rect: {
     primitives: (node) => [{ kind: 'path', points: rectCorners(node), closed: true }],
     // Its corners run clockwise on screen: a positive distance is inwards.

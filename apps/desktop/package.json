@@ -49,8 +49,13 @@
     },
     "fileAssociations": [
       {
-        "ext": "opencalque",
+        "ext": "adg",
         "name": "AxioDraw drawing",
+        "role": "Editor"
+      },
+      {
+        "ext": "opencalque",
+        "name": "AxioDraw drawing (old name)",
         "role": "Editor"
       }
     ],

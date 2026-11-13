@@ -297,7 +297,7 @@ const STATIC: Command[] = [
   panel('assistant', ['Mod+J']),
   { id: 'view.resetLayout', title: msg('Reset the panel layout'), category: 'View', run: resetLayout },
   { id: 'help.welcome', title: msg('Welcome window…'), category: 'General', global: true, run: () => useWindows.setState({ welcomeOpen: true }) },
-  { id: 'help.about', title: msg('About OpenCalque and what is new…'), category: 'General', global: true, run: () => useWindows.setState({ aboutOpen: true }) },
+  { id: 'help.about', title: msg('About AxioDraw and what is new…'), category: 'General', global: true, run: () => useWindows.setState({ aboutOpen: true }) },
   { id: 'prefs.open', title: msg('Preferences…'), category: 'General', keys: ['Mod+,'], global: true, run: () => useWindows.setState({ preferencesOpen: true }) },
   { id: 'view.zoomOut', title: msg('Zoom out'), category: 'View', keys: ['-', 'Mod+-'], run: () => zoomBy(0.8) },
 
@@ -328,6 +328,8 @@ const STATIC: Command[] = [
   tool('rect', msg('Rectangle'), 'R'),
   tool('ellipse', msg('Ellipse'), 'O'),
   tool('circle', msg('Circle'), 'C'),
+  { id: 'tool.column', title: msg('Column'), category: 'Tools', keywords: 'pillar structure', run: () => setTool('column') },
+  { id: 'tool.beam', title: msg('Beam'), category: 'Tools', keywords: 'girder structure', run: () => setTool('beam') },
   tool('wall', msg('Wall'), 'W'),
   tool('dimension', msg('Dimension'), 'D'),
   tool('measure', msg('Measure'), 'M'),

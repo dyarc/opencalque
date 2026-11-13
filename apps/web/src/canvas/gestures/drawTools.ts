@@ -113,6 +113,12 @@ export function finishPoly(c: Canvas, g: GestureOf<'poly'>, closed: boolean): vo
 }
 
 /** The text starts empty and is typed in place; see TextEditor. */
+export const columnDown: Press = (c, _e, _at, world) => {
+  const node = shape('column', newId(), world, world)
+  if (preview([{ op: 'add_node', node }])) commit()
+  else cancel()
+}
+
 export const textDown: Press = (c, e, _at, world) => {
   const s = get()
   const { p } = snap(c, world, e, [])

@@ -73,7 +73,7 @@ export const toolsFor = (pictures: boolean) => (pictures ? TOOLS : TOOLS.filter(
 
 /** The fixed part of the prompt: what the app is, how drawings are stored, and how to edit them. */
 export function systemPrompt(registry: Registry, pictures = true): string {
-  return `You are the drawing assistant built into OpenCalque, a 2D drafting application for architectural plans and layouts. The person you are talking to has a drawing open in the app right now. When you change it, the result appears on their canvas immediately, and all the changes made for one request are undone together by a single Ctrl+Z, so it is fine to act on a clear request without asking for confirmation first.
+  return `You are the drawing assistant built into AxioDraw, a 2D drafting application for architectural plans and layouts. The person you are talking to has a drawing open in the app right now. When you change it, the result appears on their canvas immediately, and all the changes made for one request are undone together by a single Ctrl+Z, so it is fine to act on a clear request without asking for confirmation first.
 
 # What comes with each message
 

@@ -81,11 +81,11 @@ export function Welcome() {
   return (
     <div className="palette-backdrop welcome-backdrop" onMouseDown={close} onKeyDown={(e) => e.key === 'Escape' && close()}>
       {/* The window itself takes the keyboard, so that Esc closes it without any one control looking chosen. */}
-      <div className="dialog welcome" role="dialog" aria-label={t('Welcome to OpenCalque')} tabIndex={-1} ref={box} onMouseDown={(e) => e.stopPropagation()}>
+      <div className="dialog welcome" role="dialog" aria-label={t('Welcome to AxioDraw')} tabIndex={-1} ref={box} onMouseDown={(e) => e.stopPropagation()}>
         <div className="welcome-head">
           <Logo size={46} />
           <div>
-            <h2>{t('Welcome to OpenCalque')}</h2>
+            <h2>{t('Welcome to AxioDraw')}</h2>
             <p className="faint">{t('Plans and layouts drawn to scale, free and open source.')}</p>
           </div>
         </div>

@@ -50,3 +50,17 @@ describe('axonometric faces', () => {
     expect(axoDepth({ x: 1000, y: 0, z: 0 }, 0)).toBeGreaterThan(axoDepth({ x: 0, y: 0, z: 0 }, 0))
   })
 })
+
+describe('structural solids in the axonometric view', () => {
+  it('stands slabs, columns and beams up between their bottom and their top', () => {
+    const doc = applyOps(createDocument('Plan'), [
+      { op: 'add_node', node: { id: 'slab', type: 'rect', parent: 'page_1', layer: 'layer_1', x: 0, y: 0, width: 3000, height: 2000, top: 2700, bottom: 2500 } } as never,
+      { op: 'add_node', node: { id: 'col', type: 'column', parent: 'page_1', layer: 'layer_1', x: 1000, y: 500, width: 300, height: 300, top: 2700, bottom: 0 } } as never,
+      { op: 'add_node', node: { id: 'beam', type: 'beam', parent: 'page_1', layer: 'layer_1', a: { x: 0, y: 0 }, b: { x: 3000, y: 0 }, width: 200, top: 2700, bottom: 2400 } } as never,
+    ])
+    const faces = axonometricFaces(doc, 'page_1', registry)
+    expect(faces.some((face) => face.points.every((p) => p.z === 2500 || p.z === 2700))).toBe(true)
+    expect(faces.some((face) => face.points.every((p) => p.z === 0 || p.z === 2700))).toBe(true)
+    expect(faces.some((face) => face.points.every((p) => p.z === 2400 || p.z === 2700))).toBe(true)
+  })
+})

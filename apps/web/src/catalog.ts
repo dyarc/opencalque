@@ -9,7 +9,7 @@ export { bundledExtensions } from '@opencalque/warehouse'
  * A catalog is a JSON file:
  *   { "libraries":  [{ "name": "…", "description": "…", "file": "relative/or/absolute.opencalque" }],
  *     "extensions": [{ "file": "relative/or/absolute.json" }] }
- * A library is an ordinary OpenCalque document; an extension is a declarative extension (data, not code).
+ * A library is an ordinary AxioDraw document; an extension is a declarative extension (data, not code).
  */
 export interface Library {
   id: string

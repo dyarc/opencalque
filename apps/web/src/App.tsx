@@ -89,7 +89,7 @@ export function App() {
       discard: t('Discard changes'),
       cancel: t('Cancel'),
       connect: t('Let the assistant connect to {origin}?'),
-      connectDetail: t('OpenCalque reaches an AI service only at an address set in Preferences. Allow it if you entered this address yourself.'),
+      connectDetail: t('AxioDraw reaches an AI service only at an address set in Preferences. Allow it if you entered this address yourself.'),
       allow: t('Allow'),
       deny: t('Do not allow'),
     })

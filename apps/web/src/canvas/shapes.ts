@@ -181,6 +181,17 @@ export function shape(tool: Tool, id: string, a: Vec2, b: Vec2, offset = 0): Nod
     case 'wall':
       // Of the material chosen for the tool, when this drawing has it: the setting outlives the drawing.
       return { ...common, type: 'wall', a, b, thickness: wallThickness, ...(wallMaterial && doc.materials?.[wallMaterial] ? { material: wallMaterial } : {}) }
+    case 'column': {
+      // As wide as a structural column usually is, from the floor to the page's wall height.
+      const page = base?.nodes[scope] ?? doc.nodes[scope]
+      const top = page?.type === 'page' && page.wallHeight !== undefined ? page.wallHeight : 2500
+      return { ...common, type: 'column', x: a.x - 200, y: a.y - 200, width: 400, height: 400, bottom: 0, top }
+    }
+    case 'beam': {
+      const page = base?.nodes[scope] ?? doc.nodes[scope]
+      const top = page?.type === 'page' && page.wallHeight !== undefined ? page.wallHeight : 2500
+      return { ...common, type: 'beam', a, b, width: 200, bottom: top - 200, top }
+    }
     case 'construction':
       // An endless guide through the two points clicked: only its direction is kept.
       return { ...common, type: 'construction', a, b }

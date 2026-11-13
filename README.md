@@ -1,4 +1,4 @@
-<h1 align="center">OpenCalque</h1>
+<h1 align="center">AxioDraw</h1>
 
 <p align="center">
   <strong>Open-source 2D architectural editor.</strong><br>
@@ -14,13 +14,13 @@
   <a href="#contributing"><img alt="Contributions welcome" src="https://img.shields.io/badge/contributions-welcome-22c55e"></a>
 </p>
 
-![A furnished apartment plan open in OpenCalque: rooms with floor patterns and areas, doors, windows, furniture, dimensions and notes](docs/screenshot.png)
+![A furnished apartment plan open in AxioDraw: rooms with floor patterns and areas, doors, windows, furniture, dimensions and notes](docs/screenshot.png)
 
-*Calque* is French for tracing paper, and for a layer. OpenCalque is a drafting table for buildings: draw walls that join themselves, drop in doors, windows and stairs that know how to behave, name rooms and get their area, then frame it all on a sheet. It is a desktop app and a web app from the same code, and everything it saves is a file you can read.
+*Calque* is French for tracing paper, and for a layer. AxioDraw is a drafting table for buildings: draw walls that join themselves, drop in doors, windows and stairs that know how to behave, name rooms and get their area, then frame it all on a sheet. It is a desktop app and a web app from the same code, and everything it saves is a file you can read.
 
 > **Status: 1.0, stable.** The editor works end to end and is covered by unit tests and browser tests, and a drawing saved by it stays readable by every later version ([what stays stable](#what-stays-stable)). [Download it](#download) or run it from source, and see [what is not there yet](#what-is-not-there-yet) and [what changed](CHANGELOG.md).
 
-## Why OpenCalque
+## Why AxioDraw
 
 | | |
 | --- | --- |
@@ -43,15 +43,15 @@ Installers for each version are on the [releases page](https://github.com/lauren
 
 | System | File |
 | --- | --- |
-| Windows | `OpenCalque-…-windows-setup.exe` to install, or `…-windows-portable.exe` to run without installing |
-| macOS | `OpenCalque-…-mac-arm64.dmg` (Apple silicon) or `…-mac-x64.dmg` (Intel) |
-| Linux | `OpenCalque-…-linux-….AppImage` |
+| Windows | `AxioDraw-…-windows-setup.exe` to install, or `…-windows-portable.exe` to run without installing |
+| macOS | `AxioDraw-…-mac-arm64.dmg` (Apple silicon) or `…-mac-x64.dmg` (Intel) |
+| Linux | `AxioDraw-…-linux-….AppImage` |
 
 The builds are not signed, so the system asks before running them the first time:
 
 - **Windows**: choose "More info", then "Run anyway".
-- **macOS**: open the app once, then go to System Settings → Privacy & Security, where an "Open Anyway" button for OpenCalque appears; on macOS 14 and earlier, right-clicking the app and choosing Open does the same. If a version before 0.4.1 says the app "is damaged", run `xattr -cr /Applications/OpenCalque.app` once, or take a newer version.
-- **Linux**: make the AppImage executable (`chmod +x OpenCalque-*.AppImage`). AppImages need FUSE 2, which recent Ubuntu does not install by default (`sudo apt install libfuse2t64`). On Ubuntu 24.04 and later, an Electron app started from an AppImage can close at once because the system restricts the sandbox it uses; starting it with `--no-sandbox` gets past that.
+- **macOS**: open the app once, then go to System Settings → Privacy & Security, where an "Open Anyway" button for AxioDraw appears; on macOS 14 and earlier, right-clicking the app and choosing Open does the same. If a version before 0.4.1 says the app "is damaged", run `xattr -cr /Applications/AxioDraw.app` once, or take a newer version.
+- **Linux**: make the AppImage executable (`chmod +x AxioDraw-*.AppImage`). AppImages need FUSE 2, which recent Ubuntu does not install by default (`sudo apt install libfuse2t64`). On Ubuntu 24.04 and later, an Electron app started from an AppImage can close at once because the system restricts the sandbox it uses; starting it with `--no-sandbox` gets past that.
 
 The macOS and Linux builds are made by the same release workflow as the Windows one, but have not been tried on a real Mac or Linux machine by the maintainers: reports of what works and what does not are welcome.
 
@@ -148,12 +148,12 @@ A batch is all-or-nothing and every result is validated, so a script or a model 
 
 ## AI agents
 
-OpenCalque serves drawings to an agent over [MCP](https://modelcontextprotocol.io), with the tools the assistant uses: edit with operations, read, measure, check what came out wrong, and look at a picture of the result.
+AxioDraw serves drawings to an agent over [MCP](https://modelcontextprotocol.io), with the tools the assistant uses: edit with operations, read, measure, check what came out wrong, and look at a picture of the result.
 
 **The drawing open in the desktop app** needs only the app. Turn on *Let agents on this computer work on the open drawing* under Preferences › AI, which also gives the command to run once, with the real path of your app. With Claude Code it looks like this:
 
 ```sh
-claude mcp add opencalque-live -- "C:\Users\you\AppData\Local\Programs\OpenCalque\OpenCalque.exe" --mcp
+claude mcp add opencalque-live -- "C:\Users\you\AppData\Local\Programs\AxioDraw\AxioDraw.exe" --mcp
 ```
 
 For any other MCP client, the command is the app and its one argument is `--mcp`. The app does not need to be open when you add it, only when the agent works.

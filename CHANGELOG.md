@@ -1,12 +1,14 @@
 # Changelog
 
-What changed in each version of OpenCalque. The app shows this list under About, and the text of
+What changed in each version of AxioDraw. The app shows this list under About, and the text of
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
 ## 1.9.1 — 2026-11-13
 
 ### New
+- The application is now **AxioDraw** throughout, and a saved drawing is an **`.adg`** file; `.opencalque` and `.opencad` drawings still open, and the file format inside is the same.
+- Slabs, columns and beams: a rectangle can take a top and a bottom height and stands as a slab; the Column tool places a post, and the Beam tool runs a girder between two points, each with its own width and its top and bottom. The 3D view draws them as solids, between those faces.
 - 3D view (`Shift+3`): an axonometric view of the page, with its walls standing as blocks and the floors of its rooms, from four directions, panned and zoomed, and with no perspective. It is worked out from the plan each time and is read-only; the plan is still what is edited.
 - The interface takes all the CreaBIM palettes, Graphite, Paper, Blueprint, Sage, Solarized and Ink (high contrast) beside Light and Dark, and its Inter typeface. The theme is chosen in Preferences › Language and appearance.
 - The application is now **AxioDraw**: the window, the splash screen and the installers say so, while drawings keep the `.opencalque` format they had.
@@ -48,7 +50,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - The electrical symbols are all objects to set, always there with nothing to install (they can be turned off in Preferences › Extensions): sockets (also 32 A, TV and network), switches (one or two circuits, two-way), a dimmer, a push button, a consumer unit, an electric radiator, all fixed on walls at their usual heights and drawn in elevations; ceiling and pendant lights, a recessed spotlight, a light strip, a smoke detector, an extractor fan and a junction box. They take the place of the library of electrical components; drawings that hold those keep them.
 - The height of a socket or a switch can be written beside it on the plan ("Height on plan" in Properties), as electrical plans do: h 0.30.
 - A socket or a switch near a wall but not on its face is reported by the drawing check (for the assistant and the command line), and Properties says it is on no wall.
-- Drawings with an elevation are saved in a new version of the format, which OpenCalque 1.8 and earlier refuse to open; drawings without one still open in them.
+- Drawings with an elevation are saved in a new version of the format, which AxioDraw 1.8 and earlier refuse to open; drawings without one still open in them.
 - A Circle tool (`C`, with the shapes): click the centre, then a point the circle goes through. A radius can be typed instead of the second click, or before the first, and a click then places the circle by its centre. Pointed at a line from the centre, the circle touches it.
 - An Extend tool (`J`, beside Trim): click a line, a polyline or a wall near the end to carry on, and it runs straight on to the next thing in its way (a line, a rectangle, a grid line, the face of a wall; for a wall, the next wall). Click again to go on to the one after.
 - A Fillet tool (`Shift+F`, beside Trim): click two lines, on the parts to keep, and they meet at their corner, each cut back or carried on to it. With a radius typed, the corner is rounded instead, by an arc touching both.
@@ -73,7 +75,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 ### New
 - A Move tool (`Shift+E`, beside Rotate), as in CAD: click a point of the selection, such as a corner, a middle or its centre, then where that point goes. Both snap, so the point lands exactly on a point of something else. A length and an angle can be typed instead of the second click, the arrow keys hold the move level or upright, and the view can be panned with the middle button between the two clicks. Ctrl leaves a copy there and goes on for more. Walls joined to what moves stay joined, as when dragging.
 - Points snap to the centre of a rectangle and of a closed shape, as they already did to that of a circle, and the mark says Centre.
-- OpenCalque speaks Turkish: the interface, the objects and the bundled libraries. It follows a system set to Turkish, or is chosen in Preferences › General.
+- AxioDraw speaks Turkish: the interface, the objects and the bundled libraries. It follows a system set to Turkish, or is chosen in Preferences › General.
 - Offset works on walls: it makes a wall like it beside it, of the same material, thickness and look, the distance measured between the two walls' lines. A curved wall gives one round the same centre. Doors and windows are not copied.
 
 ### Improved
@@ -185,7 +187,7 @@ A change of the format that breaks with 1.0 on two points: what a component hold
 - Panels keep their width and the drawing takes the difference: the line between two columns side by side resizes the outer one without widening the other, and a panel closed leaves its room to the drawing rather than making every column as wide as the others.
 
 ### Improved
-- The save dialog shows the type of the file being saved, OpenCalque (*.opencalque) for a drawing or PDF, SVG, DXF or CSV for an export, and adds its extension to a name typed without one (#3).
+- The save dialog shows the type of the file being saved, AxioDraw (*.opencalque) for a drawing or PDF, SVG, DXF or CSV for an export, and adds its extension to a name typed without one (#3).
 - The length of a wall or a line can be typed in its properties, where it was only shown: it grows or shrinks in its own direction from its start (from its end when only its start is free), the walls joined at the end that moves following it, and a curved wall keeps its shape (#4).
 - With several objects selected, the properties show how wide and high they stand together, as the box drawn round them (#4).
 - In the Properties panel, what is yes or no (a column of a table shown, the total row, the title block of a sheet, the line between two walls at a corner, a setting of an object or a modifier) is chosen between two tabs, Yes and No, in place of a checkbox.
@@ -225,7 +227,7 @@ The desktop app now updates itself. Anyone on 1.0.0 downloads this version by ha
 
 ## 1.0.0 — 2026-10-15
 
-The first stable version of OpenCalque. From this version on, a drawing stays readable by every later version: what a newer version adds is kept when an older one opens and saves it, and a drawing an older version cannot read is refused with a message rather than half-read and saved back. This is what changed since 0.8.5; the notes of the release candidates, 1.0.0-rc.1 to rc.4, give the details.
+The first stable version of AxioDraw. From this version on, a drawing stays readable by every later version: what a newer version adds is kept when an older one opens and saves it, and a drawing an older version cannot read is refused with a message rather than half-read and saved back. This is what changed since 0.8.5; the notes of the release candidates, 1.0.0-rc.1 to rc.4, give the details.
 
 ### New
 - The interface in Korean, chosen under Preferences › Language or followed from the system, with the component library, doors, windows and stairs named in Korean too. Korean text in an exported PDF prints in a Korean font that ships with the app.
@@ -506,7 +508,7 @@ The release candidate for 1.0. From this version on, drawings are kept readable:
 ## 0.5.0 — 2026-10-10
 
 ### New
-- OpenCalque in a browser, with nothing to install: https://opencalque.com always runs the latest version.
+- AxioDraw in a browser, with nothing to install: https://opencalque.com always runs the latest version.
 - Quantities: File → Export → CSV writes a table for a spreadsheet with the rooms and their areas, the walls (length, ground covered and, once a wall height is given, the area of their face less doors and windows, and their volume), the doors and windows counted by kind and size, and the wall types layer by layer.
 - Wall types, in their own panel. A type defines what you tick, and only that: what the wall is made of ("Plaster 15, Brick 200", or just a material), its thickness, height, fill, outline colour, weight and kind of line. Give a type to walls in their properties or choose it in the bar above the tools; its walls take what it defines, and changing the type changes them all. A wall can still be given a value of its own: it is marked as an exception, with a button to go back to the type. Measured layers are drawn as lines inside the wall.
 - Dimension the selected walls (Object menu): a chain of dimensions along each wall, through each side of its doors and windows, with the whole length beyond, on the outside of the plan.
@@ -534,7 +536,7 @@ The release candidate for 1.0. From this version on, drawings are kept readable:
 - Shift while dragging the end of a wall or a line keeps it on course: the end slides along the line it already lies on, or swings to level, upright or 45°. Shift while dragging a corner moves it along one of its walls.
 
 ### Fixed
-- macOS: the app no longer opens with "OpenCalque is damaged and can't be opened" on Apple-silicon Macs. It is still not signed by an identified developer, so the first time it has to be opened with a right-click, then Open. There is now a build for Intel Macs as well.
+- macOS: the app no longer opens with "AxioDraw is damaged and can't be opened" on Apple-silicon Macs. It is still not signed by an identified developer, so the first time it has to be opened with a right-click, then Open. There is now a build for Intel Macs as well.
 
 ## 0.4.0 — 2026-10-09
 

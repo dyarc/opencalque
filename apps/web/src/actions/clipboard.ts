@@ -108,7 +108,7 @@ export const paste = (inPlace = false) => {
     const { text, picture } = await readClipboard()
     if (!clipOf(text) && picture) return placePicture(new Uint8Array(await picture.arrayBuffer()), at)
     let clip = clipOf(text || lastCopy)
-    if (!clip) return toast(t('There is nothing from OpenCalque on the clipboard.'))
+    if (!clip) return toast(t('There is nothing from AxioDraw on the clipboard.'))
     // Taken from where it was seen to the same place as seen from here: out of a component it was cut from, onto the page.
     const from = clipPlacement(clip)
     const to = scopePlacement()

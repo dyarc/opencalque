@@ -33,7 +33,7 @@ function UpdateNote() {
   const update = useUpdate()
   if (update.status === 'ready') {
     return (
-      <button className="menubar-item menubar-update" title={t('Version {version} is ready. It will be installed when OpenCalque closes.', { version: update.version })} onClick={() => executeById('app.installUpdate')}>
+      <button className="menubar-item menubar-update" title={t('Version {version} is ready. It will be installed when AxioDraw closes.', { version: update.version })} onClick={() => executeById('app.installUpdate')}>
         <RotateCw size={13} />
         {t('Restart to update')}
       </button>
@@ -95,7 +95,7 @@ export function MenuBar() {
     <header className="menubar" ref={bar}>
       <strong className="menubar-brand">
         <Logo size={16} />
-        OpenCalque
+        AxioDraw
       </strong>
       {MENUS.map(([title, entries]) => (
         <div key={title} className="menu">

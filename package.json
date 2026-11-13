@@ -1,5 +1,5 @@
 {
-  "name": "opencalque",
+  "name": "axiodraw",
   "version": "1.9.1",
   "private": true,
   "license": "MIT",
@@ -30,5 +30,5 @@
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
   },
-  "description": "Open-source 2D architectural editor: floor plans and layouts with a Figma-like interface, a local CLI, and a plain JSON format built for AI workflows."
+  "description": "AxioDraw: open-source 2D architectural editor: floor plans and layouts with a Figma-like interface, a local CLI, and a plain JSON format built for AI workflows."
 }

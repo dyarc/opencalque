@@ -220,7 +220,7 @@ function AgentSettings() {
         onChange={(on) => setPrefs({ agentBridge: on })}
         hint={
           <>
-            <p className="hint">{t('Programs on this computer that know how to reach it, such as Claude Code through the OpenCalque MCP server, can then read the open drawing and change it. Each change can be undone.')}</p>
+            <p className="hint">{t('Programs on this computer that know how to reach it, such as Claude Code through the AxioDraw MCP server, can then read the open drawing and change it. Each change can be undone.')}</p>
             <p className="hint">{t('Any program you run on this computer can then reach the open drawing, so turn this off when you are not using it.')}</p>
           </>
         }
@@ -329,7 +329,7 @@ function GeneralSettings() {
             label={t('Check for a new version when the app starts')}
             checked={prefs.checkUpdates}
             onChange={(checkUpdates) => setPrefs({ checkUpdates })}
-            hint={t('OpenCalque asks GitHub, where it is published, whether a newer version is out. Where it can, it downloads it and installs it when the app closes.')}
+            hint={t('AxioDraw asks GitHub, where it is published, whether a newer version is out. Where it can, it downloads it and installs it when the app closes.')}
           />
         )}
       </Section>

@@ -6,7 +6,7 @@ z.config({ jitless: true })
 export const FORMAT = 'opencalque'
 /** What `format` was before the project was renamed. Such drawings are still read. */
 export const FORMER_FORMAT = 'opencad'
-export const FORMAT_VERSION = 5
+export const FORMAT_VERSION = 6
 
 const Id = z.string().min(1)
 
@@ -256,6 +256,8 @@ export const NodeSchema = z
         width: z.number().nonnegative(),
         height: z.number().nonnegative(),
         rotation,
+        top: z.number().optional().describe('The upper face of the slab it is, in mm above the floor (z = 0). With "bottom", the rectangle stands as a slab in the 3D view and in sections.'),
+        bottom: z.number().optional().describe('The lower face of the slab it is, in mm above the floor (z = 0).'),
       })
       .describe('Rectangle with its top-left corner at (x, y), rotated around that corner.'),
     z
@@ -366,6 +368,30 @@ export const NodeSchema = z
       .describe(
         'A sheet of paper laid on the drawing, with its top-left corner at (x, y): it frames the part of the drawing meant for one printed sheet. Width and height are in drawing millimetres like everything else. It has no children: whatever lies entirely inside its rectangle is on it, and is moved and copied with it in the editor.',
       ),
+    z
+      .object({
+        ...base,
+        type: z.literal('column'),
+        x: z.number(),
+        y: z.number(),
+        width: z.number().positive(),
+        height: z.number().positive(),
+        rotation: z.number().optional().describe('Degrees clockwise on screen. Defaults to 0.'),
+        top: z.number().optional().describe('Its upper face, in mm above the floor (z = 0).'),
+        bottom: z.number().optional().describe('Its lower face, in mm above the floor (z = 0).'),
+      })
+      .describe('A column standing where it is put, as wide and as deep as it says, between its bottom and its top.'),
+    z
+      .object({
+        ...base,
+        type: z.literal('beam'),
+        a: Vec2Schema,
+        b: Vec2Schema,
+        width: z.number().positive(),
+        top: z.number().optional().describe('Its upper face, in mm above the floor (z = 0).'),
+        bottom: z.number().optional().describe('Its lower face, in mm above the floor (z = 0).'),
+      })
+      .describe('A beam running from a to b, as wide as it says, between its bottom and its top.'),
     z.object({
       ...base,
       type: z.literal('ellipse'),

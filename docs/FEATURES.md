@@ -1,4 +1,4 @@
-# OpenCalque: features and roadmap
+# AxioDraw: features and roadmap
 
 What the app does today, the ten big features chosen to do next and where each stands, and the longer backlog. For how things are built, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -10,7 +10,7 @@ Last updated: 2026-11-11 (after 1.8.0).
 - Lines, rectangles, ellipses and arcs (an ellipse with a start and an end angle), polylines and polygons, straight or curved through their points, text. The Curved line tool draws the curve as its points are clicked; the Arc tool draws an arc by its two ends and a point it goes through, or a typed radius; the Circle tool a circle by its centre and a point it goes through, or a typed radius.
 - **Construction lines**: an endless dashed guide through two points, or parallel to a line at an offset typed or given by the pointer; picked and snapped to along its length, on its layer, never printed.
 - **Extend**: the end of a line, a polyline or a wall clicked runs straight on to the next thing in its way (for a wall, the next wall), and again to the one after. **Fillet**: two lines clicked meet at their corner, each cut back or carried on to it, or are joined by an arc of a typed radius; two neighbouring segments of one polyline are rounded inside it with a true arc.
-- **3D view**: the page in axonometric, its walls as blocks and the floors of its rooms, from four directions, panned and zoomed, with no perspective; read-only for now.
+- **3D view**: the page in axonometric, its walls as blocks, the floors of its rooms and the slabs, columns and beams it holds, from four directions, panned and zoomed, with no perspective; read-only for now.
 - **Explode and join**: a polyline or a rectangle drawn as the lines it is made of, an arc inside a line as an arc (`Shift+B`); lines, open polylines and circular arcs joined end to end into one polyline, an arc keeping its bow as a bulge, closed when the chain comes back to where it began (`Shift+J`).
 - **Offset**: a parallel copy of a wall, a line, a polyline, a curve, a rectangle, a circle or an arc, at a typed distance or where the pointer says. A wall's copy is a wall like it, its line that far from the first, a curved one round the same centre.
 - **Selecting by a box**, as in CAD: dragged to the right it takes what is wholly inside it; dragged to the left, green and dashed, what it touches, by what is drawn rather than by the box around it.
@@ -169,7 +169,7 @@ Not ranked within an area.
 - ~~Lock aspect ratio; non-uniform scaling~~ (done for rectangles and ellipses; a selection of several is stretched by a size typed, scaled in proportion by its corners); ~~numeric move and copy~~ (done: the Move tool takes a length and an angle, and Ctrl leaves copies).
 
 **Architecture**
-- Columns, beams, slabs, roofs in plan; curtain walls.
+- Slabs, columns and beams in plan and in the 3D view are done in their simplest form (a top and a bottom, a width); roofs, curtain walls and sections through them next.
 - Curved walls drawn directly with the wall tool, extended and trimmed, and dimensioned along their curve.
 - ~~Schedules of doors, windows and rooms placed on a sheet~~ (done, with floors, walls and materials); a table of each wall or each door one by one, with a mark drawn beside each on the plan.
 - Walls of materials: a command that lays a lining against a face of the selected wall; walls laid against one another moved together.

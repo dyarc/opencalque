@@ -31,7 +31,7 @@ let labels = {
   discard: 'Discard changes',
   cancel: 'Cancel',
   connect: 'Let the assistant connect to {origin}?',
-  connectDetail: 'OpenCalque reaches an AI service only at an address set in Preferences. Allow it if you entered this address yourself.',
+  connectDetail: 'AxioDraw reaches an AI service only at an address set in Preferences. Allow it if you entered this address yourself.',
   allow: 'Allow',
   deny: 'Do not allow',
 }
@@ -78,14 +78,14 @@ const backedUp = new Set<string>()
  * what was saved before can be found again in the backups folder, whatever the app later does to it.
  */
 async function backUp(path: string): Promise<void> {
-  if (backedUp.has(path) || !/\.(opencalque|opencad)$/i.test(path) || !existsSync(path)) return
+  if (backedUp.has(path) || !/\.(adg|opencalque|opencad)$/i.test(path) || !existsSync(path)) return
   backedUp.add(path)
   try {
     await mkdir(backups, { recursive: true })
     const stamp = new Date().toISOString().replace(/[:.]/g, '-')
     await copyFile(path, join(backups, `${stamp} ${basename(path)}`))
     // Named after the time they were made, they sort oldest first.
-    const kept = (await readdir(backups)).filter((name) => /\.(opencalque|opencad)$/i.test(name)).sort()
+    const kept = (await readdir(backups)).filter((name) => /\.(adg|opencalque|opencad)$/i.test(name)).sort()
     for (const old of kept.slice(0, Math.max(0, kept.length - BACKUPS_KEPT))) await unlink(join(backups, old)).catch(() => {})
   } catch {
     // A backup that cannot be made must not stop the drawing from being saved.
@@ -296,7 +296,7 @@ function createWindow(): void {
     height: 900,
     minWidth: 900,
     minHeight: 600,
-    title: 'OpenCalque',
+    title: 'AxioDraw',
     backgroundColor: dark ? '#1e1e1e' : '#ffffff',
     webPreferences: { preload: join(__dirname, '../preload/index.js'), contextIsolation: true, sandbox: true },
     ...(inBackground ? { show: false, x: -10000, y: -10000, skipTaskbar: true } : {}),
@@ -357,7 +357,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('file:open', async (event, extensions: string[]) => {
     const win = BrowserWindow.fromWebContents(event.sender)!
-    const result = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: 'OpenCalque', extensions }] })
+    const result = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: 'AxioDraw', extensions }] })
     return result.canceled ? null : read(result.filePaths[0])
   })
 
@@ -372,9 +372,9 @@ app.whenReady().then(() => {
     let path = token
     if (!path || !granted.has(path)) {
       const win = BrowserWindow.fromWebContents(event.sender)!
-      // A filter of the file's type: the dialog shows it ("OpenCalque (*.opencalque)") and adds the extension to a name typed without one.
+      // A filter of the file's type: the dialog shows it ("AxioDraw (*.adg)") and adds the extension to a name typed without one.
       const extension = extname(suggestedName).slice(1).toLowerCase()
-      const filters = extension ? [{ name: /^(opencalque|opencad)$/.test(extension) ? 'OpenCalque' : extension.toUpperCase(), extensions: [extension] }] : []
+      const filters = extension ? [{ name: /^(opencalque|opencad)$/.test(extension) ? 'AxioDraw' : extension.toUpperCase(), extensions: [extension] }] : []
       const result = await dialog.showSaveDialog(win, { defaultPath: suggestedName, filters })
       if (result.canceled || !result.filePath) return null
       path = result.filePath
@@ -383,7 +383,7 @@ app.whenReady().then(() => {
     await backUp(path)
     await writeSafely(path, content)
     // Exports (PDF, SVG, DXF) are saved this way too; only drawings are worth reopening.
-    if (/\.(opencalque|opencad)$/i.test(path)) remember(path)
+    if (/\.(adg|opencalque|opencad)$/i.test(path)) remember(path)
     return { name: basename(path), token: path }
   })
 

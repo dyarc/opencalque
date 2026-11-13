@@ -18,13 +18,13 @@ let asked = false
 function message(state: UpdateState): string | null {
   switch (state.status) {
     case 'latest':
-      return t('OpenCalque {version} is the newest version.', { version: VERSION })
+      return t('AxioDraw {version} is the newest version.', { version: VERSION })
     case 'available':
       return t('Version {version} is out. Click it at the top of the window to download it.', { version: state.version })
     case 'downloading':
-      return t('Version {version} is being downloaded. It will be installed when OpenCalque closes.', { version: state.version })
+      return t('Version {version} is being downloaded. It will be installed when AxioDraw closes.', { version: state.version })
     case 'ready':
-      return t('Version {version} is ready. It will be installed when OpenCalque closes.', { version: state.version })
+      return t('Version {version} is ready. It will be installed when AxioDraw closes.', { version: state.version })
     case 'failed':
       return t('Could not look for a new version: {reason}', { reason: state.message })
     default:
