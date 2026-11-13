@@ -22,7 +22,13 @@ const REACH = 6
 function stretchUnder(c: Canvas, world: Vec2): { a: Vec2; b: Vec2 } | null {
   const { view } = get()
   const reach = REACH / view.zoom
-  const hit = hitTest(c.scene, world, reach)
+  // A construction line is a guide already, and the one being placed crosses the pointer: neither
+  // is a line to take a direction from.
+  const hit = hitTest(
+    c.scene.filter((item) => item.node.type !== 'construction'),
+    world,
+    reach,
+  )
   if (!hit) return null
   let best: { a: Vec2; b: Vec2; near: number } | null = null
   for (const prim of hit.prims) {
@@ -70,6 +76,9 @@ function place(c: Canvas, g: GestureOf<'construction'>, e: Keys, world: Vec2): v
 export const constructionDown: Press = (c, e, at, world) => {
   const g = c.gesture
   if (g.kind === 'construction') return place(c, g, e, world)
+  // A two-point guide is being drawn: the next click is its second point, and the line under the
+  // pointer is that guide itself, which must not be taken for a line to copy.
+  if (g.kind === 'draw') return drawDown(c, e, at, world)
   const stretch = stretchUnder(c, world)
   // On a line: the guide runs parallel to it, at the distance the pointer gives. Elsewhere: two points.
   if (!stretch) return drawDown(c, e, at, world)

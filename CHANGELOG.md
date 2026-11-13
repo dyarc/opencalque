@@ -7,7 +7,10 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 ## 1.9.1 — 2026-11-13
 
 ### New
-- Construction lines: an endless dashed guide to draw against, made with the Construction line tool (`Q`, with the shapes). Click a line to take its direction, then move the pointer to set how far from it the guide runs, on that side — or type the distance in the quick bar — and click to place it; away from any line, click two points instead. It is picked and snapped to along its whole length, lies on its layer, and is never printed or exported.
+- Construction lines: an endless dashed guide to draw against, made with the Construction line tool (`Q`, with the shapes). Click a line to take its direction, then move the pointer to set how far from it the guide runs, on that side — or type the distance in the quick bar — and click to place it; away from any line, click two points instead. It is picked and snapped to along its whole length, lies on its layer, and is never printed or exported. Its look — colour, weight and dashes — is set in Properties as a line's is.
+
+### Fixed
+- A construction line made through two points stopped at the first point when the pointer had moved over the guide's own preview before the second click: the second click now finishes the line, both ways.
 
 ### Improved
 - The wheel moves the view the way a trackpad moves it elsewhere: two fingers scroll to pan the drawing, side to side as well as up and down, and pinching zooms about the pointer. A mouse wheel pans too; Ctrl-wheel (⌘-wheel) zooms.

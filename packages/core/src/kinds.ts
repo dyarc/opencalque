@@ -27,7 +27,7 @@ const VIEW_LINE_ARROW = 500
 const VIEW_LINE_HEAD = 180
 
 /** The dashes of a construction line, in mm: a guide to draw against, not a line of the drawing. */
-export const CONSTRUCTION_DASH = [12, 4]
+export const CONSTRUCTION_DASH = [9, 3]
 /** How far either way of the points that set its direction a construction line is drawn, in mm: a kilometre, past any drawing. */
 export const CONSTRUCTION_REACH = 1e6
 
