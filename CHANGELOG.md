@@ -39,7 +39,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - The drawing's name and saved state sit in the top-left corner of the drawing area, as quiet as the coordinate reading in the bottom-left; the system window title is just AxioDraw.
 - Selection boxes can be made by dragging, or by AutoCAD's click-move-click, chosen under Preferences › Selection.
 - Delete is bound to Shift+X by default; the Offset tool keeps O and OFF.
-- Pointer movement is coalesced to one redraw a frame; a plain object is moved over the unchanged plan and the document changes once, on release; and an object that has not changed keeps the drawing it had. Dragging one thing through a busy plan no longer rebuilds everything at every step.
+- Pointer movement is coalesced to one redraw a frame; a plain object moved by dragging or by the Move tool is drawn over the unchanged plan and the document changes once, on release; and an object that has not changed keeps the drawing it had. Dragging one thing through a busy plan no longer rebuilds everything at every step.
 - Ellipses and arcs can be offset: each radius grows or shrinks by the distance, and an arc keeps its start and end angles, so an arc compressed into an ellipse no longer loses its offset. A polyline with arc stretches, or a curved wall, can be offset as a whole (the polyline's copy follows its arcs, sampled).
 - An ellipse is set in three points: the two ends of one axis, with a dashed guide in the snap colour following the first, then a third click for its width the other way.
 - A construction line can be picked with a crossing selection box (dragged right to left), though it has no bounds to fit.
