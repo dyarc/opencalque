@@ -6,7 +6,7 @@
  */
 const shown = typeof performance === 'undefined' ? 0 : performance.now()
 /** The scene has five flashes and brings in the mark; a quick start still lets it play. */
-const LEAST = 2600
+const LEAST = 3800
 let hiding = false
 
 export function hideSplash(): void {
