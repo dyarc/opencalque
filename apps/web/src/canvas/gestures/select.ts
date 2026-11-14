@@ -57,7 +57,7 @@ import { get, type Canvas, type Move, type Press, type Release } from '../runtim
 import { faceAcross, faceOf, paperLabel, resizeCursor, round, sizes, thicknessLabel, thicknessStep, wallNormal } from '../shapes'
 
 /** Things whose move can be shown by shifting their drawing, without rebuilding the plan. */
-const FAST_MOVE = new Set(['ellipse', 'polyline', 'rect', 'image', 'column', 'beam', 'construction', 'dimension', 'radialDimension', 'angleDimension', 'text'])
+const FAST_MOVE = new Set(['ellipse', 'polyline', 'rect', 'image', 'column', 'beam', 'construction', 'dimension', 'radialDimension', 'angleDimension', 'text', 'parametric'])
 
 /*
  * The select tool: what a press picks or takes hold of, and each drag that follows. Every drag is a
@@ -201,7 +201,9 @@ export const moveMove: Move<'move'> = (_c, g, e, _at, world, out) => {
     const target = { x: (span[0].x + span[1].x) / 2 + world.x - g.start.x, y: (span[0].y + span[1].y) / 2 + world.y - g.start.y }
     const onWall = snapOpeningToWall(s.base ?? s.doc, s.scope, registry, only, target, 10 / s.view.zoom, step, only.rotation ?? 0)
     if (onWall) {
-      out.previewed = preview([{ op: 'update_node', id: only.id, patch: onWall }])
+      g.ops = [{ op: 'update_node', id: only.id, patch: onWall }]
+      out.moved = { ids: [only.id], delta: { x: onWall.x - only.x, y: onWall.y - only.y }, ...(onWall.rotation !== (only.rotation ?? 0) ? { rotation: onWall.rotation - (only.rotation ?? 0), pivot: { x: only.x, y: only.y } } : {}) }
+      out.previewed = true
       return
     }
   }
@@ -210,7 +212,9 @@ export const moveMove: Move<'move'> = (_c, g, e, _at, world, out) => {
     const target = { x: only.x + world.x - g.start.x, y: only.y + world.y - g.start.y }
     const onWall = snapMountToWall(s.base ?? s.doc, s.scope, registry, only, target, MOUNT_REACH / s.view.zoom, step)
     if (onWall) {
-      out.previewed = preview([{ op: 'update_node', id: only.id, patch: onWall }])
+      g.ops = [{ op: 'update_node', id: only.id, patch: onWall }]
+      out.moved = { ids: [only.id], delta: { x: onWall.x - only.x, y: onWall.y - only.y } }
+      out.previewed = true
       return
     }
   }

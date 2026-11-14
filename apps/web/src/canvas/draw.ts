@@ -191,8 +191,8 @@ export interface Overlay {
   guide?: { at: Vec2; angle: number }
   /** What the ends of the selected walls are joined to, and the walls joined to them (`WallLinks`). */
   wallLinks?: WallLinks | null
-  /** Objects moved as a preview without rebuilding the drawing: their ids, and how far they have gone. */
-  moved?: { ids: string[]; delta: Vec2 }
+  /** Objects moved as a preview without rebuilding the drawing: their ids, how far they have gone, and any turn about their own point. */
+  moved?: { ids: string[]; delta: Vec2; rotation?: number; pivot?: Vec2 }
 }
 
 /** How long, in screen pixels, the arrow at each end of a selected view's line is: what is dragged to move that end. */
@@ -690,6 +690,11 @@ export function drawScene(
     const steps = stepsOf(movedItems)
     ctx.save()
     ctx.translate(overlay.moved.delta.x, overlay.moved.delta.y)
+    if (overlay.moved.rotation && overlay.moved.pivot) {
+      ctx.translate(overlay.moved.pivot.x, overlay.moved.pivot.y)
+      ctx.rotate((overlay.moved.rotation * Math.PI) / 180)
+      ctx.translate(-overlay.moved.pivot.x, -overlay.moved.pivot.y)
+    }
     paintSteps(ctx, steps.sheets, view.zoom, palette.ink)
     paintSteps(ctx, steps.drawn, view.zoom, palette.ink)
     ctx.restore()
