@@ -13,16 +13,17 @@ export const door: ParametricKind = {
     HEIGHT(2040),
     { key: 'type', label: 'Type', type: 'string', default: 'Single', options: ['Single', 'Double', 'Sliding', 'Opening only'] },
     { key: 'shape', label: 'Shape', type: 'string', default: 'Straight', options: ['Straight', 'Curved'] },
+    { key: 'bow', label: 'Bow', type: 'number', default: 120, unit: 'length' },
     { key: 'hinge', label: 'Hinge', type: 'string', default: 'Left', options: ['Left', 'Right'] },
     { key: 'angle', label: 'Open angle', type: 'number', default: 90, unit: 'angle' },
     OTHER_SIDE,
   ],
   opening: ({ width }) => ({ from: 0, to: atLeast(1, width) }),
   size: { x: 'width' },
-  build({ width, type, hinge, angle, flip, shape }, env) {
+  build({ width, type, hinge, angle, flip, shape, bow }, env) {
     const w = atLeast(1, width)
     const h = (env.wallThickness ?? LOOSE_WALL) / 2
-    const curve = shape === 'Curved' ? env.wallCurve : undefined
+    const curve = shape === 'Curved' ? env.wallCurve ?? curveOf(w, bow) : undefined
     const open = clamp(angle, 5, 180)
     // A leaf hinged on the +Y face. `dir` is +1 when it closes towards +X, -1 towards -X.
     const leaf = (hingeX: number, length: number, dir: 1 | -1): Primitive[] => {
@@ -77,6 +78,7 @@ export const windowKind: ParametricKind = {
   params: [
     { ...WIDTH, default: 1200 },
     { key: 'shape', label: 'Shape', type: 'string', default: 'Straight', options: ['Straight', 'Curved'] },
+    { key: 'bow', label: 'Bow', type: 'number', default: 120, unit: 'length' },
     { key: 'panes', label: 'Panes', type: 'number', default: 2 },
     { key: 'glazing', label: 'Glazing', type: 'string', default: 'Double', options: ['Single', 'Double', 'Triple'] },
     HEIGHT(1250),
@@ -87,10 +89,10 @@ export const windowKind: ParametricKind = {
   opening: ({ width }) => ({ from: 0, to: atLeast(1, width) }),
   size: { x: 'width' },
   sill: 'sillHeight',
-  build({ width, panes, glazing, sill, flip, shape }, env) {
+  build({ width, panes, glazing, sill, flip, shape, bow }, env) {
     const w = atLeast(1, width)
     const h = (env.wallThickness ?? LOOSE_WALL) / 2
-    const curve = shape === 'Curved' ? env.wallCurve : undefined
+    const curve = shape === 'Curved' ? env.wallCurve ?? curveOf(w, bow) : undefined
     const frame = Math.min(50, w / 4)
     // A line for each pane of glass, evenly across the middle of the wall.
     const gap = Math.min(h * 0.3, 25)
@@ -140,4 +142,13 @@ export const curvedWindow: ParametricKind = {
   kind: 'arch.window.curved',
   label: 'Curved window',
   params: windowKind.params.map((param) => (param.key === 'shape' ? { ...param, default: 'Curved' } : param)),
+}
+
+
+/** A curve of a chosen bow when an opening is not in a curved wall: the sagitta sets the radius. */
+function curveOf(width: number, bow: unknown): { radius: number; half: number; side: 1 } | undefined {
+  const b = Number(bow)
+  const half = atLeast(1, width) / 2
+  if (!Number.isFinite(b) || b <= 0) return undefined
+  return { radius: (half * half + b * b) / (2 * b), half, side: 1 }
 }

@@ -15,15 +15,98 @@ export interface SceneItem {
   locked: boolean
 }
 
+/** The kinds whose drawing never looks at another node: moving one leaves the others as they were. */
+const INDEPENDENT = new Set<Node['type']>(['ellipse', 'polyline', 'rect', 'image', 'column', 'beam', 'construction'])
+/** The kinds whose drawing may change when another node does: a wall's joints, a room, an opening in a wall. */
+const DEPENDENT = new Set<Node['type']>(['wall', 'room', 'column', 'parametric', 'paper', 'instance', 'group', 'component', 'elevation'])
+
+/** The same values, though not the same object: a document is copied on every edit, its maps with it. */
+function sameValues(a: Record<string, unknown> | undefined, b: Record<string, unknown> | undefined): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  const keys = Object.keys(a)
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key])
+}
+
+type SceneCache = {
+  nodes: Document['nodes']
+  layers: Document['layers']
+  colors: Document['colors']
+  settings: Document['settings']
+  materials: Document['materials']
+  dimensionStyles: Document['dimensionStyles']
+  assets: Document['assets']
+  info: Document['info']
+  name: string
+  version: number
+  items: Map<string, SceneItem>
+}
+const sceneCaches = new Map<string, SceneCache>()
+
 /** Everything visible in a page or component, bottom to top. */
 export function buildScene(doc: Document, containerId: string, registry: Registry): SceneItem[] {
   const ctx = { doc, registry, depth: 0 }
+  const previous = sceneCaches.get(containerId)
+  const sameDocument =
+    previous &&
+    sameValues(previous.layers, doc.layers) &&
+    sameValues(previous.colors, doc.colors) &&
+    sameValues(previous.settings as Record<string, unknown> | undefined, doc.settings as Record<string, unknown> | undefined) &&
+    sameValues(previous.materials, doc.materials) &&
+    sameValues(previous.dimensionStyles, doc.dimensionStyles) &&
+    sameValues(previous.assets, doc.assets) &&
+    sameValues(previous.info, doc.info) &&
+    previous.name === doc.name &&
+    previous.version === registry.version
+  const changed = new Set<string>()
+  if (sameDocument && previous.nodes !== doc.nodes) {
+    for (const id of new Set([...Object.keys(previous.nodes), ...Object.keys(doc.nodes)])) {
+      if (previous.nodes[id] !== doc.nodes[id]) changed.add(id)
+    }
+  }
+  // A group, or a component opened in place, draws its children: anything changed inside it has to
+  // be redrawn, so its ancestors are marked too.
+  const dirty = new Set<string>()
+  for (const id of changed) {
+    let node = doc.nodes[id]
+    while (node?.parent) {
+      dirty.add(node.parent)
+      node = doc.nodes[node.parent]
+    }
+  }
+  const dependentChanged = [...changed].some((id) => {
+    const node = doc.nodes[id] ?? previous?.nodes[id]
+    return !!node && DEPENDENT.has(node.type)
+  })
   const items = childrenOf(doc, containerId)
     .filter((node) => isVisible(doc, node))
     .map((node): SceneItem => {
+      const old = previous?.items.get(node.id)
+      const volatile = node.type === 'instance' || node.type === 'paper' || node.type === 'group' || node.type === 'component' || node.type === 'elevation'
+      const reuse =
+        sameDocument &&
+        old?.node === node &&
+        !(volatile && changed.size > 0) &&
+        (changed.size === 0 ||
+          (INDEPENDENT.has(node.type) && !dirty.has(node.id)) ||
+          (!dependentChanged && !dirty.has(node.id)))
+      if (reuse) return old
       const prims = nodePrimitives(node, ctx)
       return { id: node.id, node, prims, bounds: boundsOf(prims), locked: isLocked(doc, node) }
     })
+  sceneCaches.set(containerId, {
+    nodes: doc.nodes,
+    layers: doc.layers,
+    colors: doc.colors,
+    settings: doc.settings,
+    materials: doc.materials,
+    dimensionStyles: doc.dimensionStyles,
+    assets: doc.assets,
+    info: doc.info,
+    name: doc.name,
+    version: registry.version,
+    items: new Map(items.map((item) => [item.id, item])),
+  })
   const sheet = templateSheet(doc, containerId)
   return sheet ? [sheet, ...items] : items
 }
