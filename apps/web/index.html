@@ -7,9 +7,9 @@
     <link rel="apple-touch-icon" href="./icon.png" />
     <title>AxioDraw</title>
     <style>
-      /* The loading screen: a dark field, the crosshair of a drawing, and a point of light. It is
-         shown from the first paint while the app's code loads, and taken away by src/splash.ts.
-         Plain HTML and CSS: the Content-Security-Policy lets no script run in this page. */
+      /* The loading screen: the mark, then the line beside it. It is shown from the first paint
+         while the app's code loads, and taken away by src/splash.ts. Plain HTML and CSS: the
+         Content-Security-Policy lets no script run in this page. */
       #splash {
         position: fixed;
         inset: 0;
@@ -26,95 +26,71 @@
         pointer-events: none;
         -webkit-app-region: no-drag;
       }
-      .splash-axis {
-        position: absolute;
-        background: rgb(255 255 255 / 38%);
-        box-shadow: 0 0 12px rgb(140 180 255 / 18%);
-        opacity: 0;
-        animation: splash-axis 0.8s ease-out forwards;
-      }
-      .splash-axis.horizontal {
-        top: 50%;
-        left: 0;
-        width: 100%;
-        height: 1px;
-      }
-      .splash-axis.vertical {
-        top: 0;
-        left: 50%;
-        width: 1px;
-        height: 100%;
-        animation-delay: 0.08s;
-      }
-      .splash-glow {
+      .splash-lockup {
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: radial-gradient(circle, #fff 0 18%, rgb(160 200 255 / 75%) 32%, rgb(90 140 255 / 22%) 55%, transparent 72%);
-        box-shadow: 0 0 24px 8px rgb(120 170 255 / 45%), 0 0 70px 22px rgb(60 110 255 / 18%);
+        display: flex;
+        align-items: center;
+        gap: 30px;
         transform: translate(-50%, -50%);
-        opacity: 0;
-        animation: splash-flash 0.24s ease-in-out 0.16s 5;
       }
       .splash-mark {
-        position: absolute;
-        top: calc(50% - 155px);
-        left: calc(50% - 205px);
-        width: 116px;
-        height: 116px;
+        width: 190px;
+        height: 190px;
         object-fit: contain;
         opacity: 0;
-        filter: drop-shadow(0 0 18px rgb(130 175 255 / 18%));
-        animation: splash-in 0.9s ease-out 0.58s forwards;
+        filter: drop-shadow(0 0 22px rgb(140 175 255 / 16%));
+        animation: splash-mark-in 0.8s ease-out 0.12s forwards;
       }
       .splash-tagline {
-        position: absolute;
-        top: calc(50% - 92px);
-        left: calc(50% + 58px);
         margin: 0;
-        color: rgb(236 242 255 / 88%);
-        font: 300 15px/1.4 Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-        letter-spacing: 0.075em;
+        color: rgb(238 243 255 / 82%);
+        font: 300 12px/1.5 Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+        letter-spacing: 0.14em;
         white-space: nowrap;
         opacity: 0;
-        animation: splash-in 0.9s ease-out 0.58s forwards;
+        animation: splash-line-in 0.9s ease-out 0.9s forwards;
       }
-      @keyframes splash-axis {
-        to {
-          opacity: 1;
-        }
-      }
-      @keyframes splash-flash {
-        0%,
-        100% {
-          opacity: 0.12;
-        }
-        42% {
-          opacity: 1;
-        }
-      }
-      @keyframes splash-in {
+      @keyframes splash-mark-in {
         from {
           opacity: 0;
-          transform: translateY(5px);
+          transform: scale(0.94);
         }
         to {
           opacity: 1;
-          transform: translateY(0);
+          transform: scale(1);
+        }
+      }
+      @keyframes splash-line-in {
+        from {
+          opacity: 0;
+          transform: translateX(-6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @media (max-width: 640px) {
+        .splash-lockup {
+          flex-direction: column;
+          gap: 18px;
+        }
+        .splash-mark {
+          width: 150px;
+          height: 150px;
+        }
+        .splash-tagline {
+          font-size: 11px;
+          letter-spacing: 0.1em;
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .splash-axis,
-        .splash-glow {
-          animation-duration: 0.6s;
-          animation-iteration-count: 1;
-        }
         .splash-mark,
         .splash-tagline {
-          animation-delay: 0.1s;
+          animation-duration: 0.01s;
+          animation-delay: 0s;
         }
       }
     </style>
@@ -122,11 +98,10 @@
   <body>
     <div id="root"></div>
     <div id="splash" role="status" aria-label="AxioDraw">
-      <div class="splash-axis horizontal"></div>
-      <div class="splash-axis vertical"></div>
-      <img class="splash-mark" src="./logo-mark.png" alt="" />
-      <p class="splash-tagline">AxioDraw - Present Your Taste.</p>
-      <div class="splash-glow"></div>
+      <div class="splash-lockup">
+        <img class="splash-mark" src="./logo-mark.png" alt="" />
+        <p class="splash-tagline">AxioDraw - Present Your Taste.</p>
+      </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
