@@ -104,10 +104,7 @@
             "CFBundleTypeExtensions": [
               "adg"
             ],
-            "CFBundleTypeIconFile": "document.icns",
-            "LSItemContentTypes": [
-              "com.axiodraw.drawing"
-            ]
+            "CFBundleTypeIconFile": "document.icns"
           },
           {
             "CFBundleTypeName": "AxioDraw drawing (old name)",
@@ -117,29 +114,7 @@
               "opencalque",
               "opencad"
             ],
-            "CFBundleTypeIconFile": "document.icns",
-            "LSItemContentTypes": [
-              "com.axiodraw.drawing"
-            ]
-          }
-        ],
-        "UTExportedTypeDeclarations": [
-          {
-            "UTTypeIdentifier": "com.axiodraw.drawing",
-            "UTTypeDescription": "AxioDraw drawing",
-            "UTTypeIconFile": "document.icns",
-            "UTTypeConformsTo": [
-              "public.json",
-              "public.data"
-            ],
-            "UTTypeTagSpecification": {
-              "public.filename-extension": [
-                "adg",
-                "opencalque",
-                "opencad"
-              ],
-              "public.mime-type": "application/json"
-            }
+            "CFBundleTypeIconFile": "document.icns"
           }
         ]
       }
