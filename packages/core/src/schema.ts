@@ -515,6 +515,7 @@ export const NodeSchema = z
         offset: z.number().describe('Signed distance from the measured points to the dimension line.'),
         text: z.string().optional().describe('Replaces the measured value when set.'),
         dimensionStyle: Id.optional().describe('The id of the dimension style it is drawn in, among the document\'s "dimensionStyles". It takes what the style defines, except where it gives itself a value.'),
+        textOffset: Vec2Schema.optional().describe('Moves the words away from where the dimension puts them, in mm.'),
         ...dimensionLook,
       })
       .describe(
@@ -536,6 +537,7 @@ export const NodeSchema = z
         extension: StyleSchema.pick({ stroke: true, strokeWidth: true, dash: true }).optional().describe('Look of the extension lines. Unset values follow the dimension line.'),
         extensionGap: z.number().nonnegative().optional().describe('Gap in mm between a measured point and its extension line. Defaults to 0.'),
         textPosition: z.enum(['above', 'center', 'below']).optional().describe("Where the text sits relative to the dimension line. Defaults to 'above'."),
+        textOffset: Vec2Schema.optional().describe('Moves the words away from where the dimension puts them, in mm.'),
         textRotation: z.enum(['aligned', 'horizontal']).optional().describe("Defaults to 'aligned' (along the dimension line)."),
         verticalText: z.enum(['up', 'down']).optional().describe("Which way text along a vertical dimension line reads. Defaults to 'down'."),
         size: z.number().positive().optional().describe('Text size in mm. Defaults to 150.'),
@@ -564,6 +566,7 @@ export const NodeSchema = z
         extension: StyleSchema.pick({ stroke: true, strokeWidth: true, dash: true }).optional().describe('Look of the extension lines. Unset values follow the dimension line.'),
         extensionGap: z.number().nonnegative().optional().describe('Gap in mm between a measured point and its extension line. Defaults to 0.'),
         textPosition: z.enum(['above', 'center', 'below']).optional().describe("Where the text sits relative to the dimension line. Defaults to 'above'."),
+        textOffset: Vec2Schema.optional().describe('Moves the words away from where the dimension puts them, in mm.'),
         textRotation: z.enum(['aligned', 'horizontal']).optional().describe("Defaults to 'aligned' (along the dimension line)."),
         verticalText: z.enum(['up', 'down']).optional().describe("Which way text along a vertical dimension line reads. Defaults to 'down'."),
         size: z.number().positive().optional().describe('Text size in mm. Defaults to 150.'),

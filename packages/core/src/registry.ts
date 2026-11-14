@@ -38,6 +38,11 @@ export interface Mount {
 export interface BuildEnv {
   /** Thickness of the wall the object sits in, when it is an opening placed on one. */
   wallThickness?: number
+  /**
+   * How the wall the opening sits in bends under it: the radius at its middle, how wide the
+   * opening is, and which side of its own +Y the wall's middle bows to. Set only on a curved wall.
+   */
+  wallCurve?: { radius: number; half: number; side: 1 | -1 }
 }
 
 /** An object type drawn from parameters. `build` returns primitives in local coordinates (origin = insertion point). */

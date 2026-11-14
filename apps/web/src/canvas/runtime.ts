@@ -100,6 +100,7 @@ export interface Shown {
   face?: Overlay['face']
   turning?: Overlay['box']
   marquee?: Overlay['marquee']
+  moved?: Overlay['moved']
   status: string
   /** False when a preview failed, which has put its reason in the status bar. */
   previewed: boolean

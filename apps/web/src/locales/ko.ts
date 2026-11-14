@@ -1188,4 +1188,5 @@ export const ko: Record<string, string> = {
   "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "상자 선택 방식: 첫 모서리에서 두 번째 모서리로 끌거나, AutoCAD처럼 첫 모서리를 클릭하고 이동한 뒤 두 번째를 클릭합니다.",
   "Drag: press, drag, release": "끌기: 누르고, 끌고, 놓기",
   "Click: click, move, click (AutoCAD)": "클릭: 클릭, 이동, 클릭 (AutoCAD)",
+  "Edit the selected group or component": "선택한 그룹 또는 구성 요소 편집",
 }

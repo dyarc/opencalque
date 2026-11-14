@@ -676,6 +676,7 @@ function dimensionPrimitives(node: NodeOf<'dimension'>, drawing?: DrawingSetting
     anchor = add(middle, scale(rotate({ x: 0, y: -1 }, angle), lift))
     cover = width / 2 + size * 0.3
   }
+  const textAt = add(anchor, node.textOffset ?? { x: 0, y: 0 })
   const broken = position === 'center' && length > 2 * cover
   const lines: Vec2[][] = broken ? [[a, sub(middle, scale(dir, cover))], [add(middle, scale(dir, cover)), b]] : [[a, b]]
   const markerSize = node.markerSize ?? DIMENSION_MARKER_SIZE
@@ -688,8 +689,8 @@ function dimensionPrimitives(node: NodeOf<'dimension'>, drawing?: DrawingSetting
     ...dimensionMarker(node.endMarker, b, dir, dir, markerSize, markers),
     {
       kind: 'text',
-      x: anchor.x,
-      y: anchor.y,
+      x: textAt.x,
+      y: textAt.y,
       text: label,
       size,
       rotation: angle,
@@ -723,6 +724,15 @@ function measureRotation(along: number, node: { textRotation?: 'aligned' | 'hori
  * words. Nothing is drawn through the centre: the arc is where it is measured, and the centre is
  * not in the way.
  */
+/** Where a radius dimension's words sit before `textOffset`. */
+function radialTextPoint(node: NodeOf<'radialDimension'>): Vec2 {
+  const size = node.size ?? DIMENSION_TEXT_SIZE
+  const dir = { x: Math.cos((node.angle * Math.PI) / 180), y: Math.sin((node.angle * Math.PI) / 180) }
+  const end = add(node.centre, scale(dir, node.radius + (node.leader ?? size * 1.8)))
+  const side = node.textPosition === 'below' ? -1 : node.textPosition === 'center' ? 0 : 1
+  return add(add(end, scale(dir, size * (side === 0 ? 0.15 : 0.45))), scale(perp(dir), side * size * 0.5))
+}
+
 function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindContext): Primitive[] {
   const size = node.size ?? DIMENSION_TEXT_SIZE
   const markerSize = node.markerSize ?? MEASURE_ARROW
@@ -739,8 +749,7 @@ function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindCon
     dash: node.extension?.dash,
   }
   const label = node.text ?? `R ${dimensionLabel(node, node.radius, ctx.doc.settings ?? {})}`
-  const side = node.textPosition === 'below' ? -1 : node.textPosition === 'center' ? 0 : 1
-  const textAt = add(add(end, scale(dir, size * (side === 0 ? 0.15 : 0.45))), scale(perp(dir), side * size * 0.5))
+  const textAt = add(radialTextPoint(node), node.textOffset ?? { x: 0, y: 0 })
   const rotation = measureRotation(node.angle, node)
   // The leader, and a short tail past the words when extension lines are given a look of their own.
   const tail = add(end, scale(dir, size * 0.8))
@@ -755,6 +764,20 @@ function radialDimensionPrimitives(node: NodeOf<'radialDimension'>, ctx: KindCon
 }
 
 /** An angle dimension: its arc between two directions, its arrows at each end, and the degrees beyond it. */
+/** Where an angle dimension's words sit before `textOffset`. */
+function angleTextPoint(node: NodeOf<'angleDimension'>): Vec2 {
+  const size = node.size ?? DIMENSION_TEXT_SIZE
+  const d1 = norm(sub(node.from, node.vertex))
+  const d2 = norm(sub(node.to, node.vertex))
+  const a1 = (Math.atan2(d1.y, d1.x) * 180) / Math.PI
+  const a2 = (Math.atan2(d2.y, d2.x) * 180) / Math.PI
+  const delta = ((a2 - a1 + 540) % 360) - 180
+  const middle = a1 + delta / 2
+  const side = node.textPosition === 'below' ? -1 : node.textPosition === 'center' ? 0 : 1
+  const out = node.radius + (side < 0 ? -size * 0.5 : size * 1.3)
+  return { x: node.vertex.x + Math.cos((middle * Math.PI) / 180) * out, y: node.vertex.y + Math.sin((middle * Math.PI) / 180) * out }
+}
+
 function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindContext): Primitive[] {
   const size = node.size ?? DIMENSION_TEXT_SIZE
   const d1 = norm(sub(node.from, node.vertex))
@@ -790,11 +813,7 @@ function angleDimensionPrimitives(node: NodeOf<'angleDimension'>, ctx: KindConte
     ...extension,
   })
   const middle = a1 + delta / 2
-  const side = node.textPosition === 'below' ? -1 : node.textPosition === 'center' ? 0 : 1
-  const textAt = {
-    x: node.vertex.x + Math.cos((middle * Math.PI) / 180) * (node.radius + (side < 0 ? -size * 0.5 : size * 1.3)),
-    y: node.vertex.y + Math.sin((middle * Math.PI) / 180) * (node.radius + (side < 0 ? -size * 0.5 : size * 1.3)),
-  }
+  const textAt = add(angleTextPoint(node), node.textOffset ?? { x: 0, y: 0 })
   const rotation = measureRotation(middle + (delta >= 0 ? 90 : -90), node)
   const decimal = node.decimal ?? ctx.doc.settings?.decimal ?? '.'
   const value = Math.abs(delta)
@@ -1190,10 +1209,15 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
   dimension: {
     primitives: (node, ctx) => dimensionPrimitives(styledDimension(ctx.doc, node), ctx.doc.settings),
     move: moveAB,
-    // The third handle sits on the dimension line and sets how far it stands off.
-    handles: (node) => [node.a, node.b, add(mid(node.a, node.b), scale(perp(norm(sub(node.b, node.a))), node.offset))],
+    // The third handle sits on the dimension line and sets how far it stands off; the fourth
+    // moves the words away from where the dimension puts them.
+    handles: (node) => {
+      const middle = add(mid(node.a, node.b), scale(perp(norm(sub(node.b, node.a))), node.offset))
+      return [node.a, node.b, middle, add(middle, node.textOffset ?? { x: 0, y: 0 })]
+    },
     moveHandle: (node, index, p) => {
       if (index < 2) return moveHandleAB(node, index, p)
+      if (index === 3) return { textOffset: sub(p, add(mid(node.a, node.b), scale(perp(norm(sub(node.b, node.a))), node.offset))) }
       const n = perp(norm(sub(node.b, node.a)))
       return { offset: Math.round((p.x - node.a.x) * n.x + (p.y - node.a.y) * n.y) }
     },
@@ -1211,6 +1235,8 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
   radialDimension: {
     primitives: (node, ctx) => radialDimensionPrimitives(styledMeasure(ctx.doc, node), ctx),
     move: (node, d) => ({ centre: add(node.centre, d) }),
+    handles: (node) => [add(radialTextPoint(node), node.textOffset ?? { x: 0, y: 0 })],
+    moveHandle: (node, _index, p) => ({ textOffset: sub(p, radialTextPoint(node)) }),
     snapPoints: (node) => [node.centre],
     snapLines: () => [],
     transform: (node, t) => ({
@@ -1223,6 +1249,8 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
   angleDimension: {
     primitives: (node, ctx) => angleDimensionPrimitives(styledMeasure(ctx.doc, node), ctx),
     move: (node, d) => ({ vertex: add(node.vertex, d), from: add(node.from, d), to: add(node.to, d) }),
+    handles: (node) => [add(angleTextPoint(node), node.textOffset ?? { x: 0, y: 0 })],
+    moveHandle: (node, _index, p) => ({ textOffset: sub(p, angleTextPoint(node)) }),
     snapPoints: (node) => [node.vertex],
     snapLines: () => [],
     transform: (node, t) => ({

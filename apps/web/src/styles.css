@@ -590,11 +590,11 @@ html.dock-dragging .tab-more {
   display: flex;
   align-items: center;
   height: 26px;
-  padding: 0 10px 0 8px;
+  padding: 0 11px;
   border: 0;
-  border-radius: 5px;
-  background: none;
-  color: inherit;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -603,7 +603,7 @@ html.dock-dragging .tab-more {
 
 .menubar-brand:hover,
 .menubar-brand.open {
-  background: var(--hover);
+  filter: brightness(0.92);
 }
 
 .menubar-item {
@@ -842,6 +842,14 @@ html.dock-dragging .tab-more {
   border: 1px solid var(--accent);
   border-radius: 3px;
   outline: 0;
+  background: var(--bg);
+  color: var(--text);
+  caret-color: var(--text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
 }
 
 .field {

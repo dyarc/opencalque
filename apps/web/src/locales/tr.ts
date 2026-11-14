@@ -1188,4 +1188,5 @@ export const tr: Record<string, string> = {
   "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "Kutunun seçme biçimi: ilk köşeden ikinciye sürükleyin veya AutoCAD’deki gibi ilk köşeyi tıklayın, hareket edin ve ikinciyi tıklayın.",
   "Drag: press, drag, release": "Sürükle: bas, sürükle, bırak",
   "Click: click, move, click (AutoCAD)": "Tıkla: tıkla, hareket et, tıkla (AutoCAD)",
+  "Edit the selected group or component": "Seçili grubu veya bileşeni düzenle",
 }

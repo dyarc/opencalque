@@ -1,5 +1,5 @@
 import { arcPoints, type ParametricKind, type Primitive } from '@opencalque/core'
-import { atLeast, clamp, count, HEAVY, HEIGHT, line, LOOSE_WALL, mirrorAcross, mirrorAlong, OTHER_SIDE, outline, pt, THIN, WIDTH } from './shared'
+import { atLeast, clamp, count, curveLine, curveOutline, curvePoint, HEAVY, HEIGHT, line, LOOSE_WALL, mirrorAcross, mirrorAlong, OTHER_SIDE, outline, pt, THIN, WIDTH } from './shared'
 
 /* Doors and windows: openings that cut the wall they are placed on, drawn along +X, the wall's line, and told its thickness. */
 
@@ -12,30 +12,47 @@ export const door: ParametricKind = {
     WIDTH,
     HEIGHT(2040),
     { key: 'type', label: 'Type', type: 'string', default: 'Single', options: ['Single', 'Double', 'Sliding', 'Opening only'] },
+    { key: 'shape', label: 'Shape', type: 'string', default: 'Straight', options: ['Straight', 'Curved'] },
+    { key: 'bow', label: 'Bow', type: 'number', default: 120, unit: 'length' },
     { key: 'hinge', label: 'Hinge', type: 'string', default: 'Left', options: ['Left', 'Right'] },
     { key: 'angle', label: 'Open angle', type: 'number', default: 90, unit: 'angle' },
     OTHER_SIDE,
   ],
   opening: ({ width }) => ({ from: 0, to: atLeast(1, width) }),
   size: { x: 'width' },
-  build({ width, type, hinge, angle, flip }, env) {
+  build({ width, type, hinge, angle, flip, shape, bow }, env) {
     const w = atLeast(1, width)
     const h = (env.wallThickness ?? LOOSE_WALL) / 2
+    const curve = shape === 'Curved' ? env.wallCurve ?? curveOf(w, bow) : undefined
     const open = clamp(angle, 5, 180)
     // A leaf hinged on the +Y face. `dir` is +1 when it closes towards +X, -1 towards -X.
     const leaf = (hingeX: number, length: number, dir: 1 | -1): Primitive[] => {
-      const hingePoint = pt(hingeX, h)
+      const hingePoint = curvePoint(hingeX, h, curve)
       const closed = dir === 1 ? 0 : 180
       const opened = closed + dir * open
       const tip = arcPoints(hingePoint, length, opened, opened, 1)[0]
-      return [line([hingePoint, tip], HEAVY), line(arcPoints(hingePoint, length, closed, opened), THIN)]
+      if (!curve) return [line([hingePoint, tip], HEAVY), line(arcPoints(hingePoint, length, closed, opened), THIN)]
+      // A curved leaf keeps a bow of its own as it swings: a quadratic from the hinge to the tip,
+      // bent by the wall's curvature, beside the arc it sweeps.
+      const sag = curve.radius - Math.sqrt(Math.max(0, curve.radius * curve.radius - (length / 2) ** 2))
+      const mid = { x: (hingePoint.x + tip.x) / 2, y: (hingePoint.y + tip.y) / 2 }
+      const side = { x: -(tip.y - hingePoint.y), y: tip.x - hingePoint.x }
+      const size = Math.hypot(side.x, side.y) || 1
+      const bow = { x: mid.x + (side.x / size) * sag * curve.side * 0.55, y: mid.y + (side.y / size) * sag * curve.side * 0.55 }
+      const steps = 12
+      const curvedLeaf = Array.from({ length: steps + 1 }, (_, i) => {
+        const t = i / steps
+        const u = 1 - t
+        return { x: u * u * hingePoint.x + 2 * u * t * bow.x + t * t * tip.x, y: u * u * hingePoint.y + 2 * u * t * bow.y + t * t * tip.y }
+      })
+      return [line(curvedLeaf, HEAVY), line(arcPoints(hingePoint, length, closed, opened), THIN)]
     }
-    let prims: Primitive[] = [line([pt(0, -h), pt(w, -h)], THIN), line([pt(0, h), pt(w, h)], THIN)]
+    let prims: Primitive[] = [curveLine(0, w, -h, curve, THIN), curveLine(0, w, h, curve, THIN)]
     if (type === 'Single') prims.push(...leaf(0, w, 1))
     else if (type === 'Double') prims.push(...leaf(0, w / 2, 1), ...leaf(w, w / 2, -1))
     else if (type === 'Sliding') {
       const offset = h * 0.3
-      prims.push(line([pt(0, -offset), pt(w * 0.55, -offset)], HEAVY), line([pt(w * 0.45, offset), pt(w, offset)], HEAVY))
+      prims.push(curveLine(0, w * 0.55, -offset, curve, HEAVY), curveLine(w * 0.45, w, offset, curve, HEAVY))
     }
     if (hinge === 'Right') prims = mirrorAlong(prims, w)
     return flip ? mirrorAcross(prims) : prims
@@ -60,6 +77,8 @@ export const windowKind: ParametricKind = {
   description: 'Place it on a wall: it cuts the opening and follows the wall. The sill marks the outside.',
   params: [
     { ...WIDTH, default: 1200 },
+    { key: 'shape', label: 'Shape', type: 'string', default: 'Straight', options: ['Straight', 'Curved'] },
+    { key: 'bow', label: 'Bow', type: 'number', default: 120, unit: 'length' },
     { key: 'panes', label: 'Panes', type: 'number', default: 2 },
     { key: 'glazing', label: 'Glazing', type: 'string', default: 'Double', options: ['Single', 'Double', 'Triple'] },
     HEIGHT(1250),
@@ -70,26 +89,27 @@ export const windowKind: ParametricKind = {
   opening: ({ width }) => ({ from: 0, to: atLeast(1, width) }),
   size: { x: 'width' },
   sill: 'sillHeight',
-  build({ width, panes, glazing, sill, flip }, env) {
+  build({ width, panes, glazing, sill, flip, shape, bow }, env) {
     const w = atLeast(1, width)
     const h = (env.wallThickness ?? LOOSE_WALL) / 2
+    const curve = shape === 'Curved' ? env.wallCurve ?? curveOf(w, bow) : undefined
     const frame = Math.min(50, w / 4)
     // A line for each pane of glass, evenly across the middle of the wall.
     const gap = Math.min(h * 0.3, 25)
     const glass = glazing === 'Triple' ? [-gap, 0, gap] : glazing === 'Double' ? [-gap, gap] : [0]
     const n = count(panes)
     const prims: Primitive[] = [
-      line([pt(0, -h), pt(w, -h)]),
-      line([pt(0, h), pt(w, h)]),
-      line([pt(frame, -h), pt(frame, h)], THIN),
-      line([pt(w - frame, -h), pt(w - frame, h)], THIN),
-      ...glass.map((y) => line([pt(frame, y), pt(w - frame, y)], THIN)),
+      curveLine(0, w, -h, curve),
+      curveLine(0, w, h, curve),
+      line([curvePoint(frame, -h, curve), curvePoint(frame, h, curve)], THIN),
+      line([curvePoint(w - frame, -h, curve), curvePoint(w - frame, h, curve)], THIN),
+      ...glass.map((y) => curveLine(frame, w - frame, y, curve, THIN)),
     ]
     for (let i = 1; i < n; i++) {
       const x = frame + ((w - 2 * frame) * i) / n
-      prims.push(line([pt(x, -h), pt(x, h)], THIN))
+      prims.push(line([curvePoint(x, -h, curve), curvePoint(x, h, curve)], THIN))
     }
-    if (sill > 0) prims.push(outline([pt(-30, -h), pt(w + 30, -h), pt(w + 30, -h - sill), pt(-30, -h - sill)], THIN))
+    if (sill > 0) prims.push(curveOutline(-30, w + 30, -h, -h - sill, curve, THIN))
     return flip ? mirrorAcross(prims) : prims
   },
   // Seen from in front: from its sill height up, its frame, and a line between each pane.
@@ -106,4 +126,29 @@ export const windowKind: ParametricKind = {
     }
     return prims
   },
+}
+
+/** The same door, starting as a curved leaf: the shape can still be changed in Properties. */
+export const curvedDoor: ParametricKind = {
+  ...door,
+  kind: 'arch.door.curved',
+  label: 'Curved door',
+  params: door.params.map((param) => (param.key === 'shape' ? { ...param, default: 'Curved' } : param)),
+}
+
+/** The same window, following a curved wall by default. */
+export const curvedWindow: ParametricKind = {
+  ...windowKind,
+  kind: 'arch.window.curved',
+  label: 'Curved window',
+  params: windowKind.params.map((param) => (param.key === 'shape' ? { ...param, default: 'Curved' } : param)),
+}
+
+
+/** A curve of a chosen bow when an opening is not in a curved wall: the sagitta sets the radius. */
+function curveOf(width: number, bow: unknown): { radius: number; half: number; side: 1 } | undefined {
+  const b = Number(bow)
+  const half = atLeast(1, width) / 2
+  if (!Number.isFinite(b) || b <= 0) return undefined
+  return { radius: (half * half + b * b) / (2 * b), half, side: 1 }
 }

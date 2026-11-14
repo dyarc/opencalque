@@ -1188,4 +1188,5 @@ export const ja: Record<string, string> = {
   "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "範囲の選び方：最初の角から次の角までドラッグするか、AutoCAD のように最初の角をクリックし、移動して次の角をクリックします。",
   "Drag: press, drag, release": "ドラッグ：押して、動かして、離す",
   "Click: click, move, click (AutoCAD)": "クリック：クリック、移動、クリック（AutoCAD）",
+  "Edit the selected group or component": "選択したグループまたはコンポーネントを編集",
 }
