@@ -38,8 +38,14 @@
       "out/**"
     ],
     "extraResources": [
-      { "from": "../../LICENSE", "to": "LICENSE.txt" },
-      { "from": "../../THIRD-PARTY-NOTICES.txt", "to": "THIRD-PARTY-NOTICES.txt" }
+      {
+        "from": "../../LICENSE",
+        "to": "LICENSE.txt"
+      },
+      {
+        "from": "../../THIRD-PARTY-NOTICES.txt",
+        "to": "THIRD-PARTY-NOTICES.txt"
+      }
     ],
     "npmRebuild": false,
     "publish": {
@@ -51,12 +57,14 @@
       {
         "ext": "adg",
         "name": "AxioDraw drawing",
-        "role": "Editor"
+        "role": "Editor",
+        "icon": "build/document.icns"
       },
       {
         "ext": "opencalque",
         "name": "AxioDraw drawing (old name)",
-        "role": "Editor"
+        "role": "Editor",
+        "icon": "build/document.icns"
       }
     ],
     "win": {
@@ -86,7 +94,55 @@
       ],
       "identity": null,
       "category": "public.app-category.graphics-design",
-      "artifactName": "AxioDraw-${version}-mac-${arch}.${ext}"
+      "artifactName": "AxioDraw-${version}-mac-${arch}.${ext}",
+      "extendInfo": {
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "AxioDraw drawing",
+            "CFBundleTypeRole": "Editor",
+            "LSHandlerRank": "Owner",
+            "CFBundleTypeExtensions": [
+              "adg"
+            ],
+            "CFBundleTypeIconFile": "document.icns",
+            "LSItemContentTypes": [
+              "com.axiodraw.drawing"
+            ]
+          },
+          {
+            "CFBundleTypeName": "AxioDraw drawing (old name)",
+            "CFBundleTypeRole": "Editor",
+            "LSHandlerRank": "Owner",
+            "CFBundleTypeExtensions": [
+              "opencalque",
+              "opencad"
+            ],
+            "CFBundleTypeIconFile": "document.icns",
+            "LSItemContentTypes": [
+              "com.axiodraw.drawing"
+            ]
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "com.axiodraw.drawing",
+            "UTTypeDescription": "AxioDraw drawing",
+            "UTTypeIconFile": "document.icns",
+            "UTTypeConformsTo": [
+              "public.json",
+              "public.data"
+            ],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": [
+                "adg",
+                "opencalque",
+                "opencad"
+              ],
+              "public.mime-type": "application/json"
+            }
+          }
+        ]
+      }
     },
     "linux": {
       "target": "AppImage",
