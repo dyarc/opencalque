@@ -46,7 +46,7 @@ function moveAim(c: Canvas, g: GestureOf<'displace'>, world: Vec2, e: MoveKeys):
 /** Moves the selection, or leaves a copy, as shown. A copy keeps the tool going from the same point, for the next one. */
 export function finishMove(c: Canvas, g: GestureOf<'displace'>, world: Vec2, e: MoveKeys): void {
   const again = copying(e)
-  if (preview(moveAim(c, g, world, e).ops)) commit()
+  if (preview(g.ops ?? moveAim(c, g, world, e).ops)) commit()
   else cancel()
   useStore.setState({ drawLocks: {}, drawLive: null, axisLock: null })
   if (again) return
@@ -70,11 +70,22 @@ export const moveToolDown: Press = (c, e, _at, world) => {
 
 export const displaceMove: Move<'displace'> = (c, g, e, _at, world, out) => {
   const aimed = moveAim(c, g, world, e)
-  out.previewed = preview(aimed.ops)
+  const d = sub(aimed.to, g.from)
+  const simple = g.copies.length === 0 && g.ids.every((id) => {
+    const node = c.scene.find((item) => item.id === id)?.node
+    return node && ['ellipse', 'polyline', 'rect', 'image', 'column', 'beam', 'construction', 'dimension', 'radialDimension', 'angleDimension', 'text', 'parametric'].includes(node.type)
+  })
+  if (simple) {
+    g.ops = aimed.ops
+    out.moved = { ids: g.ids, delta: d }
+    out.previewed = true
+  } else {
+    g.ops = undefined
+    out.previewed = preview(aimed.ops)
+  }
   out.marker = aimed.marker
   if (aimed.link) out.link = aimed.link
   out.status = aimed.status
   out.measure = { a: g.from, b: aimed.to }
-  const d = sub(aimed.to, g.from)
   out.live = { a: len(d), b: (-Math.atan2(d.y, d.x) * 180) / Math.PI }
 }
