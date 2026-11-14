@@ -1184,4 +1184,8 @@ export const de: Record<string, string> = {
   "Click the other end of that axis": "Klicken Sie das andere Ende dieser Achse an",
   "Click the other end of the first axis": "Klicken Sie das andere Ende der ersten Achse an",
   "Click to set how wide it is the other way": "Klicken Sie, wie breit sie in der anderen Richtung wird",
+  "Selection box": "Auswahlrahmen",
+  "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "Wie ein Rahmen auswählt: vom ersten zum zweiten Eckpunkt ziehen oder – wie in AutoCAD – das erste Eck klicken, bewegen und das zweite klicken.",
+  "Drag: press, drag, release": "Ziehen: drücken, ziehen, loslassen",
+  "Click: click, move, click (AutoCAD)": "Klicken: klicken, bewegen, klicken (AutoCAD)",
 }

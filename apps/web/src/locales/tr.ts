@@ -1184,4 +1184,8 @@ export const tr: Record<string, string> = {
   "Click the other end of that axis": "Bu eksenin diğer ucunu tıklayın",
   "Click the other end of the first axis": "İlk eksenin diğer ucunu tıklayın",
   "Click to set how wide it is the other way": "Diğer yöndeki genişliğini belirlemek için tıklayın",
+  "Selection box": "Seçim kutusu",
+  "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "Kutunun seçme biçimi: ilk köşeden ikinciye sürükleyin veya AutoCAD’deki gibi ilk köşeyi tıklayın, hareket edin ve ikinciyi tıklayın.",
+  "Drag: press, drag, release": "Sürükle: bas, sürükle, bırak",
+  "Click: click, move, click (AutoCAD)": "Tıkla: tıkla, hareket et, tıkla (AutoCAD)",
 }

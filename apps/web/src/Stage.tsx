@@ -68,13 +68,14 @@ import { QuickBar } from './QuickBar'
 import type { ScopeStep } from './scopePath'
 import { registry, useExtensions } from './extensions'
 import { leaveTo, returnTo, trailAhead } from './navigation'
-import { redo, setTool, undo, useStore } from './store'
+import { apply, isDirty, redo, setTool, undo, useStore } from './store'
 import { CUT_TOOLS, hintsFor, MEASURE_TOOLS, ROOM_TOOLS, SHAPE_TOOLS, STRUCTURE_TOOLS, TEXT_TOOLS, TRANSFORM_TOOLS, type Hint, type Tool } from './tools'
 import { TextEditor } from './TextEditor'
 import { ClearanceEditor } from './ClearanceEditor'
-import { IconButton, labelOf, TypeIcon } from './ui'
+import { EditableText, IconButton, labelOf, TypeIcon } from './ui'
 import { useWindows } from './windows'
 import { setPrefs, usePrefs, type Prefs } from './prefs'
+import { autosaves } from './autosave'
 import { screenScale } from './view'
 
 const ICONS: Partial<Record<Tool, [title: string, icon: LucideIcon]>> = {
@@ -631,11 +632,27 @@ function Status() {
   )
 }
 
+/** The drawing's name and whether it is saved, in the corner of the drawing rather than the window bar. */
+function DrawingName() {
+  const name = useStore((s) => s.doc.name)
+  const dirty = useStore(isDirty)
+  const file = useStore((s) => s.file)
+  usePrefs((p) => p.autosave)
+  return (
+    <div className="canvas-name">
+      <EditableText value={name} onChange={(next) => apply([{ op: 'set_document', name: next }])} />
+      {dirty && <span title={autosaves(file) ? t('Saving…') : t('Unsaved changes')}>●</span>}
+      {!dirty && autosaves(file) && <span className="canvas-name-saved">{t('Saved')}</span>}
+    </div>
+  )
+}
+
 export function Stage() {
   const toast = useWindows((s) => s.toast)
   return (
     <main className="stage">
       <CanvasView />
+      <DrawingName />
       <Breadcrumb />
       <Status />
       {toast && <div className="toast">{toast}</div>}

@@ -1184,4 +1184,8 @@ export const ja: Record<string, string> = {
   "Click the other end of that axis": "その軸のもう一方の端をクリック",
   "Click the other end of the first axis": "最初の軸のもう一方の端をクリック",
   "Click to set how wide it is the other way": "もう一方の幅を決める位置をクリック",
+  "Selection box": "選択範囲",
+  "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "範囲の選び方：最初の角から次の角までドラッグするか、AutoCAD のように最初の角をクリックし、移動して次の角をクリックします。",
+  "Drag: press, drag, release": "ドラッグ：押して、動かして、離す",
+  "Click: click, move, click (AutoCAD)": "クリック：クリック、移動、クリック（AutoCAD）",
 }

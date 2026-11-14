@@ -27,6 +27,8 @@ export type Gesture =
   /** `box`: the box of a selection with no turn of its own (a group, several things), turned with the pointer while it is dragged. */
   | { kind: 'rotate'; nodes: Node[]; pivot: Vec2; from: number; box?: ResizeFrame }
   | { kind: 'marquee'; start: Vec2; keep: string[] }
+  /** A box started by a click, finished by another: AutoCAD's way of selecting. */
+  | { kind: 'marqueeClick'; start: Vec2; keep: string[] }
   /**
    * A two-point shape whose first point is set. `press` is where and when the button went down,
    * until it is released. `origin`, `segments` and `since` describe the run of chained shapes this

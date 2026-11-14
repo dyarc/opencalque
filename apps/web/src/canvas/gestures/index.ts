@@ -11,7 +11,7 @@ import { painterDown } from './painter'
 import { recessDown } from './recess'
 import { extendDown, filletDown, filletMove } from './fit'
 import { elevationDown, eyedropperDown, placeDown, sectionMove, splitDown, toolHover, trimDown } from './place'
-import { cornerMove, cropMove, dragUp, elevatedMove, endMove, faceMove, handleMove, hover, marqueeMove, marqueeUp, moveMove, pressMove, pressUp, resizeMove, rotateMove, scaleMove, selectDown } from './select'
+import { cornerMove, cropMove, dragUp, elevatedMove, endMove, faceMove, handleMove, hover, marqueeClickMove, marqueeMove, marqueeUp, moveMove, pressMove, pressUp, resizeMove, rotateMove, scaleMove, selectDown } from './select'
 import { displaceMove, moveToolDown } from './move'
 import { rotateDown, turnMove } from './turn'
 
@@ -69,6 +69,7 @@ export const MOVES: { [K in Gesture['kind']]: Move<K> } = {
   resize: resizeMove,
   rotate: rotateMove,
   marquee: marqueeMove,
+  marqueeClick: marqueeClickMove,
   draw: drawMove,
   construction: constructionMove,
   radiusDimension: radialDimensionMove,

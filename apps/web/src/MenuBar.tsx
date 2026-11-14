@@ -2,20 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { Check, Download, RotateCw } from 'lucide-react'
 import { allCommands, execute, executeById, formatKey, keysOf, useCommands, type Command } from './commands'
 import { msg, t } from './i18n'
-import { autosaves } from './autosave'
-import { usePrefs } from './prefs'
-import { apply, isDirty, useStore } from './store'
-import { EditableText } from './ui'
 import { useUpdate } from './updates'
-import { Logo } from './Welcome'
 import { useWindows } from './windows'
 
 /**
  * What each menu holds: command ids, null for a separator, or "@Category" for every command of a
  * category (used for the lists that depend on the drawing and on extensions).
  */
+const FILE_MENU: (string | null)[] = ['file.new', 'file.open', 'file.save', 'file.saveAs', 'file.autosave', 'file.backups', null, 'file.import', 'file.export', null, 'file.drawingSettings', 'tool.calibrate']
+
 const MENUS: [string, (string | null)[]][] = [
-  [msg('File'), ['file.new', 'file.open', 'file.save', 'file.saveAs', 'file.autosave', 'file.backups', null, 'file.import', 'file.export', null, 'file.drawingSettings', 'tool.calibrate']],
   [msg('Edit'), ['edit.undo', 'edit.redo', null, 'edit.cut', 'edit.copy', 'edit.paste', 'edit.duplicate', 'edit.delete', null, 'edit.selectAll', 'edit.selectSimilar', 'edit.selectSameType', 'edit.selectSameLayer', 'edit.selectSameMaterial', 'edit.deselect']],
   // What is done to the selection as an object, as against editing in general: arranging, transforming, modifying.
   [
@@ -65,11 +61,6 @@ export function MenuBar() {
   const [open, setOpen] = useState<string | null>(null)
   const bar = useRef<HTMLElement>(null)
   const overrides = useCommands((s) => s.overrides)
-  const name = useStore((s) => s.doc.name)
-  const dirty = useStore(isDirty)
-  const file = useStore((s) => s.file)
-  // Read so the note beside the name follows the setting.
-  usePrefs((p) => p.autosave)
   const commands = open ? allCommands() : []
 
   // An open menu closes on Escape or on a press anywhere outside the menus. Nothing covers the bar
@@ -91,13 +82,46 @@ export function MenuBar() {
     }
   }, [open])
 
+  const entries = (list: (string | null)[]) =>
+    items(list, commands).map((item, i) =>
+      item === null ? (
+        <hr key={i} />
+      ) : (
+        <button
+          key={item.id}
+          role="menuitem"
+          disabled={item.when ? !item.when() : false}
+          onClick={() => {
+            setOpen(null)
+            execute(item)
+          }}
+        >
+          <span className="menu-check">{item.checked?.() && <Check size={12} />}</span>
+          <span className="menu-title">{t(item.title)}</span>
+          <kbd>{keysOf(item, overrides).slice(0, 1).map(formatKey)}</kbd>
+        </button>
+      ),
+    )
+
   return (
     <header className="menubar" ref={bar}>
-      <strong className="menubar-brand">
-        <Logo size={16} />
-        AxioDraw
-      </strong>
-      {MENUS.map(([title, entries]) => (
+      <div className="menu">
+        <button
+          className={`menubar-brand${open === 'file' ? ' open' : ''}`}
+          aria-haspopup="menu"
+          aria-expanded={open === 'file'}
+          onClick={() => setOpen(open === 'file' ? null : 'file')}
+          onPointerEnter={() => open && open !== 'file' && setOpen('file')}
+        >
+          AxioDraw
+        </button>
+        {open === 'file' && (
+          <div className="menu-list" role="menu">
+            {entries(FILE_MENU)}
+          </div>
+        )}
+      </div>
+      {MENUS.map(([title, list]) => (
         <div key={title} className="menu">
           <button
             className={`menubar-item${open === title ? ' open' : ''}`}
@@ -111,25 +135,7 @@ export function MenuBar() {
           </button>
           {open === title && (
             <div className="menu-list" role="menu">
-              {items(entries, commands).map((item, i) =>
-                item === null ? (
-                  <hr key={i} />
-                ) : (
-                  <button
-                    key={item.id}
-                    role="menuitem"
-                    disabled={item.when ? !item.when() : false}
-                    onClick={() => {
-                      setOpen(null)
-                      execute(item)
-                    }}
-                  >
-                    <span className="menu-check">{item.checked?.() && <Check size={12} />}</span>
-                    <span className="menu-title">{t(item.title)}</span>
-                    <kbd>{keysOf(item, overrides).slice(0, 1).map(formatKey)}</kbd>
-                  </button>
-                ),
-              )}
+              {entries(list)}
             </div>
           )}
         </div>
@@ -138,11 +144,6 @@ export function MenuBar() {
       <button className="menubar-item" onClick={() => useWindows.setState({ aboutOpen: true })}>
         {t('About')}
       </button>
-      <div className="menubar-name">
-        <EditableText value={name} onChange={(next) => apply([{ op: 'set_document', name: next }])} />
-        {dirty && <span className="faint" title={autosaves(file) ? t('Saving…') : t('Unsaved changes')}>●</span>}
-        {!dirty && autosaves(file) && <span className="faint menubar-saved">{t('Saved')}</span>}
-      </div>
       <UpdateNote />
     </header>
   )

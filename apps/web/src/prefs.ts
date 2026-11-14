@@ -36,6 +36,8 @@ export interface Prefs {
   zoomSpeed: number
   /** What the wheel does: a trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms. */
   wheelMode: 'trackpad' | 'mouse'
+  /** How a selection box is made: dragged from corner to corner, or clicked at one corner and then the other, as in AutoCAD. */
+  selectionMode: 'drag' | 'click'
   /** While editing inside a group: the rest of the drawing shown faded around it, to see and snap to, or not shown. */
   editGroups: Surroundings
   /** The same, while editing a component gone into by one of its placements. */
@@ -103,6 +105,7 @@ const DEFAULTS: Prefs = {
   showClearances: true,
   zoomSpeed: 1,
   wheelMode: 'trackpad',
+  selectionMode: 'drag',
   editGroups: 'faded',
   editComponents: 'alone',
   agentBridge: false,

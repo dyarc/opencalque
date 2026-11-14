@@ -589,9 +589,21 @@ html.dock-dragging .tab-more {
 .menubar-brand {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 10px 0 4px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
   font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.menubar-brand:hover,
+.menubar-brand.open {
+  background: var(--hover);
 }
 
 .menubar-item {
@@ -609,25 +621,6 @@ html.dock-dragging .tab-more {
 .menubar-item:hover,
 .menubar-item.open {
   background: var(--hover);
-}
-
-.menubar-name {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-width: 0;
-  font-weight: 600;
-}
-
-/* Renaming the drawing happens where its name is: the field is as wide as the text, which stays put. */
-.menubar-name .inline-input {
-  flex: 0 1 auto;
-  field-sizing: content;
-  min-width: 4ch;
-  font: inherit;
-  text-align: center;
 }
 
 /* Panels */
@@ -1418,6 +1411,35 @@ body.scrubbing .quick-field input[title] {
   pointer-events: none;
 }
 
+/* The drawing's name and saved state, where the drawing starts: as quiet as the pointer reading below. */
+.canvas-name {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: calc(100% - 24px);
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+}
+
+.canvas-name .inline-input {
+  flex: 0 1 auto;
+  field-sizing: content;
+  min-width: 4ch;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.canvas-name .canvas-name-saved {
+  opacity: 0.7;
+}
+
 .toast {
   position: absolute;
   left: 50%;
@@ -1437,7 +1459,7 @@ body.scrubbing .quick-field input[title] {
  */
 .breadcrumb {
   position: absolute;
-  top: 10px;
+  top: 36px;
   left: 10px;
   /* Above the hints under it, which the list of a folded way opens over. */
   z-index: 2;
@@ -1552,7 +1574,7 @@ button.crumb.ahead:hover {
 
 /* Under the breadcrumb, which a wide row of hints would run into. */
 .breadcrumb ~ .hint-bar {
-  top: 46px;
+  top: 72px;
 }
 
 .hint-bar span {

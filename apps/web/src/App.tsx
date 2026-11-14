@@ -77,9 +77,7 @@ function DropTarget() {
 }
 
 export function App() {
-  const name = useStore((s) => s.doc.name)
   const dirty = useStore(isDirty)
-  const fileName = useStore((s) => s.file?.name)
 
   useEffect(() => {
     startUp()
@@ -105,8 +103,8 @@ export function App() {
     platform.setDirty(dirty)
   }, [dirty])
   useEffect(() => {
-    document.title = `${dirty ? '● ' : ''}${fileName ?? name} – AxioDraw`
-  }, [dirty, fileName, name])
+    document.title = 'AxioDraw'
+  }, [])
 
   return (
     <div className="app">

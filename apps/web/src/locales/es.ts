@@ -1184,4 +1184,8 @@ export const es: Record<string, string> = {
   "Click the other end of that axis": "Haz clic en el otro extremo de ese eje",
   "Click the other end of the first axis": "Haz clic en el otro extremo del primer eje",
   "Click to set how wide it is the other way": "Haz clic para fijar su anchura en el otro sentido",
+  "Selection box": "Caja de selección",
+  "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "Cómo selecciona una caja: arrastra desde la primera esquina hasta la segunda, o haz clic en la primera, mueve y haz clic en la segunda, como en AutoCAD.",
+  "Drag: press, drag, release": "Arrastrar: pulsar, arrastrar, soltar",
+  "Click: click, move, click (AutoCAD)": "Clic: clic, mover, clic (AutoCAD)",
 }

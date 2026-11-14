@@ -1184,4 +1184,8 @@ export const zh: Record<string, string> = {
   "Click the other end of that axis": "点击这条轴的另一个端点",
   "Click the other end of the first axis": "点击第一条轴的另一个端点",
   "Click to set how wide it is the other way": "点击确定它在另一方向的宽度",
+  "Selection box": "选择框",
+  "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "框选方式：从第一个角拖到第二个角；或像 AutoCAD 一样，点击第一个角、移动，再点击第二个角。",
+  "Drag: press, drag, release": "拖拽：按住、拖动、松开",
+  "Click: click, move, click (AutoCAD)": "点击：点击、移动、再点击（AutoCAD）",
 }

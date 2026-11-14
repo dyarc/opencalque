@@ -63,6 +63,15 @@ import { faceAcross, faceOf, paperLabel, resizeCursor, round, sizes, thicknessLa
 
 export const selectDown: Press = (c, e, at, world) => {
   const s = get()
+  // A box started by click is finished by the next click, wherever that lands.
+  if (c.gesture.kind === 'marqueeClick') {
+    const g = c.gesture
+    if (dist(world, g.start) < 3 / s.view.zoom) select(g.keep)
+    else select(boxed(c, g, world))
+    c.gesture = { kind: 'idle' }
+    c.setOverlay({})
+    return
+  }
   const { frame, ownBox } = c
   // A click on the length of a temporary dimension opens it, to type another (`ClearanceEditor`).
   const measuring = clearanceAt(c, at)
@@ -160,7 +169,10 @@ export const selectDown: Press = (c, e, at, world) => {
       return
     }
     if (!adding) select([])
-    c.gesture = { kind: 'marquee', start: world, keep: adding ? s.selection : [] }
+    c.gesture =
+      usePrefs.getState().selectionMode === 'click'
+        ? { kind: 'marqueeClick', start: world, keep: adding ? s.selection : [] }
+        : { kind: 'marquee', start: world, keep: adding ? s.selection : [] }
     return
   }
   let ids = s.selection
@@ -382,10 +394,11 @@ export const rotateMove: Move<'rotate'> = (_c, g, e, _at, world, out) => {
 }
 
 /** As in CAD, a box dragged leftwards picks up what it touches, and one dragged rightwards what lies wholly inside it. */
-const crossing = (g: GestureOf<'marquee'>, world: Vec2) => world.x < g.start.x
+type BoxGesture = GestureOf<'marquee'> | GestureOf<'marqueeClick'>
+const crossing = (g: BoxGesture, world: Vec2) => world.x < g.start.x
 
 /** What the box from where the drag started to `world` selects, with what was kept. */
-function boxed(c: Canvas, g: GestureOf<'marquee'>, world: Vec2): string[] {
+function boxed(c: Canvas, g: BoxGesture, world: Vec2): string[] {
   const box = boundsOfPoints([g.start, world])!
   const found = crossing(g, world) ? itemsTouching(c.scene, box) : itemsInside(c.scene, box)
   return [...new Set([...g.keep, ...found.map((item) => item.id)])]
@@ -393,6 +406,15 @@ function boxed(c: Canvas, g: GestureOf<'marquee'>, world: Vec2): string[] {
 
 /** Shows what the box would select while it is being dragged, not only on release. */
 export const marqueeMove: Move<'marquee'> = (c, g, _e, _at, world, out) => {
+  marqueeAim(c, g, world, out)
+}
+
+/** The same box, while it waits for its second click. */
+export const marqueeClickMove: Move<'marqueeClick'> = (c, g, _e, _at, world, out) => {
+  marqueeAim(c, g, world, out)
+}
+
+function marqueeAim(c: Canvas, g: BoxGesture, world: Vec2, out: { marquee?: { a: Vec2; b: Vec2; crossing: boolean }; status?: string }): void {
   const s = get()
   const next = boxed(c, g, world)
   if (next.length !== s.selection.length || next.some((id, i) => id !== s.selection[i])) select(next)

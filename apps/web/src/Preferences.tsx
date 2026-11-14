@@ -418,6 +418,14 @@ function DrawingSettings() {
           </select>
         </Setting>
       </Section>
+      <Section title={t('Selection')}>
+        <Setting label={t('Selection box')} hint={t('How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.')}>
+          <select value={prefs.selectionMode} onChange={(e) => setPrefs({ selectionMode: e.target.value as typeof prefs.selectionMode })}>
+            <option value="drag">{t('Drag: press, drag, release')}</option>
+            <option value="click">{t('Click: click, move, click (AutoCAD)')}</option>
+          </select>
+        </Setting>
+      </Section>
       <Section title={t('Groups and components')}>
         <Setting label={t('Editing inside a group')}>
           <select value={prefs.editGroups} onChange={(e) => setPrefs({ editGroups: e.target.value as typeof prefs.editGroups })}>
