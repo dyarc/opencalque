@@ -191,6 +191,8 @@ export interface Overlay {
   guide?: { at: Vec2; angle: number }
   /** What the ends of the selected walls are joined to, and the walls joined to them (`WallLinks`). */
   wallLinks?: WallLinks | null
+  /** Objects moved as a preview without rebuilding the drawing: their ids, and how far they have gone. */
+  moved?: { ids: string[]; delta: Vec2 }
 }
 
 /** How long, in screen pixels, the arrow at each end of a selected view's line is: what is dragged to move that end. */
@@ -654,18 +656,20 @@ export function drawScene(
   // each step, sharp all the way: scaling the old one up and painting it sharp once the view had
   // stopped made it blur and come back into focus, which read as the plan loading again. What is
   // laid over it is always painted as it is.
-  const key = [scene, around, width, height, dpr, showGrid, palette, arrived]
+  const movedKey = overlay.moved ? overlay.moved.ids.join('\u0000') : ''
+  const baseScene = overlay.moved ? scene.filter((item) => !overlay.moved!.ids.includes(item.id)) : scene
+  const key = [scene, around, width, height, dpr, showGrid, palette, arrived, movedKey]
   const same = !!base && base.key.every((value, i) => value === key[i])
   const moving = lastView !== null && (lastView.zoom !== view.zoom || lastView.x !== view.x || lastView.y !== view.y)
   lastView = view
   clearTimeout(settling)
-  const whole = () => (base = { canvas: paintBase(base?.canvas, ctx.canvas, size, view, scene, around, showGrid, palette), key, view, sharp: true })
+  const whole = () => (base = { canvas: paintBase(base?.canvas, ctx.canvas, size, view, baseScene, around, showGrid, palette), key, view, sharp: true })
   if (!base || !same || base.view.zoom !== view.zoom) whole()
   else {
     const off = base.view.x !== view.x || base.view.y !== view.y
     // Still, it is painted again where it is not exactly what the view shows.
     if (off && moving) {
-      if (!panBase(base, size, view, scene, around, showGrid, palette)) whole()
+      if (!panBase(base, size, view, baseScene, around, showGrid, palette)) whole()
     } else if (off || !base.sharp) whole()
   }
   // Kept for a view a fraction of a pixel off: painted exactly once the view has been still a moment.
@@ -678,6 +682,18 @@ export function drawScene(
     ctx.drawImage(kept.canvas, 0, 0)
   }
   world()
+
+  // Things moved without rebuilding the scene: the rest of the drawing stays as it was painted,
+  // and only these are drawn at their new place.
+  if (overlay.moved) {
+    const movedItems = scene.filter((item) => overlay.moved!.ids.includes(item.id))
+    const steps = stepsOf(movedItems)
+    ctx.save()
+    ctx.translate(overlay.moved.delta.x, overlay.moved.delta.y)
+    paintSteps(ctx, steps.sheets, view.zoom, palette.ink)
+    paintSteps(ctx, steps.drawn, view.zoom, palette.ink)
+    ctx.restore()
+  }
 
   // The walls joined to the selected ones, faintly: what follows when their corners are moved.
   if (overlay.wallLinks && overlay.wallLinks.joined.length > 0) {
@@ -692,7 +708,8 @@ export function drawScene(
     ctx.globalAlpha = 1
   }
 
-  const selected = scene.filter((item) => selection.includes(item.id))
+  const moved = new Set(overlay.moved?.ids ?? [])
+  const selected = scene.filter((item) => selection.includes(item.id) && !moved.has(item.id))
   for (const item of scene.filter((item) => selection.includes(item.id) || item.id === overlay.lit)) {
     for (const prim of item.prims) {
       // The lines of a pattern are a surface, not an outline: lit up, they would hide the shape and what is under it.

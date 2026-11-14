@@ -12,7 +12,7 @@ export type Gesture =
   /** An object of the plan dragged where an elevation shows it: across the view along its wall, up and down for its height. */
   | { kind: 'elevated'; view: NodeOf<'elevation'>; node: NodeOf<'parametric'> | NodeOf<'instance'>; start: Vec2; role: 'opening' | 'fixed' | 'standing'; raises: boolean }
   /** `moving` and `others` are what is moved and what it can line up with, as they stood when the move began. */
-  | { kind: 'move'; start: Vec2; nodes: Node[]; moving: Alignable | null; others: Alignable[] }
+  | { kind: 'move'; start: Vec2; nodes: Node[]; moving: Alignable | null; others: Alignable[]; /** The operations the current pointer position would commit, for a fast preview. */ ops?: import('@opencalque/core').Op[] }
   /** With `grab`, the handle was taken that far from its point (the arrow at an end of a view, anywhere along it), which it keeps as it is dragged. */
   | { kind: 'handle'; node: Node; index: number; grab?: Vec2 }
   /** A wall corner being dragged: every wall end at `from` follows, or with `only` just that wall's. */

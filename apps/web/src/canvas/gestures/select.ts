@@ -56,6 +56,9 @@ import { clearanceAt, cornerAt, endAt, faceAt, looseEndAt, frameCornerAt, frameC
 import { get, type Canvas, type Move, type Press, type Release } from '../runtime'
 import { faceAcross, faceOf, paperLabel, resizeCursor, round, sizes, thicknessLabel, thicknessStep, wallNormal } from '../shapes'
 
+/** Things whose move can be shown by shifting their drawing, without rebuilding the plan. */
+const FAST_MOVE = new Set(['ellipse', 'polyline', 'rect', 'image', 'column', 'beam', 'construction', 'dimension', 'radialDimension', 'angleDimension', 'text'])
+
 /*
  * The select tool: what a press picks or takes hold of, and each drag that follows. Every drag is a
  * preview from the drawing as it was when the press came (`base`), committed on release.
@@ -225,7 +228,17 @@ export const moveMove: Move<'move'> = (_c, g, e, _at, world, out) => {
   if (g.moving && !e.altKey && usePrefs.getState().snapToObjects) out.smart = moveGuides(g.moving, g.others, d)
   const before = s.base ?? s.doc
   // Walls joined to the ones being moved stretch to stay joined, and openings follow their wall. Alt moves only what was picked.
-  out.previewed = preview([...g.nodes.flatMap((n) => moveOps(before, n, d)), ...(e.altKey ? [] : wallFollowOps(before, g.nodes, d, registry))])
+  const ops = [...g.nodes.flatMap((n) => moveOps(before, n, d)), ...(e.altKey ? [] : wallFollowOps(before, g.nodes, d, registry))]
+  if (g.nodes.every((node) => FAST_MOVE.has(node.type))) {
+    // A plain object moves by drawing it over the unchanged plan: no whole plan is rebuilt for
+    // every pixel of the pointer. The operations are kept for the release.
+    g.ops = ops
+    out.moved = { ids: g.nodes.map((node) => node.id), delta: d }
+    out.previewed = true
+  } else {
+    g.ops = undefined
+    out.previewed = preview(ops)
+  }
 }
 
 export const handleMove: Move<'handle'> = (c, g, e, _at, world, out) => {
@@ -513,6 +526,13 @@ export function dragUp(c: Canvas): void {
   c.setGripCursor(null)
   if (s.axisLock) useStore.setState({ axisLock: null })
   if (s.wallFace) useStore.setState({ wallFace: null })
+  // A preview drawn by shifting the scene has not changed the document yet: make the move once,
+  // now that the pointer is down.
+  if (c.gesture.kind === 'move' && c.gesture.ops) {
+    const ops = c.gesture.ops
+    c.gesture.ops = undefined
+    preview(ops)
+  }
   // The points rested on were for this drag; the next starts afresh.
   c.tracked = { tool: s.tool, points: [], resting: null }
   commit()

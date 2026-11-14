@@ -50,13 +50,18 @@ export const circle = (cx: number, cy: number, r: number, style: { strokeWidth?:
 /** How the wall under an opening bends, as the core tells an opening it is drawn on one. */
 export type WallCurve = { radius: number; half: number; side: 1 | -1 }
 
-/** A point of a curved opening, away from its local Y by the wall's bow. */
+/** A point of a curved opening: along a circular arc, and out from it along its own normal. */
 export function curvePoint(x: number, y: number, curve?: WallCurve): Vec2 {
   if (!curve) return pt(x, y)
-  const u = x - curve.half
-  const edge = Math.sqrt(Math.max(0, curve.radius * curve.radius - curve.half * curve.half))
-  const bow = Math.sqrt(Math.max(0, curve.radius * curve.radius - u * u)) - edge
-  return pt(x, y + curve.side * bow)
+  const half = Math.max(1e-6, curve.half)
+  const edge = Math.sqrt(Math.max(0, curve.radius * curve.radius - half * half))
+  const centreY = -curve.side * edge
+  const start = Math.atan2(-centreY, -half)
+  const end = Math.atan2(-centreY, half)
+  const angle = start + ((end - start) * Math.max(0, Math.min(2 * half, x))) / (2 * half)
+  const along = curve.radius * Math.cos(angle)
+  const across = centreY + curve.radius * Math.sin(angle)
+  return pt(half + along + Math.cos(angle) * y, across + Math.sin(angle) * y)
 }
 
 /** A line across a curved opening at `y`, sampled enough to look like the wall's own curve. */
