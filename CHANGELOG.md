@@ -4,6 +4,26 @@ What changed in each version of AxioDraw. The app shows this list under About, a
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
+## 1.10.0 — 2026-11-14
+
+### New
+- Curved doors and windows in the architecture library: their frame, panes and jambs follow a circular arc, square to the wall or to a bow of their own, and a curved door's leaf keeps its bow as it swings.
+- Columns break the wall they cross, leaving the column's own footprint rather than wall linework over it.
+- A selected group or component is opened for editing with Enter, as well as with a double-click.
+- A dimension's words can be dragged by their handle, on linear, radius and angle dimensions, without moving the measured line.
+- Selection boxes can be made by dragging, or by AutoCAD's click-move-click, chosen under Preferences › Selection.
+
+### Improved
+- A plain object moved by dragging or with the Move tool is drawn over the unchanged plan and the document changes once, on release; unchanged objects keep their drawing, and pointer moves redraw once a frame. Dragging through a busy plan is much lighter.
+- An object's name and saved state sit in the top-left corner of the drawing area, as quiet as the coordinate reading below, while the window title stays AxioDraw.
+- AxioDraw in the menu bar sits in a rounded rectangle of the theme's highlight colour and opens the File menu; the logo and the separate File button are gone.
+- Form fields follow the theme's own text and background colours, so names typed in the dark theme are readable.
+- Delete is bound to Shift+X by default; the Offset tool keeps O and OFF.
+
+### Fixed
+- A curved window or door no longer looks like a straight one bent across: its ends stand square to the curve, and an opening on a straight wall has a visible bow set by its Bow property.
+- The desktop app is smaller: Electron's unused interface languages are left out and PDF fonts travel gzipped, unpacked only when a PDF is made.
+
 ## 1.9.1 — 2026-11-13
 
 ### New
