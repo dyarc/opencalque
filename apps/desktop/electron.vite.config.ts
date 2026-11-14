@@ -11,6 +11,7 @@ export default defineConfig({
   preload: {},
   renderer: {
     root: web,
+    assetsInclude: ['**/*.gz'],
     plugins: [react(), csp()],
     build: {
       outDir: resolve(__dirname, 'out/renderer'),

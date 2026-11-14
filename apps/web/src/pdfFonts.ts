@@ -6,10 +6,10 @@ import { pdfFontNames, readTrueType } from '@opencalque/core'
  * the font as base64 text, which the desktop app can load from disk where it could not fetch a file.
  */
 const FONTS: Record<string, () => Promise<{ default: string }>> = {
-  NotoSans: () => import('../../../fonts/NotoSans-Regular.ttf?inline'),
-  NotoSansSC: () => import('../../../fonts/NotoSansSC-Regular.ttf?inline'),
-  NotoSansJP: () => import('../../../fonts/NotoSansJP-Regular.ttf?inline'),
-  NotoSansKR: () => import('../../../fonts/NotoSansKR-Regular.ttf?inline'),
+  NotoSans: () => import('../../../fonts/NotoSans-Regular.ttf.gz?inline'),
+  NotoSansSC: () => import('../../../fonts/NotoSansSC-Regular.ttf.gz?inline'),
+  NotoSansJP: () => import('../../../fonts/NotoSansJP-Regular.ttf.gz?inline'),
+  NotoSansKR: () => import('../../../fonts/NotoSansKR-Regular.ttf.gz?inline'),
 }
 
 const loaded = new Map<string, Promise<Uint8Array>>()
@@ -17,11 +17,14 @@ const loaded = new Map<string, Promise<Uint8Array>>()
 function load(name: string): Promise<Uint8Array> {
   let font = loaded.get(name)
   if (!font) {
-    font = FONTS[name]().then(({ default: url }) => {
+    font = FONTS[name]().then(async ({ default: url }) => {
       const text = atob(url.slice(url.indexOf(',') + 1))
-      const bytes = new Uint8Array(text.length)
-      for (let i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i)
-      return bytes
+      const packed = new Uint8Array(text.length)
+      for (let i = 0; i < text.length; i++) packed[i] = text.charCodeAt(i)
+      // The fonts travel gzipped: a PDF has to embed the plain TrueType bytes, which only a
+      // machine making one needs, so the app keeps the smaller copy.
+      const stream = new Blob([packed]).stream().pipeThrough(new DecompressionStream('gzip'))
+      return new Uint8Array(await new Response(stream).arrayBuffer())
     })
     // A download that failed is tried again next time.
     font.catch(() => loaded.delete(name))

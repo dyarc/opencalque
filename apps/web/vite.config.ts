@@ -5,5 +5,6 @@ import { csp } from './csp'
 export default defineConfig({
   // Relative asset paths, so the build can be hosted under any URL and loaded from disk by the desktop shell.
   base: './',
+  assetsInclude: ['**/*.gz'],
   plugins: [react(), csp()],
 })

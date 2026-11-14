@@ -34,3 +34,7 @@ pyftsubset static.ttf --unicodes='*' --no-hinting --layout-features='' \
 ```
 
 The writer reads TrueType outlines (`glyf`), not CFF: a replacement must be a `.ttf` of that kind.
+
+The `.ttf.gz` files beside each font are the copies the app packages: a PDF export unpacks one
+when it embeds it, which keeps about 12 MB out of the download. The plain `.ttf` files are kept for
+the tests and for making new gzipped copies (`gzip -9 -c font.ttf > font.ttf.gz`).

@@ -13,8 +13,11 @@
 //    question about an app from an unidentified developer, which the user can answer.
 const { execFileSync } = require('node:child_process')
 const { join } = require('node:path')
+const { pruneLocales } = require('./prune-app.cjs')
 
 exports.default = async function afterPack(context) {
+  const app = join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`)
+  if (context.electronPlatformName === 'darwin') pruneLocales(app)
   const fuses = await context.packager.generateFuseConfig({
     runAsNode: false,
     enableNodeOptionsEnvironmentVariable: false,
@@ -23,7 +26,6 @@ exports.default = async function afterPack(context) {
   await context.packager.addElectronFuses(context, fuses)
 
   if (context.electronPlatformName !== 'darwin') return
-  const app = join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`)
   execFileSync('codesign', ['--force', '--deep', '--sign', '-', app], { stdio: 'inherit' })
   // Fails the build here rather than on a user's Mac if the result is not a valid app.
   execFileSync('codesign', ['--verify', '--deep', '--strict', app], { stdio: 'inherit' })
