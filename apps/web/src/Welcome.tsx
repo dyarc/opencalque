@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import logo from './assets/logo.png'
 import { FilePlus, FileText, FolderOpen, History, LayoutTemplate, X, type LucideIcon } from 'lucide-react'
 import { guarded, newDocument, openDocument, openExample, openRecent } from './actions'
 import { language, LANGUAGES, t } from './i18n'
@@ -13,15 +14,9 @@ import { useWindows } from './windows'
 
 const close = () => useWindows.setState({ welcomeOpen: false })
 
-/** The mark of the app: sheets of tracing paper lying on one another. */
+/** The mark of the app: the A and D monogram, white on black. */
 export function Logo({ size }: { size: number }) {
-  return (
-    <svg className="logo" width={size} height={size} viewBox="0 0 64 64" aria-hidden>
-      <rect width="64" height="64" rx="14" fill="#0d99ff" />
-      <path d="M32 14 52 25 32 36 12 25Z" fill="#fff" />
-      <path d="M12 33 32 44 52 33M12 41 32 52 52 41" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity=".8" />
-    </svg>
-  )
+  return <img className="logo" src={logo} width={size} height={size} alt="" aria-hidden />
 }
 
 function Choice(props: { icon: LucideIcon; title: string; note: string; onClick: () => void }) {
