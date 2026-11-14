@@ -60,6 +60,6 @@ jobs:
           # A version with a hyphen (1.0.0-rc.1) is a pre-release.
           prerelease=""
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then prerelease="--prerelease"; fi
-          gh release create "$GITHUB_REF_NAME" installers/* --title "OpenCalque ${GITHUB_REF_NAME#v}" --notes-file notes.md $prerelease
+          gh release create "$GITHUB_REF_NAME" installers/* --title "AxioDraw ${GITHUB_REF_NAME#v}" --notes-file notes.md $prerelease
         env:
           GH_TOKEN: ${{ github.token }}
