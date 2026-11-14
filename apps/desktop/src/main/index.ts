@@ -189,8 +189,14 @@ try {
   // None kept yet.
 }
 
-/** Whether keys can be kept encrypted: on Linux without a keyring, Electron would only obscure them, so they stay where they were. */
-const canEncrypt = () => safeStorage.isEncryptionAvailable() && (process.platform !== 'linux' || safeStorage.getSelectedStorageBackend() !== 'basic_text')
+/**
+ * Whether keys can be kept encrypted. Asking Electron on macOS opens the keychain's Safe Storage
+ * item, which asks for the login password at every start even when no key has ever been kept; the
+ * platforms that have a safe store are taken at their word, and only Linux, which may have no
+ * keyring, is asked. A failed encrypt or decrypt is caught below.
+ */
+const canEncrypt = () =>
+  process.platform === 'darwin' || process.platform === 'win32' || (safeStorage.isEncryptionAvailable() && safeStorage.getSelectedStorageBackend() !== 'basic_text')
 
 function secret(name: string): string | null {
   if (!SECRET_NAMES.includes(name) || !secrets[name] || !canEncrypt()) return null
@@ -203,9 +209,13 @@ function secret(name: string): string | null {
 
 async function keepSecret(name: string, value: string): Promise<void> {
   if (!SECRET_NAMES.includes(name) || typeof value !== 'string' || !canEncrypt()) return
-  if (value) secrets[name] = safeStorage.encryptString(value).toString('base64')
-  else delete secrets[name]
-  await writeFile(secretsFile, JSON.stringify(secrets))
+  try {
+    if (value) secrets[name] = safeStorage.encryptString(value).toString('base64')
+    else delete secrets[name]
+    await writeFile(secretsFile, JSON.stringify(secrets))
+  } catch {
+    // No safe store after all: leave the key where it was rather than writing it in the clear.
+  }
 }
 
 async function read(path: string) {

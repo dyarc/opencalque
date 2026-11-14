@@ -48,7 +48,7 @@
         inset: 0;
         width: 40%;
         border-radius: inherit;
-        background: #0d99ff;
+        background: #5b8cff;
         animation: splash-slide 1.2s ease-in-out infinite;
       }
       @keyframes splash-appear {
@@ -103,11 +103,7 @@
   <body>
     <div id="root"></div>
     <div id="splash" role="progressbar" aria-label="AxioDraw">
-      <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
-        <rect width="64" height="64" rx="14" fill="#0d99ff" />
-        <path d="M32 14 52 25 32 36 12 25Z" fill="#fff" />
-        <path d="M12 33 32 44 52 33M12 41 32 52 52 41" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".8" />
-      </svg>
+      <img src="./icon.png" width="72" height="72" alt="" />
       <div class="splash-bar"></div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
