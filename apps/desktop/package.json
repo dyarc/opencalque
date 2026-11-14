@@ -45,6 +45,10 @@
       {
         "from": "../../THIRD-PARTY-NOTICES.txt",
         "to": "THIRD-PARTY-NOTICES.txt"
+      },
+      {
+        "from": "build/adg-icon.rsrc",
+        "to": "adg-icon.rsrc"
       }
     ],
     "npmRebuild": false,

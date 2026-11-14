@@ -1,7 +1,8 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, net, safeStorage, shell, type WebContents } from 'electron'
-import { spawn, type ChildProcess } from 'node:child_process'
+import { execFile, spawn, type ChildProcess } from 'node:child_process'
 import { cpSync, existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, readdir, readFile, realpath, rename, unlink, writeFile } from 'node:fs/promises'
+import { promisify } from 'node:util'
 import { basename, dirname, extname, join, resolve } from 'node:path'
 import { agentCommand, startBridge, type Bridge } from './bridge'
 import { checkForUpdate, installOnClose, installUpdate, keptOpen, listen } from './updates'
@@ -10,6 +11,21 @@ import { checkForUpdate, installOnClose, installUpdate, keptOpen, listen } from 
 // does for a person, but off the screen, out of the taskbar and without taking the focus. Windows
 // would count it as covered and Chromium stop painting it, so that is switched off, and nothing
 // asks about unsaved changes: that dialog would come up on the screen, with the focus.
+const run = promisify(execFile)
+/** The picture Finder puts on a drawing: the app's mark, written into the file's resource fork. */
+const DRAWING = /\.(adg|opencalque|opencad)$/i
+async function giveDrawingIcon(path: string, named = path): Promise<void> {
+  if (process.platform !== 'darwin' || !DRAWING.test(named)) return
+  try {
+    const resource = await readFile(join(process.resourcesPath, 'adg-icon.rsrc'))
+    await run('/usr/bin/xattr', ['-wx', 'com.apple.ResourceFork', resource.toString('hex'), path])
+    // The Finder flag that says the resource fork holds the picture (kHasCustomIcon).
+    await run('/usr/bin/xattr', ['-wx', 'com.apple.FinderInfo', '0000000000000000040000000000000000000000000000000000000000000000', path])
+  } catch {
+    // A file on a volume without resource forks still saves; it just keeps the type's icon.
+  }
+}
+
 const inBackground = process.env.OPENCALQUE_BACKGROUND === '1'
 if (inBackground) app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion')
 
@@ -47,6 +63,7 @@ async function writeSafely(path: string, content: string | Uint8Array): Promise<
   const target = await realpath(path).catch(() => path)
   const temporary = join(dirname(target), `.${basename(target)}.${process.pid}-${Date.now()}.tmp`)
   await writeFile(temporary, content)
+  await giveDrawingIcon(temporary, target)
   for (let attempt = 1; ; attempt++) {
     try {
       return await rename(temporary, target)
@@ -61,7 +78,9 @@ async function writeSafely(path: string, content: string | Uint8Array): Promise<
       }
       await unlink(temporary).catch(() => {})
       if (!['EPERM', 'EBUSY', 'EACCES', 'EXDEV'].includes(code)) throw error
-      return writeFile(target, content)
+      await writeFile(target, content)
+      await giveDrawingIcon(target)
+      return
     }
   }
 }
@@ -221,7 +240,9 @@ async function keepSecret(name: string, value: string): Promise<void> {
 async function read(path: string) {
   granted.add(path)
   remember(path)
-  return { name: basename(path), content: await readFile(path, 'utf8'), token: path }
+  const content = await readFile(path, 'utf8')
+  await giveDrawingIcon(path)
+  return { name: basename(path), content, token: path }
 }
 
 /**
@@ -404,7 +425,7 @@ app.whenReady().then(() => {
   ipcMain.handle('file:initial', () => {
     const asked = waiting.shift()
     if (asked) return read(asked)
-    const file = process.argv.slice(1).find((arg) => arg.endsWith('.opencalque') || arg.endsWith('.opencad'))
+    const file = process.argv.slice(1).find((arg) => /\.(adg|opencalque|opencad)$/i.test(arg))
     return file ? read(resolve(file)) : null
   })
 
