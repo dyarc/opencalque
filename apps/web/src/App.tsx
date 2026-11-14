@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { About } from './About'
-import { AxonometricView } from './AxonometricView'
+import { ThreeView } from './ThreeView'
 import { DrawingSettingsWindow } from './DrawingSettingsWindow'
 import { startUp } from './actions'
 import { startAutosave } from './autosave'
@@ -118,7 +118,7 @@ export function App() {
       <ExportDialog />
       <DrawingSettingsWindow />
       <About />
-      <AxonometricView />
+      <ThreeView />
       <QuestionWindow />
       <DropTarget />
     </div>

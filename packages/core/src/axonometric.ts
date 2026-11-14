@@ -26,6 +26,8 @@ export const AXO_WALL_HEIGHT = 2500
 
 /** A face of the view: the points around it, and how much light falls on it. */
 export interface AxoFace {
+  /** The node the face belongs to, when it was made from one. */
+  id?: string
   points: Vec3[]
   /** The way it faces, in the plan, for vertical faces; straight up for a top or a floor. */
   normal: Vec2
@@ -50,6 +52,7 @@ export function axonometricFaces(doc: Document, root: string, registry: Registry
   const faces: AxoFace[] = []
   for (const node of leavesOf(doc, root)) {
     if (!isVisible(doc, node)) continue
+    const first = faces.length
     if (node.type === 'wall') {
       const outline = wallOutline(node, doc)
       if (outline.length < 3) continue
@@ -91,6 +94,7 @@ export function axonometricFaces(doc: Document, root: string, registry: Registry
       if (!region || region.outline.length < 3) continue
       faces.push({ points: region.outline.map((p): Vec3 => ({ x: p.x, y: p.y, z: 0 })), normal: { x: 0, y: 0 }, light: 1, kind: 'floor' })
     }
+    for (let i = first; i < faces.length; i++) faces[i].id = node.id
   }
   return faces
 }

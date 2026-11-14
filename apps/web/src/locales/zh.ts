@@ -1189,4 +1189,6 @@ export const zh: Record<string, string> = {
   "Drag: press, drag, release": "拖拽：按住、拖动、松开",
   "Click: click, move, click (AutoCAD)": "点击：点击、移动、再点击（AutoCAD）",
   "Edit the selected group or component": "编辑选中的组或组件",
+  "3D model": "3D 模型",
+  "Drag to orbit, scroll to zoom. Select a solid, then drag the arrows to move it over the floor.": "拖动旋转，滚轮缩放。选中一个立体，拖动箭头即可在地面上移动。",
 }

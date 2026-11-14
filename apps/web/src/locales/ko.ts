@@ -1189,4 +1189,6 @@ export const ko: Record<string, string> = {
   "Drag: press, drag, release": "끌기: 누르고, 끌고, 놓기",
   "Click: click, move, click (AutoCAD)": "클릭: 클릭, 이동, 클릭 (AutoCAD)",
   "Edit the selected group or component": "선택한 그룹 또는 구성 요소 편집",
+  "3D model": "3D 모델",
+  "Drag to orbit, scroll to zoom. Select a solid, then drag the arrows to move it over the floor.": "끌어서 회전하고 스크롤하여 확대합니다. 입체를 선택한 뒤 화살표를 끌어 바닥에서 이동하세요.",
 }

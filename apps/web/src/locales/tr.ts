@@ -1189,4 +1189,6 @@ export const tr: Record<string, string> = {
   "Drag: press, drag, release": "Sürükle: bas, sürükle, bırak",
   "Click: click, move, click (AutoCAD)": "Tıkla: tıkla, hareket et, tıkla (AutoCAD)",
   "Edit the selected group or component": "Seçili grubu veya bileşeni düzenle",
+  "3D model": "3D model",
+  "Drag to orbit, scroll to zoom. Select a solid, then drag the arrows to move it over the floor.": "Döndürmek için sürükleyin, yakınlaştırmak için kaydırın. Bir katı seçin, sonra zeminde taşımak için okları sürükleyin.",
 }

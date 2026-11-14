@@ -1189,4 +1189,6 @@ export const ja: Record<string, string> = {
   "Drag: press, drag, release": "ドラッグ：押して、動かして、離す",
   "Click: click, move, click (AutoCAD)": "クリック：クリック、移動、クリック（AutoCAD）",
   "Edit the selected group or component": "選択したグループまたはコンポーネントを編集",
+  "3D model": "3D モデル",
+  "Drag to orbit, scroll to zoom. Select a solid, then drag the arrows to move it over the floor.": "ドラッグで回転、スクロールでズーム。立体を選び、矢印をドラッグして床の上で移動します。",
 }

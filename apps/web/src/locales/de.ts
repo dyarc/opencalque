@@ -1189,4 +1189,6 @@ export const de: Record<string, string> = {
   "Drag: press, drag, release": "Ziehen: drücken, ziehen, loslassen",
   "Click: click, move, click (AutoCAD)": "Klicken: klicken, bewegen, klicken (AutoCAD)",
   "Edit the selected group or component": "Die ausgewählte Gruppe oder Komponente bearbeiten",
+  "3D model": "3D-Modell",
+  "Drag to orbit, scroll to zoom. Select a solid, then drag the arrows to move it over the floor.": "Ziehen zum Drehen, scrollen zum Zoomen. Ein Volumen wählen, dann mit den Pfeilen über den Boden ziehen.",
 }
