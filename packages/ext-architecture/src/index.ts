@@ -4,7 +4,7 @@ import { compass } from './compass'
 import { cornerSofa } from './furniture'
 import { radiator } from './heating'
 import { fridge, hob, sink, wallCabinet } from './kitchen'
-import { door, windowKind } from './openings'
+import { curvedDoor, curvedWindow, door, windowKind } from './openings'
 import { pt } from './shared'
 import { lStair, spiralStair, straightStair, uStair } from './stairs'
 import { translations } from './translations'
@@ -23,7 +23,7 @@ export const architecture: Extension = {
   version: '0.5.0',
   translations,
   activate(api) {
-    for (const kind of [door, windowKind, straightStair, lStair, uStair, spiralStair]) api.registerParametric(kind)
+    for (const kind of [door, windowKind, curvedDoor, curvedWindow, straightStair, lStair, uStair, spiralStair]) api.registerParametric(kind)
     // How tall each stands on the floor, which an elevation draws them as, and, for those whose back
     // goes against a wall (their own Y = 0), standing against it: they snap to walls and follow them.
     const tall = (kind: ParametricKind, mm: number, against = true): ParametricKind => ({ ...kind, height: () => mm, ...(against ? { mount: { on: 'floor' } } : {}) })

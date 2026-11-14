@@ -3,7 +3,7 @@ import { dist, mid, scale, type Vec2 } from '../geometry'
 import type { Op } from '../ops'
 import type { Registry } from '../registry'
 import type { Document, WallEdge } from '../schema'
-import { courseOf, wallSides, type Wall } from './course'
+import { courseOf, wallPoints, wallSides, type Wall } from './course'
 import { cap, cornerJoin, wallEndsAt, wallEndsOf, type Stop } from './joints'
 import { openingIndex, openingSpan, overlap } from './openings'
 import { current, drawnWith } from './spatial'
@@ -29,7 +29,49 @@ export interface WallParts {
   stops: { a?: Stop; b?: Stop }
 }
 
-/** The doors and windows of a wall, as the stretches of its line they take (distances from `a`), in order. */
+/** Where a column's footprint crosses a wall's line, as stretches of the line (distances from `a`). */
+function columnCuts(wall: Wall, doc: Document): [number, number][] {
+  const out: [number, number][] = []
+  const points = wallPoints(wall)
+  for (const node of drawnWith(doc, wall.parent)) {
+    if (node.type !== 'column' || !isVisible(doc, node)) continue
+    const angle = ((node.rotation ?? 0) * Math.PI) / 180
+    const [cos, sin] = [Math.cos(angle), Math.sin(angle)]
+    const local = (p: Vec2): Vec2 => {
+      const [dx, dy] = [p.x - node.x, p.y - node.y]
+      return { x: dx * cos + dy * sin, y: -dx * sin + dy * cos }
+    }
+    let along = 0
+    for (let i = 0; i + 1 < points.length; i++) {
+      const [a, b] = [local(points[i]), local(points[i + 1])]
+      const length = dist(points[i], points[i + 1])
+      if (length < 1e-9) continue
+      // Liang-Barsky: the stretch of this piece inside the column's [0, width] × [0, height] box.
+      let [enter, leave] = [0, 1]
+      let inside = true
+      const d = { x: b.x - a.x, y: b.y - a.y }
+      for (const [p, q] of [
+        [-d.x, a.x],
+        [d.x, node.width - a.x],
+        [-d.y, a.y],
+        [d.y, node.height - a.y],
+      ]) {
+        if (Math.abs(p) < 1e-12) {
+          if (q < 0) inside = false
+        } else {
+          const t = q / p
+          if (p < 0) enter = Math.max(enter, t)
+          else leave = Math.min(leave, t)
+        }
+      }
+      if (inside && enter < leave - 1e-9) out.push([along + enter * length, along + leave * length])
+      along += length
+    }
+  }
+  return out
+}
+
+/** The doors, windows and columns of a wall, as the stretches of its line they take (distances from `a`), in order. */
 function openingCuts(wall: Wall, doc: Document, registry: Registry): [number, number][] {
   const cuts: [number, number][] = []
   if (current(doc, wall)) {
@@ -41,6 +83,7 @@ function openingCuts(wall: Wall, doc: Document, registry: Registry): [number, nu
       if (cut) cuts.push(cut)
     }
   }
+  cuts.push(...columnCuts(wall, doc))
   return cuts.sort((x, y) => x[0] - y[0])
 }
 

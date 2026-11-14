@@ -23,12 +23,23 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - Explode (`Shift+B`) draws a selected polyline or rectangle as the lines it is made of, an arc inside a line as an arc of its own; Join (`Shift+J`) joins lines and open polylines end to end into one polyline, closed when they come back to where they began. A corner where three or more ends meet is left alone.
 - Construction lines: an endless dashed guide to draw against, made with the Construction line tool (`Q`, with the shapes). Click a line to take its direction, then move the pointer to set how far from it the guide runs, on that side — or type the distance in the quick bar — and click to place it; away from any line, click two points instead. It is picked and snapped to along its whole length, lies on its layer, and is never printed or exported. Its look — colour, weight and dashes — is set in Properties as a line's is.
 
+- Curved doors and windows: two more objects in the architecture library, whose frame and panes follow a curved wall; a curved door's leaf keeps its bow as it swings. The shape can also be changed on an ordinary door or window in Properties.
+- A column now breaks the wall it crosses, as a door or window does, so its footprint is not filled with wall linework.
+
 ### Fixed
 - A construction line made through two points stopped at the first point when the pointer had moved over the guide's own preview before the second click: the second click now finishes the line, both ways.
 
 - A radius dimension draws its leader out from the arc, not through the centre, so the line it measures is not crossed; an angle dimension draws its extension lines only when they are given a look of their own, and then only a short way past its arc.
 
 ### Improved
+- An entered group or component can be opened with Enter, as with a double-click.
+- A dimension's words can be dragged by their handle, on a linear, radius or angle dimension, without moving the measured line.
+- Form fields use the theme's own text and background colours, so a name typed in the dark theme is readable.
+- The menu bar's AxioDraw name sits in a rounded rectangle of the theme's highlight colour, and opens the File menu; the separate File button and the logo are gone.
+- The drawing's name and saved state sit in the top-left corner of the drawing area, as quiet as the coordinate reading in the bottom-left; the system window title is just AxioDraw.
+- Selection boxes can be made by dragging, or by AutoCAD's click-move-click, chosen under Preferences › Selection.
+- Delete is bound to Shift+X by default; the Offset tool keeps O and OFF.
+- Pointer movement is coalesced to one redraw a frame, so dragging an object or a selection box over a busy drawing no longer builds up a queue of redraws.
 - Ellipses and arcs can be offset: each radius grows or shrinks by the distance, and an arc keeps its start and end angles, so an arc compressed into an ellipse no longer loses its offset. A polyline with arc stretches, or a curved wall, can be offset as a whole (the polyline's copy follows its arcs, sampled).
 - An ellipse is set in three points: the two ends of one axis, with a dashed guide in the snap colour following the first, then a third click for its width the other way.
 - A construction line can be picked with a crossing selection box (dragged right to left), though it has no bounds to fit.

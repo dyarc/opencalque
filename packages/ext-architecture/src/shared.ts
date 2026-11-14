@@ -45,3 +45,33 @@ export const sizedBox = (x: string, y: string, min: number, minDepth = min): Non
 export const roundBox = (x0: number, y0: number, x1: number, y1: number, radius: number | number[], style: { strokeWidth?: number } = {}): Primitive =>
   outline(roundCorners([pt(x0, y0), pt(x1, y0), pt(x1, y1), pt(x0, y1)], radius), style)
 export const circle = (cx: number, cy: number, r: number, style: { strokeWidth?: number } = {}): Primitive => ({ kind: 'ellipse', cx, cy, rx: r, ry: r, ...style })
+
+
+/** How the wall under an opening bends, as the core tells an opening it is drawn on one. */
+export type WallCurve = { radius: number; half: number; side: 1 | -1 }
+
+/** A point of a curved opening, away from its local Y by the wall's bow. */
+export function curvePoint(x: number, y: number, curve?: WallCurve): Vec2 {
+  if (!curve) return pt(x, y)
+  const u = x - curve.half
+  const edge = Math.sqrt(Math.max(0, curve.radius * curve.radius - curve.half * curve.half))
+  const bow = Math.sqrt(Math.max(0, curve.radius * curve.radius - u * u)) - edge
+  return pt(x, y + curve.side * bow)
+}
+
+/** A line across a curved opening at `y`, sampled enough to look like the wall's own curve. */
+export function curveLine(from: number, to: number, y: number, curve?: WallCurve, style: { strokeWidth?: number } = {}): Primitive {
+  if (!curve) return line([pt(from, y), pt(to, y)], style)
+  const steps = Math.max(4, Math.min(48, Math.ceil(Math.abs(to - from) / 60)))
+  return line(Array.from({ length: steps + 1 }, (_, i) => curvePoint(from + ((to - from) * i) / steps, y, curve)), style)
+}
+
+/** The four sides of a curved opening, at `-h` and `h`, for a frame or a closed leaf. */
+export function curveOutline(from: number, to: number, top: number, bottom: number, curve?: WallCurve, style: { strokeWidth?: number } = {}): Primitive {
+  if (!curve) return outline([pt(from, top), pt(to, top), pt(to, bottom), pt(from, bottom)], style)
+  const steps = Math.max(4, Math.min(48, Math.ceil(Math.abs(to - from) / 60)))
+  const along = (x: number, y: number) => curvePoint(x, y, curve)
+  const topLine = Array.from({ length: steps + 1 }, (_, i) => along(from + ((to - from) * i) / steps, top))
+  const bottomLine = Array.from({ length: steps + 1 }, (_, i) => along(to - ((to - from) * i) / steps, bottom))
+  return outline([...topLine, ...bottomLine], style)
+}

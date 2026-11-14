@@ -1188,4 +1188,5 @@ export const fr: Record<string, string> = {
   "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "Comment un cadre sélectionne : faites glisser du premier coin au second, ou cliquez le premier coin, déplacez, puis cliquez le second, comme dans AutoCAD.",
   "Drag: press, drag, release": "Glisser : appuyer, glisser, relâcher",
   "Click: click, move, click (AutoCAD)": "Cliquer : clic, déplacer, clic (AutoCAD)",
+  "Edit the selected group or component": "Modifier le groupe ou le composant sélectionné",
 }

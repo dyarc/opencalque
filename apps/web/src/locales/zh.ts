@@ -1188,4 +1188,5 @@ export const zh: Record<string, string> = {
   "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "框选方式：从第一个角拖到第二个角；或像 AutoCAD 一样，点击第一个角、移动，再点击第二个角。",
   "Drag: press, drag, release": "拖拽：按住、拖动、松开",
   "Click: click, move, click (AutoCAD)": "点击：点击、移动、再点击（AutoCAD）",
+  "Edit the selected group or component": "编辑选中的组或组件",
 }

@@ -1680,6 +1680,14 @@
                 "description": "Length of the end symbols in mm. Defaults to 150.",
                 "type": "number",
                 "exclusiveMinimum": 0
+              },
+              "top": {
+                "description": "The upper face of the solid a closed polygon stands as, in mm above the floor (z = 0).",
+                "type": "number"
+              },
+              "bottom": {
+                "description": "The lower face of that solid, in mm above the floor (z = 0).",
+                "type": "number"
               }
             },
             "required": [
@@ -1690,7 +1698,7 @@
               "points"
             ],
             "additionalProperties": false,
-            "description": "A line through several points; closed, it is a polygon."
+            "description": "A line through several points; closed, it is a polygon, and with a top and a bottom it is a solid."
           },
           {
             "type": "object",
@@ -1891,6 +1899,67 @@
               "bottom": {
                 "description": "The lower face of the slab it is, in mm above the floor (z = 0).",
                 "type": "number"
+              },
+              "holes": {
+                "description": "Openings cut out of the rectangle, each an outline in its own space: x to the right and y down from its top-left corner, before its turn. The fill stops at them and their edges are drawn.",
+                "type": "array",
+                "items": {
+                  "minItems": 3,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "recess": {
+                "description": "A sunken pit cut into the slab, in its own space like an opening; \"top\" and \"bottom\" are how far its floor and underside are below the top face of the slab.",
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "width": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "height": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "top": {
+                    "type": "number",
+                    "description": "How far the pit floor is below the slab's top face, in mm."
+                  },
+                  "bottom": {
+                    "type": "number",
+                    "description": "How far the underside of the sunken box is below the slab's top face, in mm."
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "width",
+                  "height",
+                  "top",
+                  "bottom"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [
@@ -2813,6 +2882,15 @@
               "dimensions": {
                 "description": "false leaves out the dimensions it draws by itself: along the floor from its start to each object fixed on the face, and the height of each above the floor. Shown when left out.",
                 "type": "boolean"
+              },
+              "cutFill": {
+                "description": "What is cut through is filled with. Defaults to a plain grey.",
+                "type": "string"
+              },
+              "cutWeight": {
+                "description": "Line weight of what is cut, in mm. Defaults to 0.35.",
+                "type": "number",
+                "exclusiveMinimum": 0
               }
             },
             "required": [
@@ -5285,6 +5363,23 @@
                 "type": "string",
                 "minLength": 1
               },
+              "textOffset": {
+                "description": "Moves the words away from where the dimension puts them, in mm.",
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
+              },
               "startMarker": {
                 "description": "Symbol at this end of the dimension line. Defaults to 'tick'.",
                 "type": "string",
@@ -5628,6 +5723,11 @@
                 "type": "number",
                 "description": "Where its leader points, in degrees clockwise on screen from the X axis."
               },
+              "leader": {
+                "description": "How far the words stand past the arc, in mm along the leader. Defaults to 1.8 times the text size.",
+                "type": "number",
+                "minimum": 0
+              },
               "text": {
                 "description": "Replaces the measured radius when set.",
                 "type": "string"
@@ -5701,6 +5801,23 @@
                   "center",
                   "below"
                 ]
+              },
+              "textOffset": {
+                "description": "Moves the words away from where the dimension puts them, in mm.",
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
               },
               "textRotation": {
                 "description": "Defaults to 'aligned' (along the dimension line).",
@@ -6083,6 +6200,23 @@
                   "center",
                   "below"
                 ]
+              },
+              "textOffset": {
+                "description": "Moves the words away from where the dimension puts them, in mm.",
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
               },
               "textRotation": {
                 "description": "Defaults to 'aligned' (along the dimension line).",

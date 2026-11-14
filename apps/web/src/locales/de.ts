@@ -1188,4 +1188,5 @@ export const de: Record<string, string> = {
   "How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.": "Wie ein Rahmen auswählt: vom ersten zum zweiten Eckpunkt ziehen oder – wie in AutoCAD – das erste Eck klicken, bewegen und das zweite klicken.",
   "Drag: press, drag, release": "Ziehen: drücken, ziehen, loslassen",
   "Click: click, move, click (AutoCAD)": "Klicken: klicken, bewegen, klicken (AutoCAD)",
+  "Edit the selected group or component": "Die ausgewählte Gruppe oder Komponente bearbeiten",
 }

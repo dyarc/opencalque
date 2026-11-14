@@ -184,7 +184,7 @@ const STATIC: Command[] = [
 
   { id: 'edit.undo', title: msg('Undo'), category: 'Edit', keys: ['Mod+Z'], interrupts: true, run: undo },
   { id: 'edit.redo', title: msg('Redo'), category: 'Edit', keys: ['Mod+Shift+Z', 'Mod+Y'], interrupts: true, run: redo },
-  { id: 'edit.delete', title: msg('Delete selection'), short: msg('Delete'), category: 'Edit', keys: ['Delete', 'Backspace'], interrupts: true, run: deleteSelection },
+  { id: 'edit.delete', title: msg('Delete selection'), short: msg('Delete'), category: 'Edit', keys: ['Shift+X'], interrupts: true, run: deleteSelection },
   { id: 'edit.cut', title: msg('Cut'), category: 'Edit', keys: ['Mod+X'], interrupts: true, when: selected, run: cutSelection },
   { id: 'edit.copy', title: msg('Copy'), category: 'Edit', keys: ['Mod+C'], when: selected, run: copySelection },
   { id: 'edit.paste', title: msg('Paste'), category: 'Edit', keys: ['Mod+V'], interrupts: true, run: () => paste() },
@@ -264,6 +264,25 @@ const STATIC: Command[] = [
   { id: 'component.previousInstance', title: msg('Previous instance'), category: 'Components', keys: ['Alt+ArrowLeft'], when: browsing, run: () => stepInstance(-1) },
   { id: 'component.create', title: msg('Make into a component'), category: 'Components', keys: ['Mod+Alt+K'], interrupts: true, when: () => selected() && !onlyInstance(), run: makeComponent },
   { id: 'component.purge', title: msg('Delete unused components'), category: 'Components', when: () => unusedComponents(get().doc).length > 0, run: deleteUnusedComponents },
+  {
+    id: 'component.edit',
+    title: msg('Edit the selected group or component'),
+    category: 'Components',
+    keys: ['Enter'],
+    interrupts: true,
+    when: () => {
+      const s = get()
+      if (s.editingText || s.selection.length !== 1) return false
+      const node = s.doc.nodes[s.selection[0]]
+      return node?.type === 'group' || node?.type === 'instance'
+    },
+    run: () => {
+      const s = get()
+      const node = s.doc.nodes[s.selection[0]]
+      if (node?.type === 'group') editComponent(node.id)
+      else if (node?.type === 'instance') editComponent(node.component, node)
+    },
+  },
   { id: 'component.finish', title: msg('Finish editing this group or component'), category: 'Components', when: () => get().scope !== get().page, run: () => editComponent(null) },
 
   { id: 'view.zoomToFit', title: msg('Zoom to fit'), category: 'View', keys: ['Shift+1'], run: zoomToFit },
@@ -341,7 +360,7 @@ const STATIC: Command[] = [
   tool('trim', msg('Trim'), ['X', 'TR']),
   tool('extend', msg('Extend'), ['J', 'EX']),
   tool('fillet', msg('Fillet'), ['Shift+F', 'FIL']),
-  tool('offset', msg('Offset a wall, a line or a shape'), ['Shift+X', 'O', 'OFF']),
+  tool('offset', msg('Offset a wall, a line or a shape'), ['O', 'OFF']),
   tool('rotate', msg('Rotate'), ['E', 'RO']),
   tool('move', msg('Move'), ['Shift+E', 'MV']),
   tool('eyedropper', msg('Eyedropper: copy the look of an object'), 'I'),
