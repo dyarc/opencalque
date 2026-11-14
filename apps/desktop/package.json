@@ -49,6 +49,10 @@
       {
         "from": "build/adg-icon.rsrc",
         "to": "adg-icon.rsrc"
+      },
+      {
+        "from": "build/document.icns",
+        "to": "document.icns"
       }
     ],
     "npmRebuild": false,
@@ -61,21 +65,20 @@
       {
         "ext": "adg",
         "name": "AxioDraw drawing",
-        "role": "Editor",
-        "icon": "build/document.icns"
+        "role": "Editor"
       },
       {
         "ext": "opencalque",
         "name": "AxioDraw drawing (old name)",
-        "role": "Editor",
-        "icon": "build/document.icns"
+        "role": "Editor"
       }
     ],
     "win": {
       "target": [
         "nsis",
         "portable"
-      ]
+      ],
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": false,
