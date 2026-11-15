@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
-import { canvas, choose, drawing, drawingOnScreen, drawWall, failOnErrors, librarySection, objectRows, openEditor, recordSaves, startWith } from './support'
+import { canvas, choose, command, drawing, drawingOnScreen, drawWall, failOnErrors, librarySection, objectRows, openEditor, recordSaves, startWith } from './support'
 
 /**
  * The editor in a browser, as people use it. Each test starts from a fresh profile: no drawing, no
@@ -30,7 +30,7 @@ test('saves a drawing, then saves each change by itself', async ({ page }) => {
   await page.keyboard.press('Control+s')
   await expect.poll(() => page.evaluate(() => (window as any).saves.length)).toBe(1)
   expect(await page.evaluate(() => (window as any).saves[0])).toContain('"type": "wall"')
-  await expect(page.locator('.menubar-saved')).toBeVisible()
+  await expect(page.locator('.canvas-name-saved')).toBeVisible()
   await drawWall(page, [300, 400], [700, 400])
   // Autosave waits for two seconds without changes.
   await expect.poll(() => page.evaluate(() => (window as any).saves.length), { timeout: 8000 }).toBe(2)
@@ -55,14 +55,14 @@ test('a drawing saved under a name of its own takes that name, which exports the
     }
   })
   await openEditor(page)
-  await expect(page.locator('.menubar-name')).toContainText('Untitled')
+  await expect(page.locator('.canvas-name')).toContainText('Untitled')
   await drawWall(page, [300, 300], [700, 300])
   await page.keyboard.press('Control+s')
-  await expect(page.locator('.menubar-name')).toContainText('Cabin')
+  await expect(page.locator('.canvas-name')).toContainText('Cabin')
   // Written again with its new name, and left saved.
   await expect.poll(() => page.evaluate(() => (window as any).saves.length)).toBe(2)
   expect(JSON.parse(await page.evaluate(() => (window as any).saves[1].content)).name).toBe('Cabin')
-  await expect(page.locator('.menubar-saved')).toBeVisible()
+  await expect(page.locator('.canvas-name-saved')).toBeVisible()
   await expect(page).toHaveTitle(/^Cabin\.opencalque/)
   await page.keyboard.press('Control+e')
   await page.getByRole('radio', { name: /SVG/ }).click()
@@ -84,7 +84,7 @@ test('opens a drawing that needs repairs, and says so; refuses one from a newer 
   await expect(objectRows(page)).toHaveCount(2)
 
   await choose(page, () => page.keyboard.press('Control+o'), 'future.opencalque', drawing({}, { version: 99 }))
-  await expect(page.locator('.toast')).toContainText('future.opencalque was saved by a newer version of OpenCalque')
+  await expect(page.locator('.toast')).toContainText('future.opencalque was saved by a newer version of AxioDraw')
   await expect(objectRows(page)).toHaveCount(2)
 })
 
@@ -130,10 +130,10 @@ test('pastes a picture copied in another program as it is, rather than what was 
   await recordSaves(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   await page.keyboard.press('Control+c')
   // What "Copy image" in a browser leaves on the clipboard: a PNG and some HTML, no plain text.
@@ -171,10 +171,10 @@ test('fills a shape with the colour of its layer, chosen in the colour window, w
   await startWith(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   const fill = page.locator('[data-panel="properties"] .fill-field .fill-now')
   // A rectangle starts with no fill; a solid one is chosen on its tab of the fill window.
@@ -195,7 +195,7 @@ test('fills a shape with the colour of its layer, chosen in the colour window, w
 test('opens the window of the next field of the bar above the tools at once, closing the one that was open', async ({ page }) => {
   await startWith(page)
   await openEditor(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   const line = page.locator('.quickbar .color-choice:not(.fill-choice) .color-now')
   const fill = page.locator('.quickbar .fill-now')
   const colourWindow = page.locator('.color-menu:not(.fill-menu)')
@@ -216,7 +216,7 @@ test('gives the next shapes a line colour and a hatch from the bar above the too
   await recordSaves(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   // No dots of colour, weight or kind of line: a colour for the lines, which is the layer's until another is chosen, and a fill.
   await expect(page.locator('.quickbar .weight-choice')).toHaveCount(0)
   const line = page.locator('.quickbar .color-choice:not(.fill-choice) .color-now')
@@ -228,7 +228,7 @@ test('gives the next shapes a line colour and a hatch from the bar above the too
   await expect(page.locator('.fill-menu')).toHaveCount(0)
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   const fill = page.locator('[data-panel="properties"] .fill-field .fill-now')
   await expect(fill).toContainText('Lines')
@@ -251,10 +251,10 @@ test('gives a colour an opacity, on a shape and on a shared colour', async ({ pa
   await startWith(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   const fill = page.locator('[data-panel="properties"] .fill-field .fill-now')
   await fill.click()
@@ -289,10 +289,10 @@ test('resizes a rectangle by the middles of its sides and its corners', async ({
     await page.mouse.up()
     if (shift) await page.keyboard.up('Shift')
   }
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   const field = (name: string) => page.locator('label.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
   await expect(field('W')).toHaveValue('2000')
@@ -384,14 +384,14 @@ test('draws a wall by its face and keeps it: thicker, it grows away; given anoth
   await startWith(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await page.getByTitle('Points along the right face of the wall').click()
   // Running east at y = 300 (800 mm), its right face is the line clicked: the wall lies north of it, from 280 to 300.
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 700, box.y + 300)
   await page.keyboard.press('Escape')
   await page.keyboard.press('Escape')
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await page.mouse.click(box.x + 500, box.y + 289)
   const field = (name: string) => page.locator('.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
   const thickness = field('Thickness')
@@ -424,14 +424,14 @@ test('with Shift, a wall being drawn keeps level and still stops on what it meet
   const onScreen = await drawingOnScreen(page)
   const field = (name: string) => page.locator('.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
   const drawHeld = async (from: [number, number], to: [number, number]) => {
-    await page.keyboard.press('w')
+    await command(page, 'w')
     await page.mouse.click(...onScreen(...from))
     await page.keyboard.down('Shift')
     await page.mouse.move(...onScreen(...to), { steps: 4 })
     await page.mouse.click(...onScreen(...to))
     await page.keyboard.up('Shift')
     await page.keyboard.press('Escape')
-    await page.keyboard.press('v')
+    await command(page, 'v')
     await objectRows(page).first().click()
   }
   // From the left, level, the pointer a little past the upright wall's middle line and a little low: it stops on that line.
@@ -922,11 +922,11 @@ test('makes a group see-through from its properties, one drag of the slider bein
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   for (const [x, y] of [[300, 300], [450, 300]]) {
-    await page.keyboard.press('r')
+    await command(page, 'r')
     await page.mouse.click(box.x + x, box.y + y)
     await page.mouse.click(box.x + x + 100, box.y + y + 80)
   }
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await page.keyboard.press('Control+a')
   await page.keyboard.press('Control+g')
   await expect(objectRows(page).first()).toContainText('Group')
@@ -1013,10 +1013,10 @@ test('stretches a placed component by a side of its frame, and gives it its prop
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   // A 2000 × 1000 rectangle from (-200, 800) mm, on screen from (300, 300) to (500, 400), made into a component placed there.
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   await page.keyboard.press('Control+Alt+k')
   await expect(objectRows(page).first()).toContainText('Component 1')
@@ -1201,10 +1201,10 @@ test('lists the components of the drawing in their own panel, and places one fro
   await startWith(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 400, box.y + 380)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   await page.keyboard.press('Control+Alt+k')
   await page.locator('.dv-tab', { hasText: 'Components' }).click()
@@ -1256,10 +1256,10 @@ test('shows the components as pictures too, faint when placed nowhere, and delet
   await expect(panel.locator('.row')).toHaveCount(0)
   // Two of the drawing's own; the placement of the second deleted, it is placed nowhere.
   for (const x of [300, 600]) {
-    await page.keyboard.press('r')
+    await command(page, 'r')
     await page.mouse.click(box.x + x, box.y + 300)
     await page.mouse.click(box.x + x + 100, box.y + 380)
-    await page.keyboard.press('v')
+    await command(page, 'v')
     await objectRows(page).first().click()
     await page.keyboard.press('Control+Alt+k')
   }
@@ -1290,10 +1290,10 @@ test('opens a component from its row filling the view, and comes back to the vie
   await startWith(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 100, box.y + 100)
   await page.mouse.click(box.x + 130, box.y + 120)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   await page.keyboard.press('Control+Alt+k')
   const zoom = page.locator('.view-bar .zoom-scale')
@@ -1316,10 +1316,10 @@ test('turns a rectangle about its middle from the angle typed, and arranges it f
   await startWith(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   const label = (name: string) => page.locator('.field', { has: page.locator(`span:text-is("${name}")`) })
   const field = (name: string) => label(name).locator('input')
@@ -1457,11 +1457,11 @@ test('with Shift, a dimension keeps level and stops on the line it crosses', asy
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   // A rectangle whose right side is at x = 1800 mm (x = 500 on screen, 10 mm a pixel).
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
   // From a point left of it, Shift held, the pointer a little past its right side and below the start.
-  await page.keyboard.press('m')
+  await command(page, 'm')
   await page.mouse.click(box.x + 200, box.y + 350)
   await page.keyboard.down('Shift')
   await page.mouse.move(box.x + 504, box.y + 356, { steps: 4 })
@@ -1469,14 +1469,14 @@ test('with Shift, a dimension keeps level and stops on the line it crosses', asy
   await page.keyboard.up('Shift')
   await page.keyboard.press('Escape')
 
-  await page.keyboard.press('d')
+  await command(page, 'd')
   await page.mouse.click(box.x + 200, box.y + 350)
   await page.keyboard.down('Shift')
   await page.mouse.move(box.x + 504, box.y + 356, { steps: 4 })
   await page.mouse.click(box.x + 504, box.y + 356)
   await page.keyboard.up('Shift')
   await page.mouse.click(box.x + 504, box.y + 330)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   const field = (name: string) => page.locator('label.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
   await expect(field('X2')).toHaveValue(/^1\s?800$/)
@@ -1489,10 +1489,10 @@ test('takes a thing out of a component: cut inside it, pasted on the page where 
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   const field = (name: string) => page.locator('label.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   await page.keyboard.press('Control+Alt+k')
   // The component placed elsewhere: its rectangle is drawn from (3000, 1000), 30 px a metre on screen... 10 mm a pixel.
@@ -1517,10 +1517,10 @@ test('shows the way into a group and a component in it, and goes back out to any
   await startWith(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   // The rectangle made into a component, its placement then put in a group.
   await page.keyboard.press('Control+Alt+k')
@@ -1566,14 +1566,14 @@ test('puts what is cut and pasted on top of what it was under', async ({ page, c
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   const rect = async (from: [number, number], to: [number, number]) => {
-    await page.keyboard.press('r')
+    await command(page, 'r')
     await page.mouse.click(box.x + from[0], box.y + from[1])
     await page.mouse.click(box.x + to[0], box.y + to[1])
   }
   // The first under the second, which overlaps it: the list shows the topmost first.
   await rect([300, 300], [500, 400])
   await rect([350, 320], [550, 420])
-  await page.keyboard.press('v')
+  await command(page, 'v')
   const x = page.locator('label.field', { has: page.locator('span:text-is("X")') }).locator('input')
   await objectRows(page).nth(1).click()
   await expect(x).toHaveValue('-200')
@@ -1589,17 +1589,17 @@ test('measures and dimensions between the points clicked, not the grid points ne
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   // At the first zoom the grid is 100 mm: these points, 4370 mm apart, are between its lines.
-  await page.keyboard.press('m')
+  await command(page, 'm')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.move(box.x + 737, box.y + 300, { steps: 4 })
   await expect(page.locator('.status')).toContainText(/4\s?370/)
   await page.keyboard.press('Escape')
 
-  await page.keyboard.press('d')
+  await command(page, 'd')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 737, box.y + 300)
   await page.mouse.click(box.x + 737, box.y + 400)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await objectRows(page).first().click()
   const x = (name: string) => page.locator('label.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
   await expect(x('X2')).toHaveValue(/^4\s?170$/)
@@ -2169,10 +2169,10 @@ test('folds the sections of the properties panel, and keeps them folded', async 
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   const drawRect = async () => {
-    await page.keyboard.press('r')
+    await command(page, 'r')
     await page.mouse.click(box.x + 300, box.y + 300)
     await page.mouse.click(box.x + 500, box.y + 400)
-    await page.keyboard.press('v')
+    await command(page, 'v')
     await objectRows(page).first().click()
   }
   await drawRect()
@@ -2239,7 +2239,7 @@ test('a drawing opens on the layer in use when it was saved, and choosing one is
   // The first layer needs no saying: a drawing on it is written as it always was.
   expect((await written()).meta).toBeUndefined()
   await rows.nth(1).click()
-  await expect(page.locator('.menubar-name .faint', { hasText: '●' })).toHaveCount(0)
+  await expect(page.locator('.canvas-name', { hasText: '●' })).toHaveCount(0)
   const file = await written()
   expect(file.layers[file.meta.activeLayer].name).toBe((await rows.nth(1).textContent())!.trim())
 
@@ -2259,11 +2259,11 @@ test('a drawing opens on the layer in use when it was saved, and choosing one is
 test('renames the drawing in place: the text does not move when it is double-clicked', async ({ page }) => {
   await startWith(page)
   await openEditor(page)
-  const name = page.locator('.menubar-name .editable')
+  const name = page.locator('.canvas-name .editable')
   const shown = (await name.boundingBox())!
   const weight = await name.evaluate((el) => getComputedStyle(el).fontWeight)
   await name.dblclick()
-  const field = page.locator('.menubar-name .inline-input')
+  const field = page.locator('.canvas-name .inline-input')
   await expect(field).toBeFocused()
   const box = (await field.boundingBox())!
   expect(Math.abs(box.x + box.width / 2 - (shown.x + shown.width / 2))).toBeLessThanOrEqual(2)

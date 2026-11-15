@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
-import { canvas, choose, drawing, drawingOnScreen, drawWall, failOnErrors, objectRows, openEditor, recordSaves, startWith } from './support'
+import { canvas, choose, command, drawing, drawingOnScreen, drawWall, failOnErrors, objectRows, openEditor, recordSaves, startWith } from './support'
 
 /**
  * Each tool of the canvas, and each drag of the select tool, used as a person would, with what it
@@ -46,7 +46,7 @@ const status = (page: Page) => page.locator('.status span')
 
 test('draws a line, and a closed shape by coming back to its first point, with the line tool', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('l')
+  await command(page, 'l')
   await click(page, at(0, 0))
   await click(page, at(1000, 0))
   await page.keyboard.press('Escape')
@@ -71,7 +71,7 @@ test('draws a line, and a closed shape by coming back to its first point, with t
 test('lines a wall up with a point the pointer rested on, and not with every point drawn', async ({ page }) => {
   const at = await blank(page)
   const move = (p: { x: number; y: number }) => page.mouse.move(p.x, p.y, { steps: 4 })
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await click(page, at(0, 0))
   await click(page, at(2000, 0))
   await page.keyboard.press('Escape')
@@ -98,7 +98,7 @@ test('lines a wall up with a point the pointer rested on, and not with every poi
 
 test('closes a run of walls back to where it started with a double-click on its last corner', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await click(page, at(0, 0))
   await click(page, at(3000, 0))
   await click(page, at(3000, 2000))
@@ -111,9 +111,9 @@ test('closes a run of walls back to where it started with a double-click on its 
 
 test('draws a rectangle by dragging and an ellipse by two clicks', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await drag(page, at(0, 0), at(2000, 1000))
-  await page.keyboard.press('o')
+  await command(page, 'ell')
   // Under it: further right, a narrow canvas has the view bar standing against its edge.
   await click(page, at(0, 1500))
   await click(page, at(2000, 2500))
@@ -124,7 +124,7 @@ test('draws a rectangle by dragging and an ellipse by two clicks', async ({ page
 
 test('writes a text where it is clicked, and a note with a leader to what it is about', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('t')
+  await command(page, 't')
   await click(page, at(0, 0))
   await page.keyboard.type('Hello')
   await page.keyboard.press('Escape')
@@ -140,7 +140,7 @@ test('writes a text where it is clicked, and a note with a leader to what it is 
 
 test('draws grid lines by two clicks, each labelled after the one before', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('g')
+  await command(page, 'g')
   await click(page, at(0, 0))
   await click(page, at(0, 4000))
   await click(page, at(3000, 0))
@@ -153,10 +153,10 @@ test('draws grid lines by two clicks, each labelled after the one before', async
 
 test('changes the label of a grid line by double-clicking its bubble', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('g')
+  await command(page, 'g')
   await click(page, at(0, 0))
   await click(page, at(0, 4000))
-  await page.keyboard.press('v')
+  await command(page, 'v')
   // The bubble of 800 mm sits above the start of the line, its middle 400 mm up.
   await page.mouse.dblclick(at(0, -400).x, at(0, -400).y)
   await page.keyboard.type('X1')
@@ -167,7 +167,7 @@ test('changes the label of a grid line by double-clicking its bubble', async ({ 
 test('lays a paper at a standard format by pulling towards its corner', async ({ page }) => {
   await blank(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('f')
+  await command(page, 'f')
   // The first corner, at the origin, stays where it is while the view steps back until an A3 fits half its width.
   await page.mouse.click(box.x + 320, box.y + 220)
   const zoom = (0.5 * box.width) / 42000
@@ -178,13 +178,13 @@ test('lays a paper at a standard format by pulling towards its corner', async ({
 
 test('names the rooms that closed walls make, and splits one with a divider', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('w')
+  await command(page, 'w')
   for (const [x, y] of [[0, 0], [4000, 0], [4000, 3000], [0, 3000], [0, 0]]) await click(page, at(x, y))
   await page.keyboard.press('Shift+A')
   await click(page, at(2000, 0))
   await click(page, at(2000, 3000))
   await page.keyboard.press('Escape')
-  await page.keyboard.press('a')
+  await command(page, 'a')
   for (const [x, y] of [[1000, 1500], [3000, 1500]]) {
     await page.mouse.move(at(x, y).x, at(x, y).y)
     await click(page, at(x, y))
@@ -201,7 +201,7 @@ test('names the rooms that closed walls make, and splits one with a divider', as
 test('cuts a wall in two with the split tool', async ({ page }) => {
   const at = await blank(page)
   await drawWall(page, [320, 220], [720, 220])
-  await page.keyboard.press('k')
+  await command(page, 'k')
   await page.mouse.move(at(2000, 0).x, at(2000, 0).y)
   await click(page, at(2000, 0))
   const walls = (await saved(page)).filter((n) => n.type === 'wall')
@@ -217,7 +217,7 @@ test('takes away the stretch of a wall up to the wall crossing it with the trim 
   const at = await blank(page)
   await drawWall(page, [320, 220], [720, 220])
   await drawWall(page, [520, 20], [520, 420])
-  await page.keyboard.press('x')
+  await command(page, 'x')
   await page.mouse.move(at(1000, 0).x, at(1000, 0).y)
   await click(page, at(1000, 0))
   // What is left of the long wall ends on the line of the wall it crossed.
@@ -226,7 +226,7 @@ test('takes away the stretch of a wall up to the wall crossing it with the trim 
 
 /** Draws a line between two points of a blank drawing with the line tool. */
 async function line(page: Page, from: { x: number; y: number }, to: { x: number; y: number }) {
-  await page.keyboard.press('l')
+  await command(page, 'l')
   await click(page, from)
   await click(page, to)
   await page.keyboard.press('Escape')
@@ -234,7 +234,7 @@ async function line(page: Page, from: { x: number; y: number }, to: { x: number;
 
 test('draws a circle by its centre and a point it goes through, or by a radius typed first', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('c')
+  await command(page, 'c')
   await click(page, at(1000, 1000))
   await click(page, at(1500, 1000))
   // Typed first, the radius needs only the click at the centre.
@@ -249,7 +249,7 @@ test('extends a line from the end clicked to what is in its way, then on to the 
   await line(page, at(0, 0), at(1000, 0))
   await line(page, at(2000, -1000), at(2000, 1000))
   await line(page, at(3000, -1000), at(3000, 1000))
-  await page.keyboard.press('j')
+  await command(page, 'j')
   await page.mouse.move(at(800, 0).x, at(800, 0).y)
   await click(page, at(800, 0))
   expect((await saved(page)).find((n) => n.type === 'line' && n.a.y === 0)).toMatchObject({ a: { x: 0, y: 0 }, b: { x: 2000, y: 0 } })
@@ -283,7 +283,7 @@ test('fillets two lines into a corner, and with a radius typed into a rounded on
 test('carries a line on past its end once the pointer rested on it, and the next point lands on that way', async ({ page }) => {
   const at = await blank(page)
   await line(page, at(0, 0), at(1000, 300))
-  await page.keyboard.press('l')
+  await command(page, 'l')
   // Resting on the end of the line, then pointing along its way, where the grid alone would round to 800.
   await page.mouse.move(at(1000, 300).x, at(1000, 300).y)
   await page.waitForTimeout(400)
@@ -298,7 +298,7 @@ test('carries a line on past its end once the pointer rested on it, and the next
 
 test('flips the wall being drawn to the other side of its points with Shift+Space', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await page.getByRole('radio', { name: 'Points along the left face of the wall' }).click()
   await page.mouse.move(at(0, 0).x, at(0, 0).y)
   await page.keyboard.press('Shift+Space')
@@ -325,12 +325,12 @@ test('moves a wall by typing its distance to the wall it faces into a temporary 
 
 test('turns the selection a quarter about a point with the rotate tool', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await click(page, at(0, 0))
   await click(page, at(2000, 1000))
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await click(page, at(1000, 1000))
-  await page.keyboard.press('e')
+  await command(page, 'e')
   await click(page, at(0, 0))
   await click(page, at(1000, 0))
   // Up the screen is a quarter turn counter-clockwise, as angles are read; the drawing keeps it clockwise, as 270°.
@@ -342,16 +342,16 @@ test('turns the selection a quarter about a point with the rotate tool', async (
 
 test('turns the selection exactly onto a point clicked, at an angle that is no whole degree', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await click(page, at(0, 0))
   await click(page, at(1000, 500))
-  await page.keyboard.press('l')
+  await command(page, 'l')
   await click(page, at(0, 2500))
   await click(page, at(3000, 2000))
   await page.keyboard.press('Escape')
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await click(page, at(1000, 250))
-  await page.keyboard.press('e')
+  await command(page, 'e')
   await click(page, at(0, 0))
   await click(page, at(1000, 0))
   // The end of the line is 33.69° below level from the pivot: the rectangle's top side goes through it.
@@ -364,12 +364,12 @@ test('turns the selection exactly onto a point clicked, at an angle that is no w
 
 test('moves the selection by a point of it onto a point of something else, and leaves copies with Ctrl', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await click(page, at(0, 0))
   await click(page, at(1000, 600))
   await click(page, at(3000, 0))
   await click(page, at(4000, 1000))
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await click(page, at(1000, 300))
   await page.keyboard.press('Shift+E')
   // Taken by its centre, put down on the other's top-right corner.
@@ -392,7 +392,7 @@ test('moves the selection by a point of it onto a point of something else, and l
 
 test('reads a distance and an angle without adding anything', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('m')
+  await command(page, 'm')
   await click(page, at(0, 0))
   await page.mouse.move(at(3000, 0).x, at(3000, 0).y, { steps: 5 })
   await expect(status(page)).toContainText('Distance 3000')
@@ -408,12 +408,12 @@ test('reads a distance and an angle without adding anything', async ({ page }) =
 
 test('selects what a box is dragged around, then scales it all by a corner of the box around it', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await click(page, at(0, 0))
   await click(page, at(1000, 1000))
   await click(page, at(2000, 0))
   await click(page, at(3000, 1000))
-  await page.keyboard.press('v')
+  await command(page, 'v')
   // A box from beside them takes in both.
   await drag(page, at(-500, -500), at(3500, 1500))
   // The bottom-right corner of the box around them, pulled to twice as far from the top-left one.
@@ -427,14 +427,14 @@ test('selects what a box is dragged around, then scales it all by a corner of th
 
 test('drags a wall corner, both walls following, and the end of a line by its handle', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('w')
+  await command(page, 'w')
   for (const [x, y] of [[0, 0], [3000, 0], [3000, 2000]]) await click(page, at(x, y))
   await page.keyboard.press('Escape')
-  await page.keyboard.press('l')
+  await command(page, 'l')
   await click(page, at(0, 3000))
   await click(page, at(2000, 3000))
   await page.keyboard.press('Escape')
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await drag(page, at(3000, 0), at(4000, -1000))
   await click(page, at(1000, 3000))
   await drag(page, at(2000, 3000), at(2000, 4000))
@@ -448,10 +448,10 @@ test('drags a wall corner, both walls following, and the end of a line by its ha
 
 test('moves an object by dragging it, by whole steps of the grid', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await click(page, at(0, 0))
   await click(page, at(1000, 1000))
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await drag(page, at(500, 0), at(2500, 1000))
   expect((await saved(page)).find((n) => n.type === 'rect')).toMatchObject({ x: 2000, y: 1000, width: 1000, height: 1000 })
 })
@@ -515,12 +515,12 @@ test('a click on the third point of an arc in line with its ends makes a line', 
 
 test('a box dragged rightwards takes what is inside it, one dragged leftwards what it touches', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('l')
+  await command(page, 'l')
   await click(page, at(1000, 0))
   await click(page, at(1000, 3000))
   await page.keyboard.press('Escape')
   await page.keyboard.press('Escape')
-  await page.keyboard.press('v')
+  await command(page, 'v')
   // Over the middle of the line, its ends outside: rightwards this takes nothing.
   await drag(page, at(500, 1000), at(1500, 2000))
   await page.keyboard.press('Delete')
@@ -532,7 +532,7 @@ test('a box dragged rightwards takes what is inside it, one dragged leftwards wh
 
 test('offsets a line by a typed distance, to the side clicked, each copy one step of undo', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('l')
+  await command(page, 'l')
   await click(page, at(0, 0))
   await click(page, at(2000, 0))
   await page.keyboard.press('Escape')
@@ -550,7 +550,7 @@ test('offsets a line by a typed distance, to the side clicked, each copy one ste
 
 test('offsets a line to where the pointer says, and keeps that distance for the next', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('l')
+  await command(page, 'l')
   await click(page, at(0, 0))
   await click(page, at(2000, 0))
   await page.keyboard.press('Escape')
@@ -568,7 +568,7 @@ test('offsets a line to where the pointer says, and keeps that distance for the 
 
 test('gives up the offset being placed with Esc, leaving the drawing as it was', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('l')
+  await command(page, 'l')
   await click(page, at(0, 0))
   await click(page, at(2000, 0))
   await page.keyboard.press('Escape')
@@ -581,7 +581,7 @@ test('gives up the offset being placed with Esc, leaving the drawing as it was',
 
 test('offsets a rectangle inwards, and says so when it is too far to', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await click(page, at(0, 0))
   await click(page, at(2000, 2000))
   await page.keyboard.press('Shift+X')
@@ -607,7 +607,7 @@ test('offsets a curve and an arc into their own kinds, and tells what cannot be 
   await click(page, at(-500, 0))
   await click(page, at(-1500, 1000))
   // An ellipse that is no circle has nothing parallel to it of its kind.
-  await page.keyboard.press('o')
+  await command(page, 'o')
   await click(page, at(0, 2500))
   await click(page, at(2000, 3500))
   await page.keyboard.press('Shift+X')
@@ -628,7 +628,7 @@ test('offsets a curve and an arc into their own kinds, and tells what cannot be 
 
 test('offsets a wall into a wall like it, at a distance typed between their lines', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await click(page, at(0, 0))
   await click(page, at(4000, 0))
   await page.keyboard.press('Escape')
@@ -652,7 +652,7 @@ test('fixes a socket on the face of a wall beside the pointer, at its height, an
   const box = (await canvas(page).boundingBox())!
   const at = (x: number, y: number) => ({ x: box.x + 320 + x / 10, y: box.y + 220 + y / 10 })
   // A wall 200 thick along y = 0: its faces at y = -100 and y = 100.
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await click(page, at(0, 0))
   await click(page, at(4000, 0))
   await page.keyboard.press('Escape')
@@ -661,7 +661,7 @@ test('fixes a socket on the face of a wall beside the pointer, at its height, an
   // Beside the wall, below it: on its lower face, standing out of it downwards, by the grid along it.
   await click(page, at(1530, 300))
   await page.keyboard.press('Escape')
-  await page.keyboard.press('v')
+  await command(page, 'v')
   const socket = async () => (await saved(page)).find((n) => n.type === 'parametric')
   expect(await socket()).toMatchObject({ kind: 'elec.socket', x: 1500, y: 100, rotation: 0 })
   // The wall moved down 1 m: the socket stays on its face.
@@ -680,7 +680,7 @@ test('fixes a socket on the face of a wall beside the pointer, at its height, an
 test('draws an elevation of the face of a wall beside the pointer, put down where it is clicked', async ({ page }) => {
   const at = await blank(page)
   // A wall 200 thick along y = 0, from 0 to 4 m: its lower face at y = 100.
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await click(page, at(0, 0))
   await click(page, at(4000, 0))
   await page.keyboard.press('Escape')
@@ -763,10 +763,10 @@ test('keeps a socket dragged in an elevation to one way with Shift, on the wall 
 
 test('says the unit of lengths and angles in their fields, faint after the number', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await click(page, at(0, 0))
   await click(page, at(1000, 1000))
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await click(page, at(1000, 500))
   const unitOf = (name: string) => page.locator('.field', { has: page.locator(`span:text-is("${name}")`) }).locator('.field-unit')
   await expect(unitOf('X')).toHaveText('mm')
@@ -780,10 +780,10 @@ test('says the unit chosen in Preferences in the fields of lengths', async ({ pa
   await recordSaves(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('r')
+  await command(page, 'r')
   await page.mouse.click(box.x + 320, box.y + 220)
   await page.mouse.click(box.x + 420, box.y + 320)
-  await page.keyboard.press('v')
+  await command(page, 'v')
   await page.mouse.click(box.x + 420, box.y + 270)
   await expect(page.locator('.field', { has: page.locator('span:text-is("X")') }).locator('.field-unit')).toHaveText('cm')
 })
@@ -798,7 +798,7 @@ test('has the electrical symbols without installing anything, all of them object
 test('draws a section by its line and puts its view down on the side it is seen from', async ({ page }) => {
   const at = await blank(page)
   // A wall across x = 2000, which the section crosses.
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await click(page, at(2000, -1000))
   await click(page, at(2000, 1000))
   await page.keyboard.press('Escape')
@@ -892,7 +892,7 @@ test('says which line a view is of, and makes it a view of another one picked fr
 
 test('puts a hob against the wall beside the pointer, its back on the face and its middle under the pointer', async ({ page }) => {
   const at = await blank(page)
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await click(page, at(0, 0))
   await click(page, at(4000, 0))
   await page.keyboard.press('Escape')

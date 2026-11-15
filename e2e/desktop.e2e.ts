@@ -1,3 +1,4 @@
+import { command } from './support'
 import { _electron as electron, expect, test, type Page } from '@playwright/test'
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -43,7 +44,7 @@ test('desktop: opens the file it is started with, saves over it with a backup an
     const box = (await page.locator('.stage canvas').boundingBox())!
     const walls = () => readFileSync(file, 'utf8').match(/"type": "wall"/g)?.length ?? 0
     const drawAndSave = async (y: number) => {
-      await page.keyboard.press('w')
+      await command(page, 'w')
       await page.mouse.click(box.x + 300, box.y + y)
       await page.mouse.click(box.x + 700, box.y + y)
       await page.keyboard.press('Escape')

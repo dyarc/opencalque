@@ -47,14 +47,24 @@ export const objectRows = (page: Page) => page.locator('[data-panel="objects"] .
 /** A section of the object library, in the list on its left, by its name. */
 export const librarySection = (page: Page, name: string) => page.locator('.warehouse-section', { has: page.locator('.warehouse-section-name', { hasText: new RegExp(`^${name}$`) }) })
 
+/**
+ * Selects a tool or runs a command by its word, as the app takes it: one to three letters, then
+ * Space (commands.ts, `handleCommandBuffer`). A letter on its own only starts the word and waits,
+ * so pressing "w" alone leaves the wall tool unselected.
+ */
+export async function command(page: Page, word: string) {
+  await page.keyboard.press(word)
+  await page.keyboard.press('Space')
+}
+
 /** Draws a wall from one point of the canvas to another, in CSS pixels from its top-left corner. */
 export async function drawWall(page: Page, from: [number, number], to: [number, number]) {
   const box = (await canvas(page).boundingBox())!
-  await page.keyboard.press('w')
+  await command(page, 'w')
   await page.mouse.click(box.x + from[0], box.y + from[1])
   await page.mouse.click(box.x + to[0], box.y + to[1])
   await page.keyboard.press('Escape')
-  await page.keyboard.press('v')
+  await command(page, 'v')
 }
 
 /** Chooses a file for the next file dialog the page opens. */
