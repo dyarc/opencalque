@@ -318,6 +318,9 @@ function Hints() {
   const opening = useStore((s) => s.placing?.type === 'parametric' && Boolean(registry.parametric.get(s.placing.kind)?.opening))
   const mounted = useStore((s) => s.placing?.type === 'parametric' && Boolean(registry.parametric.get(s.placing.kind)?.mount))
   const view = useStore((s) => (s.placing?.type === 'elevation' ? (s.placing.sided ? 'section' : 'elevation') : null))
+  const pasting = useStore((s) => s.placing?.type === 'paste')
+  const copying = useStore((s) => s.copyMode)
+  const brushing = useStore((s) => s.brush !== null)
   // Whether Shift+Space would flip something: the wall tool drawing by a face, a door being placed.
   const flips = useStore((s) => (s.tool === 'wall' ? s.wallJustify !== 'center' : canFlipSide()))
   // With the select tool, a preview in progress is an object being moved, reshaped, scaled or turned.
@@ -357,7 +360,7 @@ function Hints() {
   else if (dragging && boxed) hints = [['Shift', t('keeps its proportions, from a corner')], ['Alt', t('ignores the grid and snapping')]]
   else if (boxed) hints = [['', t('Drag the middle of a side to change one size, a corner to change both')], ['', t('the knob above turns it')]]
   else if (dragging) hints = walls ? [['', t('Joined walls stretch to stay joined')], ['↑ ←', t('holds it upright or level')], ['Alt', t('moves it alone, off the grid')]] : [['Shift', t('keeps an end on its own line, or level, upright or at 45° with its other end')], ['↑ ←', t('holds it upright or level')], ['Alt', t('ignores the grid and snapping')]]
-  else hints = hintsFor(tool, step, opening, selected, flips, mounted, view)
+  else hints = hintsFor(tool, step, opening, selected, flips, mounted, view, pasting, copying, brushing)
   // With nothing else to say, inside a component: what its space is.
   if (hints.length === 0 && inside) hints = [['', t(inside)]]
   if (hints.length === 0 || browsing) return null

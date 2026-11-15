@@ -115,6 +115,25 @@ export function wallLength(wall: { a: Vec2; b: Vec2; bulge?: number }): number {
   return courseOf(wall).length
 }
 
+/**
+ * How far round a circle of `radius` a chord reaches: the length of wall a door or a window takes,
+ * whose width is kept in the drawing as the chord its two ends span. A chord wider than the
+ * diameter takes half the circle.
+ */
+export function arcLengthOfChord(radius: number, chord: number): number {
+  if (!(radius > 0)) return Math.abs(chord)
+  return 2 * radius * Math.asin(Math.min(1, Math.max(0, chord) / (2 * radius)))
+}
+
+/**
+ * The chord that spans `length` of a circle of `radius`: the width a door or a window is kept at,
+ * to take that much wall round the curve. Half the circle is the most, which is the diameter.
+ */
+export function chordOfArcLength(radius: number, length: number): number {
+  if (!(radius > 0)) return Math.abs(length)
+  return 2 * radius * Math.sin(Math.min(Math.PI, Math.max(0, length) / (2 * radius)))
+}
+
 /** The middle of a wall's middle line: for a curved wall, the top of its curve. */
 export function wallMiddle(wall: { a: Vec2; b: Vec2; bulge?: number }): Vec2 {
   const course = courseOf(wall)
@@ -136,6 +155,17 @@ export function wallParallel(wall: { a: Vec2; b: Vec2; bulge?: number }, across:
   const stops = course.stops.length > 0 ? course.stops : [0, course.length]
   const line = stops.map((s) => course.offset(s, across))
   return extend > 0 ? [sub(line[0], scale(course.dir(0), extend)), ...line, add(line[line.length - 1], scale(course.dir(course.length), extend))] : line
+}
+
+/**
+ * A wall's line, or a line beside it, between two distances along it (mm from `a`), as points:
+ * sampled round its curve as the whole wall is, and stopping at its ends.
+ */
+export function wallStretch(wall: { a: Vec2; b: Vec2; bulge?: number }, from: number, to: number, across = 0): Vec2[] {
+  const course = courseOf(wall)
+  const [s0, s1] = [Math.max(0, Math.min(from, to)), Math.min(course.length, Math.max(from, to))]
+  if (!(s1 - s0 > 1e-6)) return []
+  return [s0, ...course.stops.filter((s) => s > s0 && s < s1), s1].map((s) => course.offset(s, across))
 }
 
 /** How far a point is from a wall's line. */

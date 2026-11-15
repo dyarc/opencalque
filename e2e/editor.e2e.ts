@@ -88,40 +88,76 @@ test('opens a drawing that needs repairs, and says so; refuses one from a newer 
   await expect(objectRows(page)).toHaveCount(2)
 })
 
-test('pastes where one is looking: a cut thing back in place, a copy beside it, else in the middle of the view', async ({ page, context }) => {
+test('pastes what was copied so that it follows the pointer, and puts it down where it is clicked', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await startWith(page)
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   await drawWall(page, [300, 300], [700, 300])
-  const x1 = page.locator('label.field', { has: page.locator('span:text-is("X1")') }).locator('input')
+  const field = (name: string) => page.locator('label.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
   await objectRows(page).first().click()
-  await expect(x1).toHaveValue('-200')
+  await expect(field('X1')).toHaveValue('-200')
 
-  // Cut and pasted while in view, it comes back exactly where it was.
+  // Cut and pasted in place, it comes back exactly where it was.
   await page.keyboard.press('Control+x')
   await expect(objectRows(page)).toHaveCount(0)
-  await page.keyboard.press('Control+v')
+  await page.keyboard.press('Control+Shift+v')
   await expect(objectRows(page)).toHaveCount(1)
-  await expect(x1).toHaveValue('-200')
+  await expect(field('X1')).toHaveValue('-200')
 
-  // Copied, it is pasted beside the original, and the next paste beside that one: two steps of the 100 mm grid each time.
+  // Copied, it follows the pointer, its middle under it, and a click puts it down there: at 10 mm a
+  // pixel with the origin at (320, 220), (500, 500) is 1800, 2800 mm, and a 4000 mm wall centred
+  // there runs from -200 to 3800.
   await page.keyboard.press('Control+c')
   await page.keyboard.press('Control+v')
-  await expect(x1).toHaveValue('0')
-  await page.keyboard.press('Control+v')
-  await expect(x1).toHaveValue('200')
+  // Nothing is added until the pointer says where.
+  await expect(objectRows(page)).toHaveCount(1)
+  await page.mouse.move(box.x + 500, box.y + 500)
+  await page.mouse.click(box.x + 500, box.y + 500)
+  await expect(objectRows(page)).toHaveCount(2)
+  await expect(field('X1')).toHaveValue('-200')
+  await expect(field('Y1')).toHaveValue(/^2\s?800$/)
 
-  // Looked at from elsewhere, it lands in the middle of the view.
-  await page.mouse.move(box.x + 600, box.y + 400)
-  await page.mouse.down({ button: 'middle' })
-  await page.mouse.move(box.x + 1200, box.y + 400, { steps: 5 })
-  await page.mouse.up({ button: 'middle' })
+  // Esc puts it down nowhere: what was copied is not added.
   await page.keyboard.press('Control+v')
-  await expect(objectRows(page)).toHaveCount(4)
-  const pasted = Number((await x1.inputValue()).replace(/\s/g, ''))
-  // The view moved 600 px, 6 m at this zoom: the wall's place is now off to the right, out of sight.
-  expect(pasted).toBeLessThan(-4000)
+  await page.mouse.move(box.x + 700, box.y + 600)
+  await page.keyboard.press('Escape')
+  await expect(objectRows(page)).toHaveCount(2)
+  // Pasted and clicked without moving the pointer first: it is still put down where the pointer is.
+  // (The clipboard is read as a promise, so the placing is armed a moment after the key.)
+  await page.keyboard.press('Control+v')
+  await page.waitForTimeout(300)
+  await page.mouse.click(box.x + 700, box.y + 600)
+  await expect(objectRows(page)).toHaveCount(3)
+})
+
+test('shows the wall an opening cut away while its handle is dragged, and snaps to it', async ({ page }) => {
+  await startWith(page)
+  await recordSaves(page)
+  await openEditor(page)
+  // The wall's faces are at y = -70 and 130: off the grid the pointer would fall on.
+  await choose(
+    page,
+    () => page.keyboard.press('Control+o'),
+    'ghost.adg',
+    drawing({
+      w: { id: 'w', type: 'wall', parent: 'page_1', layer: 'layer_1', order: 'a1', a: { x: 0, y: 30 }, b: { x: 4000, y: 30 }, thickness: 200 },
+      d: { id: 'd', type: 'parametric', parent: 'page_1', layer: 'layer_1', order: 'a2', kind: 'arch.door', props: { width: 1200 }, x: 1400, y: 30, rotation: 0 },
+    }),
+  )
+  await objectRows(page).filter({ hasText: 'Door' }).click()
+  const at = await drawingOnScreen(page)
+  // Its start dragged to 2000, -60, inside where the opening cut the wall away: the ghost's face
+  // takes it to y = -70, which no grid point and no drawn line there would.
+  await page.mouse.move(...at(1400, 30))
+  await page.mouse.down()
+  await page.mouse.move(...at(2000, -60), { steps: 6 })
+  await page.mouse.up()
+  await page.keyboard.press('Control+s')
+  const doc = JSON.parse(await page.evaluate(() => (window as any).saves.at(-1)))
+  expect(doc.nodes.d.x).toBeCloseTo(2000, 6)
+  expect(doc.nodes.d.y).toBeCloseTo(-70, 6)
+  expect(doc.nodes.d.props.width).toBeCloseTo(Math.hypot(600, 100), 3)
 })
 
 test('pastes a picture copied in another program as it is, rather than what was copied here before', async ({ page, context }) => {
@@ -455,7 +491,7 @@ test('makes a wall longer by the line across its free end, in its own direction;
   await expect(field('X2')).toHaveValue('1800')
   // On its end line, 8 px off the point at its end: the pointer says sideways, and the hints what a drag does.
   await page.mouse.move(box.x + 500, box.y + 308)
-  await expect(canvas(page)).toHaveCSS('cursor', 'ew-resize')
+  await expect(canvas(page)).toHaveCSS('cursor', /ew-resize/)
   await expect(page.locator('.hint-bar')).toContainText('Drag the end to make the wall longer or shorter')
   // Dragged out and down: it only gets longer, level as it was.
   await page.mouse.down()
@@ -600,7 +636,7 @@ test('moves the step between two walls in line by the line across the end of eit
   await objectRows(page).last().click()
   // On the step, beside the thinner wall: the pointer says along the wall.
   await page.mouse.move(...at(3000, 150))
-  await expect(canvas(page)).toHaveCSS('cursor', 'ew-resize')
+  await expect(canvas(page)).toHaveCSS('cursor', /ew-resize/)
   await page.mouse.down()
   await page.mouse.move(...at(4000, 170), { steps: 5 })
   await page.mouse.up()
@@ -1353,7 +1389,8 @@ test('turns a compass by its knob, its box turning with it, and turns it again f
   const centre = { x: 320 + x * 0.1, y: 220 + y * 0.1 }
   const grabs = async (at: { x: number; y: number }) => {
     await page.mouse.move(box.x + at.x, box.y + at.y)
-    return (await canvas(page).evaluate((el) => el.style.cursor)) === 'grab'
+    // The canvas's own pointer (`cursors.ts`): a picture of a hand, with `grab` to fall back on.
+    return (await canvas(page).evaluate((el) => el.style.cursor)).endsWith('grab')
   }
   // The knob is above the middle of the box, which is as wide each side of the compass's centre.
   const above: number[] = []
@@ -1461,7 +1498,7 @@ test('with Shift, a dimension keeps level and stops on the line it crosses', asy
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.click(box.x + 500, box.y + 400)
   // From a point left of it, Shift held, the pointer a little past its right side and below the start.
-  await command(page, 'm')
+  await command(page, 'di')
   await page.mouse.click(box.x + 200, box.y + 350)
   await page.keyboard.down('Shift')
   await page.mouse.move(box.x + 504, box.y + 356, { steps: 4 })
@@ -1505,7 +1542,7 @@ test('takes a thing out of a component: cut inside it, pasted on the page where 
   await expect(field('X')).toHaveValue('0')
   await page.keyboard.press('Control+x')
   await page.keyboard.press('Escape')
-  await page.keyboard.press('Control+v')
+  await page.keyboard.press('Control+Shift+v')
   // Two things on the page now: the placement of the emptied component, and the rectangle, on top, where it was seen.
   await expect(objectRows(page)).toHaveCount(2)
   await objectRows(page).first().click()
@@ -1578,7 +1615,7 @@ test('puts what is cut and pasted on top of what it was under', async ({ page, c
   await objectRows(page).nth(1).click()
   await expect(x).toHaveValue('-200')
   await page.keyboard.press('Control+x')
-  await page.keyboard.press('Control+v')
+  await page.keyboard.press('Control+Shift+v')
   await expect(objectRows(page)).toHaveCount(2)
   await objectRows(page).first().click()
   await expect(x).toHaveValue('-200')
@@ -1589,7 +1626,7 @@ test('measures and dimensions between the points clicked, not the grid points ne
   await openEditor(page)
   const box = (await canvas(page).boundingBox())!
   // At the first zoom the grid is 100 mm: these points, 4370 mm apart, are between its lines.
-  await command(page, 'm')
+  await command(page, 'di')
   await page.mouse.click(box.x + 300, box.y + 300)
   await page.mouse.move(box.x + 737, box.y + 300, { steps: 4 })
   await expect(page.locator('.status')).toContainText(/4\s?370/)

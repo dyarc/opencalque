@@ -134,6 +134,11 @@ export interface Overlay {
   edgeHover?: Vec2[][]
   /** The face of the selected wall that a press would drag, or that is being dragged, to change its thickness, as its stretches. */
   face?: Vec2[][]
+  /**
+   * The lines of the wall a door or a window cuts away, shown faintly while one of its handles is
+   * dragged: what the opening's own bow can be set to, where no wall line is drawn any more.
+   */
+  wallGhost?: Vec2[][]
   /** The boxes in which elevations show what is selected on the plan: the same objects, seen from in front. */
   inViews?: Bounds[]
   /**
@@ -1093,6 +1098,17 @@ export function drawScene(
       ctx.stroke()
     }
     ctx.lineCap = 'butt'
+  }
+  if (overlay.wallGhost) {
+    // The wall under an opening, faint and dotted: the lines the opening cut away, there to be
+    // snapped to, not to be taken for the drawing's own.
+    ctx.setLineDash([2, 4])
+    ctx.lineWidth = 1
+    ctx.strokeStyle = 'rgb(107 122 144 / 75%)'
+    ctx.beginPath()
+    for (const line of overlay.wallGhost) line.map(toScreen).forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
+    ctx.stroke()
+    ctx.setLineDash([])
   }
   if (overlay.clearances) {
     // Thin, grey and dashed, so as not to be taken for dimensions of the drawing, with a tick across

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { architecture } from '../../ext-architecture/src'
-import { Registry } from '../src'
+import { kindOf, Registry } from '../src'
 
 const registry = new Registry().use(architecture)
 const window = registry.parametric.get('arch.window')!
@@ -37,5 +37,27 @@ describe('doors and windows seen from in front', () => {
 
   it('a window with a sill height that is not a number stands at the usual one rather than failing', () => {
     expect(extent(window.front!(registry.resolveProps(window, { sillHeight: 'high' as never }))).bottom).toBe(-900)
+  })
+})
+
+const doorOn = (props: Record<string, unknown>) =>
+  ({ id: 'd', type: 'parametric', parent: 'page_1', order: 'a0', kind: 'arch.door', props, x: 1000, y: 2000 }) as never
+
+describe('a door or a window on the canvas', () => {
+  it('has two handles on the lines it draws at the middle of its sides when its shape is curved', () => {
+    const straight = doorOn({ width: 800 })
+    expect(kindOf(straight).handles!(straight, registry)).toHaveLength(2)
+    const curved = doorOn({ width: 800, shape: 'Curved', bow: 0 })
+    // On the two lines, half the wall to either side of the middle: 200 mm of wall, with no
+    // drawing to say otherwise.
+    expect(kindOf(curved).handles!(curved, registry)).toHaveLength(4)
+    expect(kindOf(curved).handles!(curved, registry).slice(2)).toEqual([
+      { x: 1400, y: 1900 },
+      { x: 1400, y: 2100 },
+    ])
+    // Dragging one puts the line it is on where the pointer is: 200 mm out is a bow of 300 on
+    // that side, and the same on the other side a bow of -300.
+    expect(kindOf(curved).moveHandle!(curved, 2, { x: 1400, y: 2200 }, registry)).toMatchObject({ props: { shape: 'Curved', bow: 300 } })
+    expect(kindOf(curved).moveHandle!(curved, 3, { x: 1400, y: 1800 }, registry)).toMatchObject({ props: { bow: -300 } })
   })
 })

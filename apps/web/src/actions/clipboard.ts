@@ -1,8 +1,8 @@
-import { buildScene, clipPlacement, copyNodes, isClipboard, paperContents, parseDocument, pasteNodes, pasteOffset, relocateClip, rootOf, withPlacement, type Document, type Node, type Op, type Transform } from '@opencalque/core'
+import { buildScene, clipPlacement, copyNodes, isClipboard, pagesOf, paperContents, parseDocument, pasteNodes, pasteOffset, relocateClip, rootOf, sceneBounds, withPlacement, type Document, type Node, type Op, type Transform } from '@opencalque/core'
 import { registry } from '../extensions'
 import { placePicture } from '../floorplan'
 import { t } from '../i18n'
-import { apply, select, useStore } from '../store'
+import { apply, select, setTool, useStore } from '../store'
 import { gridStep, visibleArea } from '../view'
 import { toast } from '../windows'
 import { guarded } from './common'
@@ -95,11 +95,24 @@ function clipOf(text: string): Document | null {
 }
 
 /**
- * Pastes what is on the clipboard where the person is looking (see `pasteOffset`): where it was
- * when that is in view, beside it when the original is still there, else in the middle of the
- * view; chosen from the right-click menu, where the menu was opened. `inPlace` puts it exactly
- * where it was copied from, in view or not, which carries a thing to the same place on another page.
- * A picture copied in another program is pasted as it is (`placePicture`), at the same place.
+ * Copies the selection from a point picked on the drawing (`copyFromPoint`): the copies take the
+ * place the picked point is put at, so they keep their place relative to it — a corner of a table
+ * clicked stays the corner under the pointer — and every click leaves a copy where it is and goes
+ * on from the same point for another, until Esc. With nothing selected, the first click picks what
+ * to copy. The copies are only shown until they are put down, so Esc leaves nothing behind.
+ */
+export const copyFromPoint = (): void => {
+  setTool('move')
+  useStore.setState({ copyMode: true })
+}
+
+/**
+ * Pastes what is on the clipboard. From the keyboard it follows the pointer, its middle under it,
+ * to be put down with a click, so that it lands where it is wanted rather than only where it was or
+ * beside it; from the right-click menu it lands where the menu was opened, and in place
+ * (`Mod+Shift+V`) exactly where it was copied, in view or not, which carries a thing to the same
+ * place on another page. A picture copied in another program is pasted as it is (`placePicture`),
+ * at the same place.
  */
 export const paste = (inPlace = false) => {
   // Read now, before the clipboard is: the menu that set it is gone by the time that answers.
@@ -114,10 +127,21 @@ export const paste = (inPlace = false) => {
     const to = scopePlacement()
     if (from && to) clip = relocateClip(clip, from, to, registry)
     const { doc, scope, activeLayer, view, viewport } = get()
-    const visible = visibleArea(view, viewport)
     // A step that shows at any zoom (two grid steps are at least 16 pixels) and keeps the grid.
-    const offset = inPlace ? { x: 0, y: 0 } : pasteOffset(doc, clip, scope, registry, { visible, step: 2 * gridStep(view.zoom), at })
+    const offset = at && !inPlace ? pasteOffset(doc, clip, scope, registry, { visible: visibleArea(view, viewport), step: 2 * gridStep(view.zoom), at }) : { x: 0, y: 0 }
     const result = pasteNodes(doc, clip, scope, offset, activeLayer)
-    if (apply(result.ops)) select(result.ids)
+    // Chosen from the menu where it was opened, or put down at once where it was copied: there is
+    // nothing left for the pointer to say.
+    if (inPlace || at) {
+      if (apply(result.ops)) select(result.ids)
+      return
+    }
+    // Else it is a paste to be put down by hand: its middle is what the pointer takes hold of
+    // (`Placing` 'paste'), so nothing appears until the pointer says where.
+    const page = pagesOf(clip)[0]
+    const box = page ? sceneBounds(buildScene(clip, page.id, registry)) : null
+    const mid = box ? { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 } : { x: 0, y: 0 }
+    select([])
+    setTool('place', { type: 'paste', ops: result.ops, doc: result.doc, ids: result.ids, mid })
   })
 }

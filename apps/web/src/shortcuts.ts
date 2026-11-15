@@ -73,3 +73,14 @@ export function settleShortcuts(overrides: Overrides, commands: { id: string; ke
   }
   return Object.fromEntries(settled)
 }
+
+/**
+ * The shortcut a key event stands for, e.g. "Mod+Shift+S", or null for a bare modifier. Letters
+ * follow the keyboard layout; digits follow the key's position, so Shift+1 works on any layout.
+ */
+export function eventKey(e: KeyboardEvent): string | null {
+  if (['Control', 'Shift', 'Alt', 'Meta', 'AltGraph'].includes(e.key)) return null
+  const digit = /^Digit(\d)$/.exec(e.code)
+  const name = digit ? digit[1] : e.key === ' ' ? 'Space' : e.key.length === 1 ? e.key.toUpperCase() : e.key
+  return [(e.ctrlKey || e.metaKey) && 'Mod', e.altKey && 'Alt', e.shiftKey && 'Shift', name].filter(Boolean).join('+')
+}

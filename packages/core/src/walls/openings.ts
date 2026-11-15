@@ -2,7 +2,7 @@ import { isVisible, leavesOf, rootOf } from '../document'
 import { add, applyTransform, dist, perp, scale, sub, type Vec2 } from '../geometry'
 import type { Registry } from '../registry'
 import type { Document, Node, NodeOf } from '../schema'
-import { courseOf, distToBody, dot, laidAgainst, middleAcross, tidy, wallArc, wallSides, type Wall } from './course'
+import { arcLengthOfChord, courseOf, distToBody, dot, laidAgainst, middleAcross, tidy, wallArc, wallSides, type Wall, type WallArc } from './course'
 import { cellKey, current, drawnWith, wallIndex, wallsIn } from './spatial'
 
 /*
@@ -177,6 +177,12 @@ export function hostWall(doc: Document, node: Node, registry: Registry): Wall | 
   return wallsIn(doc, node.parent).find((wall) => overlap(wall, span)) ?? null
 }
 
+/** The arc of the wall a door or a window sits in: the curve it is bent to and measured round, or null on a straight wall. */
+export function openingArc(doc: Document, node: Node, registry: Registry): WallArc | null {
+  const wall = hostWall(doc, node, registry)
+  return wall ? wallArc(wall) : null
+}
+
 /**
  * Where to put an opening so that it sits on the wall nearest to `p`: centred under the cursor,
  * turned to follow the wall and opening towards the cursor's side. Returns null when no wall is
@@ -208,22 +214,21 @@ export function snapOpeningToWall(
   if (!wall) return null
   const course = courseOf(wall)
   const length = course.length
-  const half = Math.abs(opening.to - opening.from) / 2
-  let t = Math.round((course.project(p).along - half) / step) * step + half
-  if (length >= 2 * half) t = Math.max(half, Math.min(length - half, t))
-  const d = course.dir(t)
-  // In the middle of the thickness, whichever line of the wall it is drawn by. A door is straight:
-  // in a curved wall it is a chord of the curve, its two ends on the middle of the thickness.
   const arc = wallArc(wall)
-  const on = course.offset(t, middleAcross(wall))
-  const radius = arc ? dist(on, arc.centre) : 0
-  const center = arc && half < radius ? add(arc.centre, scale(sub(on, arc.centre), Math.sqrt(radius ** 2 - half ** 2) / radius)) : on
-  const along = (Math.atan2(d.y, d.x) * 180) / Math.PI
-  const facing =
-    keepRotation === undefined
-      ? dot(sub(p, center), perp(d)) >= 0
-      : Math.cos(((keepRotation - along) * Math.PI) / 180) >= 0
+  const width = Math.abs(opening.to - opening.from)
+  // How much wall it takes, round the curve: a chord as wide as the opening, on the wall's circle.
+  const taken = arc ? arcLengthOfChord(arc.radius, width) : width
+  let from = Math.round((course.project(p).along - taken / 2) / step) * step
+  from = Math.max(0, Math.min(Math.max(0, length - taken), from))
+  const to = Math.min(length, from + taken)
+  // Both ends on the line the wall is drawn by, the opening laid from one to the other.
+  const start = course.offset(from, middleAcross(wall))
+  const end = course.offset(to, middleAcross(wall))
+  const along = (Math.atan2(end.y - start.y, end.x - start.x) * 180) / Math.PI
+  const facing = keepRotation === undefined ? dot(sub(p, start), perp(sub(end, start))) >= 0 : Math.cos(((keepRotation - along) * Math.PI) / 180) >= 0
   const rotation = (((along + (facing ? 0 : 180)) % 360) + 360) % 360
-  const offset = applyTransform({ x: (opening.from + opening.to) / 2, y: 0 }, { x: 0, y: 0, rotation, flipX: node.flipX })
-  return { x: tidy(center.x - offset.x), y: tidy(center.y - offset.y), rotation: tidy(rotation) }
+  // Facing the other way, the opening is laid from the far end back: its own origin is the end
+  // the pointer is nearest, so that it covers the same stretch of wall either way.
+  const origin = facing ? start : end
+  return { x: tidy(origin.x), y: tidy(origin.y), rotation: tidy(rotation) }
 }

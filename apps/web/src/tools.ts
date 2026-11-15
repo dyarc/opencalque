@@ -31,7 +31,7 @@ export type Hint = [key: string, text: string]
  * shown that cannot be used yet. Each hint is a key and what it does; an empty key is a plain
  * instruction, and the first one is always the next thing to do.
  */
-export function hintsFor(tool: Tool, step: number, opening: boolean, selected = false, flips = false, mounted = false, view: 'elevation' | 'section' | null = null): Hint[] {
+export function hintsFor(tool: Tool, step: number, opening: boolean, selected = false, flips = false, mounted = false, view: 'elevation' | 'section' | null = null, pasting = false, copying = false, brushing = false): Hint[] {
   const free: Hint = ['Alt', t('ignores the grid and snapping')]
   // What measures the drawing never takes a point from the grid (MEASURING in canvas/gesture.ts).
   const unsnapped: Hint = ['Alt', t('ignores snapping')]
@@ -55,11 +55,14 @@ export function hintsFor(tool: Tool, step: number, opening: boolean, selected = 
         ? [['', t('Click beside a wall for an elevation of its face on that side')], ['', t('click elsewhere to start a section line')]]
         : [['', t('Click where the section line ends')], ['Esc', t('cancels')]]
     case 'formatPainter':
-      return [
-        ['', t('Click an object to take its layer, stroke and ends')],
-        ['', t('then click each object to paint with them')],
-        ['Esc', t('stops painting')],
-      ]
+      // With an object's look held (`brushing`), the eyedropper's work is done: the brush paints.
+      return brushing
+        ? [['', t('Click an object to paint it with the look taken')], ['Esc', t('stops painting')]]
+        : [
+            ['', t('Click an object to take its layer, stroke and ends')],
+            ['', t('then click each object to paint with them')],
+            ['Esc', t('stops painting')],
+          ]
     case 'radialDimension':
       return step === 0 ? [['', t('Click an arc or a circle')], ['Esc', t('cancels')]] : [['', t('Click where the radius dimension goes')], ['Esc', t('cancels')]]
     case 'angleDimension':
@@ -105,9 +108,13 @@ export function hintsFor(tool: Tool, step: number, opening: boolean, selected = 
       if (step === 1) return [['', t('Click where the turn starts from: the line from the pivot to there')], angles, free, ['Esc', t('cancels')]]
       return [['', t('Click where that line goes: the selection turns with it')], ['0-9', t('type an exact angle')], ['Shift', t('keeps to 15° steps')], ['Alt', t('turns freely')], ['Esc', t('cancels')]]
     case 'move':
-      if (!selected) return [['', t('Select what to move first: click it')]]
-      if (step === 0) return [['', t('Click the point to move it by: a corner, a middle, a centre')], rested]
-      return [['', t('Click where that point goes')], typed, angles, held, ['Ctrl', t('leaves a copy there, for more copies')], ['Alt', t('ignores snapping, and leaves joined walls where they are')], ['Esc', t('cancels')]]
+      // Copying (`copyMode`), the step is the same, said in terms of copying; Ctrl is the switch
+      // between the two, and the pointer shows a + while it copies.
+      if (!selected) return copying ? [['', t('Select what to copy first: click it')]] : [['', t('Select what to move first: click it')]]
+      if (step === 0) return copying ? [['', t('Click the point to copy it from: a corner, a middle, a centre')], rested] : [['', t('Click the point to move it by: a corner, a middle, a centre')], rested]
+      return copying
+        ? [['', t('Click where the copy goes: it stays, for another')], typed, angles, held, ['Ctrl', t('switches back to moving it')], ['Alt', t('ignores snapping, and leaves joined walls where they are')], ['Esc', t('cancels')]]
+        : [['', t('Click where that point goes')], typed, angles, held, ['Ctrl', t('copies it instead, a + by the pointer')], ['Alt', t('ignores snapping, and leaves joined walls where they are')], ['Esc', t('cancels')]]
     case 'split':
       return [['', t('Click a wall, a line or a polyline where it should be cut')], ['', t('the lengths either side are shown')], ['Alt', t('ignores the grid')]]
     case 'trim':
@@ -131,6 +138,7 @@ export function hintsFor(tool: Tool, step: number, opening: boolean, selected = 
     case 'gridline':
       return step === 0 ? [['', t('Click where the grid line starts, at its bubble')], rested] : [['', t('Click where it ends')], typed, angles, free, ['', t('the next one takes the next letter or number')]]
     case 'place':
+      if (pasting) return [['', t('Click to put what was pasted down')], ['Esc', t('cancels')], free]
       if (view === 'section') return [['', t('Click where the view goes, on the side the section is seen from')], ['Esc', t('cancels')]]
       if (view) return [['', t('Click where the view goes')], ['Esc', t('cancels')]]
       if (opening) return [['', t('Click a wall to place it')], ['R', t('rotates')], ...flip(t('hinges it on its other side')), ['Alt', t('places it freely, off walls and grid')]]

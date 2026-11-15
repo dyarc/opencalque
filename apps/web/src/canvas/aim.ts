@@ -1,4 +1,4 @@
-import { boundsContainPoint, dist, norm, snapLinesOf, snapTo, sub, wallPoints, type Snap, type Vec2 } from '@opencalque/core'
+import { boundsContainPoint, dist, norm, snapLinesOf, snapTo, sub, wallPoints, type SceneItem, type Snap, type Vec2 } from '@opencalque/core'
 import { usePrefs } from '../prefs'
 import { gridStep } from '../view'
 import { MEASURING, SNAP_REACH, type Keys } from './gesture'
@@ -90,9 +90,10 @@ const stepFrom = (from: Vec2, dir: Vec2, t: number): Vec2 => ({ x: from.x + roun
  * another, of those the pointer rested on and `from`, a line ending at one of those carried on past
  * it, or `carried`, the line itself, or upright or level with one of them), else on the grid.
  * Shift holds it to 45° steps from `from`, where it still lines up with what is drawn
- * (`heldLine`); Alt turns snapping off.
+ * (`heldLine`); Alt turns snapping off. `extra` is what to snap to besides what is drawn: the lines
+ * of a wall a drag has cut away, shown as a ghost.
  */
-export function snap(c: Canvas, world: Vec2, e: Keys, exclude: string[], from?: Vec2, carried: Carried[] = []): Target {
+export function snap(c: Canvas, world: Vec2, e: Keys, exclude: string[], from?: Vec2, carried: Carried[] = [], extra: SceneItem[] = []): Target {
   const { zoom } = get().view
   const { snapToGrid, snapToObjects } = usePrefs.getState()
   if (e.altKey) return { p: world, marker: null }
@@ -107,7 +108,8 @@ export function snap(c: Canvas, world: Vec2, e: Keys, exclude: string[], from?: 
     return measuring ? heldMeasure(c, world, from, angle, exclude) : heldLine(c, world, from, angle, exclude)
   }
   const gridded = { x: Math.round(world.x / step) * step, y: Math.round(world.y / step) * step }
-  const hit = snapToObjects ? snapTo(c.snappable, world, SNAP_REACH / zoom, { exclude, from, gridded: onGrid ? gridded : undefined, aligners: trackedPoints(c), extensions: [...carried, ...carriedLines(c)] }) : null
+  const scene = extra.length > 0 ? [...c.snappable, ...extra] : c.snappable
+  const hit = snapToObjects ? snapTo(scene, world, SNAP_REACH / zoom, { exclude, from, gridded: onGrid ? gridded : undefined, aligners: trackedPoints(c), extensions: [...carried, ...carriedLines(c)] }) : null
   rest(c, hit)
   if (hit) {
     // A point of an object (or its centre) is taken exactly as it is, and so is what a place lined up with points

@@ -1,3 +1,4 @@
+import { eventKey } from './shortcuts'
 import { create } from 'zustand'
 import { platform } from './platform'
 import { buildScene, componentsOf, pagesOf, unusedComponents } from '@opencalque/core'
@@ -10,6 +11,7 @@ import {
   joinSelection,
   deleteUnusedComponents,
   copySelection,
+  copyFromPoint,
   cutSelection,
   duplicateSelection,
   exportDxf,
@@ -29,6 +31,7 @@ import {
   zoomToFit,
   zoomToSelection,
   selectAlike,
+  startPainter,
   nudgeSelection,
   transformSelection,
   addModifier,
@@ -190,6 +193,7 @@ const STATIC: Command[] = [
   { id: 'edit.paste', title: msg('Paste'), category: 'Edit', keys: ['Mod+V'], interrupts: true, run: () => paste() },
   { id: 'edit.pasteInPlace', title: msg('Paste in place'), category: 'Edit', keys: ['Mod+Shift+V'], interrupts: true, keywords: 'same position page floor', run: () => paste(true) },
   { id: 'edit.duplicate', title: msg('Duplicate selection'), short: msg('Duplicate'), category: 'Edit', keys: ['Mod+D'], interrupts: true, run: duplicateSelection },
+  { id: 'edit.copyFromPoint', title: msg('Copy the selection from a point'), category: 'Edit', keys: ['CO', 'CP'], interrupts: true, keywords: 'copy duplicate base point picked', run: copyFromPoint },
   {
     id: 'edit.selectAll',
     title: msg('Select all'),
@@ -354,7 +358,7 @@ const STATIC: Command[] = [
   { id: 'tool.beam', title: msg('Beam'), category: 'Tools', keys: ['BM'], keywords: 'girder structure', run: () => setTool('beam') },
   tool('wall', msg('Wall'), ['W', 'WA']),
   tool('dimension', msg('Dimension'), ['D', 'DIM']),
-  tool('measure', msg('Measure'), ['M', 'DI']),
+  tool('measure', msg('Measure'), ['DI', 'MEA']),
   tool('angle', msg('Measure an angle'), 'Shift+M'),
   tool('split', msg('Split'), ['K', 'SP']),
   tool('trim', msg('Trim'), ['X', 'TR']),
@@ -362,9 +366,16 @@ const STATIC: Command[] = [
   tool('fillet', msg('Fillet'), ['Shift+F', 'FIL']),
   tool('offset', msg('Offset a wall, a line or a shape'), ['O', 'OFF']),
   tool('rotate', msg('Rotate'), ['E', 'RO']),
-  tool('move', msg('Move'), ['Shift+E', 'MV']),
+  tool('move', msg('Move'), ['M', 'MV', 'Shift+E']),
   tool('eyedropper', msg('Eyedropper: copy the look of an object'), 'I'),
-  tool('formatPainter', msg('Format painter'), ['Shift+I', 'MA']),
+  {
+    id: 'tool.formatPainter',
+    title: msg('Format painter'),
+    category: 'Tools',
+    keys: ['Shift+I', 'MA'],
+    // What is selected when it is taken is what it paints with (`startPainter`).
+    run: startPainter,
+  },
   tool('text', msg('Text'), ['T', 'TE']),
   tool('annotation', msg('Annotation'), ['Shift+T', 'TX']),
   { id: 'tool.radialDimension', title: msg('Radius dimension'), category: 'Tools', keywords: 'radius arc circle R measure annotate', run: () => setTool('radialDimension') },
@@ -410,7 +421,8 @@ export function allCommands(): Command[] {
     ...(platform.showBackups ? [{ id: 'file.backups', title: msg('Show backups of drawings'), category: 'File', run: () => platform.showBackups?.() }] : []),
     // The desktop app looks for newer versions of itself; the web app is always the newest.
     ...(platform.checkForUpdate ? UPDATES : []),
-    ...[...registry.parametric.values()].map((kind): Command => ({
+    // Only what the library offers: a kind kept for old drawings (`hidden`) is not placed anew.
+    ...[...registry.parametric.values()].filter((kind) => !kind.hidden).map((kind): Command => ({
       id: `place.${kind.kind}`,
       title: t('Place: {name}', { name: t(kind.label) }),
       keywords: `Place ${kind.label}`,
@@ -505,16 +517,7 @@ function importShortcuts(): void {
   })
 }
 
-/**
- * The shortcut a key event stands for, e.g. "Mod+Shift+S", or null for a bare modifier. Letters
- * follow the keyboard layout; digits follow the key's position, so Shift+1 works on any layout.
- */
-export function eventKey(e: KeyboardEvent): string | null {
-  if (['Control', 'Shift', 'Alt', 'Meta', 'AltGraph'].includes(e.key)) return null
-  const digit = /^Digit(\d)$/.exec(e.code)
-  const name = digit ? digit[1] : e.key === ' ' ? 'Space' : e.key.length === 1 ? e.key.toUpperCase() : e.key
-  return [(e.ctrlKey || e.metaKey) && 'Mod', e.altKey && 'Alt', e.shiftKey && 'Shift', name].filter(Boolean).join('+')
-}
+export { eventKey } from './shortcuts'
 
 const SYMBOLS: Record<string, string> = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Backspace: '⌫', Delete: 'Del' }
 const MAC_MODIFIERS: Record<string, string> = { Mod: '⌘', Alt: '⌥', Shift: '⇧' }
@@ -549,8 +552,10 @@ export function onCommand(listener: (command: Command) => void): () => void {
 
 export function execute(command: Command): void {
   if (command.when && !command.when()) return
-  command.run()
+  // What the canvas has half done is abandoned before the command runs, not after it: a command
+  // that starts something of its own must not have it swept away by the sweep.
   for (const listener of listeners) listener(command)
+  command.run()
 }
 
 export const executeById = (id: string) => {
@@ -625,8 +630,10 @@ export function handleCommandBuffer(e: KeyboardEvent): boolean {
   if (e.key === ' ' && typed) {
     const word = typed
     typed = ''
-    const command = allCommands().find((c) =>
-      keysOf(c, useCommands.getState().overrides).some((key) => key.length <= 3 && /^[A-Z]{1,3}$/.test(key) && key === word),
+    // The first command the word belongs to that can be used now: R turns what is being placed and
+    // is the rectangle tool otherwise, as it is said to be where the two are listed.
+    const command = allCommands().find(
+      (c) => (!c.when || c.when()) && keysOf(c, useCommands.getState().overrides).some((key) => key.length <= 3 && /^[A-Z]{1,3}$/.test(key) && key === word),
     )
     if (command) execute(command)
     useStore.setState({ status: '' })

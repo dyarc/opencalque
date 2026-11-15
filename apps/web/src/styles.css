@@ -866,6 +866,13 @@ textarea::placeholder {
   color: var(--muted);
 }
 
+/* A value the panel only shows: what where the object is fixes, or a length of no direction. */
+.field > output {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+}
+
 .field > input:not([type]),
 .field > select {
   flex: 1;

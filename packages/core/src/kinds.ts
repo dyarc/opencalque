@@ -9,13 +9,13 @@ import { primitiveBounds, transformPrimitive, type Primitive } from './primitive
 import { tidy, turned, type Placing } from './similarity'
 import { sheetContentOf } from './templates'
 import type { Op } from './ops'
-import type { Registry } from './registry'
+import type { BuildEnv, ParametricKind, Registry } from './registry'
 import { DEFAULT_MATERIAL, type Asset, type Document, type DrawingSettings, type Node, type NodeOf, type NodeType, type WallEdge } from './schema'
 import { DEFAULT_PAPER_SCALE, paperFormat, paperSheet } from './papers'
 import { regionPerimeter, roomAt } from './rooms'
 import { drawElevationsWith, elevationPrimitives, moveViewCorner, moveViewEdge, moveViewEnd, seenArea } from './elevation'
 import { tablePrimitives } from './tables'
-import { bulgeThrough, heightAboveFloor, hostWall, materialSeams, mountOf, wallArc, wallMiddle, wallParallel, wallPoints, wallPolygons, wallSeams, wallOutlineRuns, wallSides, wallSpot } from './walls'
+import { arcLengthOfChord, bulgeThrough, chordOfArcLength, courseOf, heightAboveFloor, hostWall, materialSeams, mountOf, wallArc, wallMiddle, wallParallel, wallPoints, wallPolygons, wallSeams, wallOutlineRuns, wallSides, wallSpot } from './walls'
 
 export const DEFAULT_INK = '#1f1f1f'
 export const WALL_FILL = '#ffffff'
@@ -103,9 +103,9 @@ export interface NodeKind<N> {
   /** Patch that translates the node by `d`. */
   move(node: N, d: Vec2): Record<string, unknown>
   /** Points the user can drag to reshape the node. A parametric object's depend on its kind, found in `registry`. */
-  handles?(node: N, registry?: Registry): Vec2[]
+  handles?(node: N, registry?: Registry, doc?: Document): Vec2[]
   /** Patch that puts handle `index` at `p`. */
-  moveHandle?(node: N, index: number, p: Vec2, registry?: Registry): Record<string, unknown>
+  moveHandle?(node: N, index: number, p: Vec2, registry?: Registry, doc?: Document): Record<string, unknown>
   /** Points other geometry snaps to. Defaults to the vertices of the node's paths. */
   snapPoints?(node: N): Vec2[]
   /**
@@ -249,8 +249,18 @@ export function parametricPrimitives(node: NodeOf<'parametric'>, ctx: KindContex
   const kind = ctx.registry.parametric.get(node.kind)
   if (!kind) return placeholder(node.kind)
   try {
-    const env = kind.opening ? { wallThickness: hostWall(ctx.doc, node, ctx.registry)?.thickness } : {}
-    return kind.build(ctx.registry.resolveProps(kind, node.props), env)
+    const props = ctx.registry.resolveProps(kind, node.props)
+    const env: BuildEnv = {}
+    if (kind.opening) {
+      const wall = hostWall(ctx.doc, node, ctx.registry)
+      if (wall) {
+        env.wallThickness = wall.thickness
+        const width = Number(props[kind.size?.x ?? ''])
+        const curve = wallCurveFor(wall, node, width)
+        if (curve) env.wallCurve = curve
+      }
+    }
+    return kind.build(props, env)
   } catch {
     // A faulty extension must not take the whole drawing down with it.
     return placeholder(node.kind)
@@ -1298,23 +1308,80 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     },
     move: moveXY,
     // One whose kind says which of its lengths is its size along its X axis (a door's or a window's
-    // width) has the two ends of that size to drag, on that axis: each moves alone, the other
-    // staying where it is, so the object is stretched along a wall rather than scaled.
-    handles: (node, registry) => {
+    // width) has the two ends of that size to drag. An end goes to wherever the pointer is, and
+    // the object turns to lie from the end that stays to it, so it is stretched in any direction
+    // rather than only along the way it already lies. One whose kind says how it bows (a door or
+    // a window whose shape is Curved) has two more, at the middle of each side, which set that
+    // bow: how far out of its own middle line either is dragged, snapped to a wall face if need
+    // be, is how far it bows.
+    handles: (node, registry, doc) => {
       const size = stretchOf(node, registry)
-      return size ? [applyTransform({ x: 0, y: 0 }, node), applyTransform({ x: size.value, y: 0 }, node)] : []
+      if (!size) return []
+      const ends = [applyTransform({ x: 0, y: 0 }, node), applyTransform({ x: size.value, y: 0 }, node)]
+      // An opening on a curved wall takes its bend from the wall: there is no bow of its own to grab.
+      const wall = doc && registry ? hostWall(doc, node, registry) : null
+      if (wall && wallArc(wall)) return ends
+      const bow = bowOf(node, registry)
+      // The two that bow it are on the lines it draws, where its kind puts them.
+      if (!bow) return ends
+      return [...ends, ...bow.of.points(bow.props, bowEnv(node, doc, registry)).map((p) => applyTransform(p, node))]
     },
-    moveHandle: (node, index, p, registry) => {
+    moveHandle: (node, index, p, registry, doc) => {
       const size = stretchOf(node, registry)
       if (!size) return {}
-      // Where the pointer is along the object's own X axis; how far off that axis it is does not count.
-      const along = inverseTransform(p, node).x
       const tidy = (n: number) => Math.round(n * 1000) / 1000
-      if (index === 1) return { props: { ...node.props, [size.key]: tidy(Math.max(MIN_STRETCH, along)) } }
+      // On a curved wall the opening follows it: an end dragged along the wall lengthens it round
+      // the curve, and stops where the wall stops; its start moves round towards the end that
+      // stays. It never turns off the wall.
+      const wall = doc && registry ? hostWall(doc, node, registry) : null
+      if (wall && wallArc(wall)) {
+        const arc = wallArc(wall)
+        const course = courseOf(wall)
+        const place = (q: Vec2) => Math.max(0, Math.min(course.length, course.project(q).along))
+        // The chord two points of the wall make, and the way it runs: the opening is laid along
+        // it, so that both of its ends sit on the wall.
+        const chord = (a: number, b: number) => (arc ? chordOfArcLength(arc.radius, Math.abs(b - a)) : Math.abs(b - a))
+        const laidAlong = (a: number, b: number) => {
+          const [u, v] = [course.at(Math.min(a, b)), course.at(Math.max(a, b))]
+          return tidy((Math.atan2(v.y - u.y, v.x - u.x) * 180) / Math.PI)
+        }
+        const start = place({ x: node.x, y: node.y })
+        // How much wall it takes now, as a length round the curve.
+        const taken = arc ? arcLengthOfChord(arc.radius, size.value) : size.value
+        const end = start + taken
+        if (index === 1) {
+          const to = Math.max(start, Math.min(course.length, place(p)))
+          return { props: { ...node.props, [size.key]: tidy(chord(start, to)) }, rotation: laidAlong(start, to) }
+        }
+        const to = Math.max(0, Math.min(end, place(p)))
+        const at = course.at(to)
+        return { x: tidy(at.x), y: tidy(at.y), props: { ...node.props, [size.key]: tidy(chord(to, end)) }, rotation: laidAlong(to, end) }
+      }
+      const bow = bowOf(node, registry)
+      // A handle of the bow is a point of the line it draws: the kind says what the bow becomes
+      // when that point goes where the pointer is.
+      if (bow && index >= 2) return { props: { ...node.props, ...bow.of.drag(bow.props, index - 2, inverseTransform(p, node), bowEnv(node, doc, registry)) } }
+      // An end: it goes to the pointer, and the object turns to lie from the end that stays to
+      // it, so that its length can be brought out in any direction.
+      const start = applyTransform({ x: 0, y: 0 }, node)
+      const end = applyTransform({ x: size.value, y: 0 }, node)
+      // It lies from the end that stays to the pointer, or, when the start is the end dragged,
+      // from the pointer to the far end, which stays where it was.
+      const [from, to] = index === 1 ? [start, p] : [p, end]
+      const length = Math.max(MIN_STRETCH, dist(from, to))
+      // Mirrored across its own Y, the object is drawn towards its own -X: the turn it needs is
+      // half a turn less than the way the pointer lies from the end that stays.
+      const mirror = node.flipX ? 180 : 0
+      // A turn of less than a degree is the pointer snapped a hair to one side of the line the
+      // opening already lies on: it stays on that line, so that an end dragged along a wall does
+      // not tip the opening off it.
+      const turn = tidy((Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI - mirror)
+      const turned = node.rotation ?? 0
+      const difference = Math.abs((((turn - turned) % 360) + 540) % 360 - 180)
+      const rotation = dist(from, to) < 1e-6 || difference < 1 ? (node.rotation ?? 0) : turn
       // The start moves, and the insertion point with it: the end stays where it was.
-      const start = Math.min(along, size.value - MIN_STRETCH)
-      const at = applyTransform({ x: start, y: 0 }, node)
-      return { x: tidy(at.x), y: tidy(at.y), props: { ...node.props, [size.key]: tidy(size.value - start) } }
+      if (index === 0) return { x: tidy(p.x), y: tidy(p.y), props: { ...node.props, [size.key]: tidy(length) }, rotation }
+      return { props: { ...node.props, [size.key]: tidy(length) }, rotation }
     },
     transform: (node, t, registry) => {
       const patch: Record<string, unknown> = { ...t.point(node), rotation: t.angle(node.rotation), ...(t.mirror ? { flipX: !node.flipX } : {}) }
@@ -1336,6 +1403,42 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
 
 /** The least a parametric object is stretched to, in mm. */
 const MIN_STRETCH = 10
+
+/**
+ * How a parametric object bows, as its kind says (`bow`): the kind's own handles, and the
+ * parameters it is drawn from, or null when its shape is not the curved one.
+ */
+function bowOf(node: NodeOf<'parametric'>, registry: Registry | undefined): { of: NonNullable<ParametricKind['bow']>; props: Record<string, any> } | null {
+  const kind = registry?.parametric.get(node.kind)
+  const bow = kind?.bow
+  if (!kind || !bow) return null
+  const props = registry!.resolveProps(kind, node.props)
+  return props[bow.shapeKey] === bow.curved ? { of: bow, props } : null
+}
+
+/**
+ * How the wall an opening sits in bends, as the opening is drawn: the arc's radius, the half chord
+ * its width makes on it, the length of wall it takes round the curve, and the side the wall bows
+ * to. Null for a straight wall, or a width the circle cannot take.
+ */
+function wallCurveFor(wall: NonNullable<ReturnType<typeof hostWall>>, node: NodeOf<'parametric'>, width: number): BuildEnv['wallCurve'] {
+  const arc = wallArc(wall)
+  if (!arc) return undefined
+  // The width kept in the drawing is the chord: the arc through its ends is the wall's own.
+  const half = Math.max(1, Math.min(Number.isFinite(width) ? width : 0, 2 * arc.radius)) / 2
+  if (!(half > 0) || half > arc.radius) return undefined
+  // Which side of its own +Y the wall bows to, read from where the wall's middle is.
+  const turn = ((node.rotation ?? 0) * Math.PI) / 180
+  const up = { x: -Math.sin(turn), y: Math.cos(turn) }
+  const middle = wallMiddle(wall)
+  const side = (middle.x - node.x) * up.x + (middle.y - node.y) * up.y >= 0 ? 1 : -1
+  return { radius: arc.radius, half, side }
+}
+
+/** What the object is drawn in, as much of it as where its handles go needs: the wall it sits in. */
+function bowEnv(node: NodeOf<'parametric'>, doc: Document | undefined, registry: Registry | undefined): BuildEnv {
+  return doc && registry ? { wallThickness: hostWall(doc, node, registry)?.thickness } : {}
+}
 
 /** The length a parametric object is stretched by along its X axis, as its kind says (`size`), and what it is now; null for a kind that says none. */
 function stretchOf(node: NodeOf<'parametric'>, registry: Registry | undefined): { key: string; value: number } | null {

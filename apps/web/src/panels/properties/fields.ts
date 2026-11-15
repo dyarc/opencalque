@@ -1,4 +1,4 @@
-import { DEFAULT_MATERIAL, type Document, drawnSolid, type Node, OBJECT_FILL, TEXT_FIELDS, type Pattern } from '@opencalque/core'
+import { DEFAULT_MATERIAL, type Document, drawnSolid, type Node, OBJECT_FILL, openingArc, TEXT_FIELDS, type Pattern } from '@opencalque/core'
 import { msg, t } from '../../i18n'
 import { registry } from '../../extensions'
 
@@ -30,6 +30,16 @@ export interface FieldSpec {
   length?: boolean
   /** The number is an angle in degrees, which its box says. */
   angle?: boolean
+  /**
+   * The number is kept in the drawing as the chord it spans of a circle of this radius: a door's or a
+   * window's width, in a curved wall. It is shown and typed as the length of that arc instead.
+   */
+  arc?: number
+  /**
+   * A value fixed by where the object is, which is shown but not edited: an opening in a curved wall
+   * is bent by the wall, so its Shape is the wall's.
+   */
+  fixed?: string
   /** The property may be cleared by emptying the field. */
   optional?: boolean
   /** For a color: what an unset value means, e.g. "from layer". */
@@ -376,7 +386,8 @@ function roomFields(node: Extract<Node, { type: 'room' }>, doc: Document): Field
 /** The properties several objects all have, to be set on all of them at once. */
 export function commonFields(nodes: Node[], doc: Document): FieldSpec[] {
   const [first, ...rest] = nodes.map((node) => fieldsOf(node, doc))
-  return first.filter((field) => rest.every((fields) => fields.some((other) => other.path === field.path && other.type === field.type && other.label === field.label)))
+  // A width measured round another curve, or a value another object's place fixes, is another field.
+  return first.filter((field) => rest.every((fields) => fields.some((other) => other.path === field.path && other.type === field.type && other.label === field.label && other.arc === field.arc && other.fixed === field.fixed)))
 }
 
 /**
@@ -418,6 +429,14 @@ export function fieldsOf(node: Node, doc: Document): FieldSpec[] {
   if (node.type !== 'parametric') return drawnSolid(doc, node.parent) ? fields.map(placedFill) : fields
   const kind = registry.parametric.get(node.kind)
   const params = kind?.params ?? []
+  // In a curved wall an opening bends with the wall, and takes a length of it round the curve: the
+  // width kept in the drawing is the chord of that stretch, so the panel says the arc length. Its
+  // Shape is the wall's there, and is not the object's to set, and its bow is no use either: the
+  // bend is the wall's, so the Bow goes, to come back with the straight wall that needs it.
+  const arc = kind?.opening ? openingArc(doc, node, registry) : null
+  const size = kind?.size?.x
+  const shape = kind?.bow?.shapeKey
+  const bow = kind?.bow?.bowKey
   // Fixed on a wall, it stands at a height, its kind's usual one until another is typed.
   const height: FieldSpec[] = kind?.mount?.on === 'wall'
     ? [
@@ -425,15 +444,22 @@ export function fieldsOf(node: Node, doc: Document): FieldSpec[] {
         { path: 'showHeight', label: msg('Height on plan'), type: 'boolean', fallback: false },
       ]
     : []
-  const own = params.map((p): FieldSpec => ({
-    path: `props.${p.key}`,
-    label: p.label,
-    type: p.type,
-    length: p.unit === 'length',
-    angle: p.unit === 'angle',
-    fallback: p.default,
-    // A value may be said differently for one parameter: "Single" glazing is not a "Single" door.
-    options: p.options?.map((value) => ({ value, label: t(`${p.label}: ${value}`) !== `${p.label}: ${value}` ? `${p.label}: ${value}` : value })),
-  }))
+  const own = params.filter((p) => !(arc !== null && p.key === bow)).map((p): FieldSpec => {
+    const roundTheCurve = arc !== null && p.key === size
+    // The shape a curved wall gives it, which it then cannot be given another of.
+    const bentByWall = arc !== null && p.key === shape ? kind?.bow?.curved : undefined
+    return {
+      path: `props.${p.key}`,
+      label: roundTheCurve ? msg('Arc length') : p.label,
+      type: p.type,
+      length: p.unit === 'length',
+      angle: p.unit === 'angle',
+      fallback: p.default,
+      ...(roundTheCurve && arc ? { arc: arc.radius } : {}),
+      ...(bentByWall ? { fixed: bentByWall } : {}),
+      // A value may be said differently for one parameter: "Single" glazing is not a "Single" door.
+      options: p.options?.map((value) => ({ value, label: t(`${p.label}: ${value}`) !== `${p.label}: ${value}` ? `${p.label}: ${value}` : value })),
+    }
+  })
   return [...fields, ...height, ...own, ...STYLE]
 }

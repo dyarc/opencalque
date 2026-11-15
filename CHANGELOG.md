@@ -4,6 +4,27 @@ What changed in each version of AxioDraw. The app shows this list under About, a
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
+## 1.10.2 — 2026-11-15
+
+### New
+- The drawing area has **pointers of its own**: an arrow for selecting, a crosshair for drawing, an open and a closed hand for panning, four-way arrows for moving, an arrow with a + for copying while moving, the side and corner arrows of a box, and the format painter's eyedropper and brush. They are white with a dark outline, so they read on the light and the dark canvas alike, and they cost nothing: the browser paints them, and they change only when the pointer means something else.
+
+### Improved
+- **The format painter shows which half of its work it is at.** An object selected before the tool is taken is what it paints with: the pointer is a brush from the start, and the next clicks paint. With nothing selected the pointer is an eyedropper, the click takes that object's look, selects it — so the drawing shows what is being painted with — and the pointer becomes a brush. The hints say the same at each step.
+- **M and Space is the Move tool**, as in AutoCAD; the Measure tool is **DI** (`MEA` works too). `MV` and `Shift+E` still pick Move.
+- A door or a window in a curved wall is measured round the curve: its properties say **Arc length**, and the number typed is the length of wall it takes, worked back into the chord the drawing keeps, so 1500 typed takes 1500 mm of wall rather than spanning a 1500 mm chord. The size written beside it on the plan says the same, its **Shape** is the wall's there: shown as Curved, and not a choice to make, and its **Bow** is gone: the bend is the wall's.
+- **Copied from the keyboard**, what was copied follows the pointer, its middle under it, and a click puts it down; the view can be panned and zoomed meanwhile, and Esc gives it up. Pasted from the right-click menu it still lands where the menu was opened, and Paste in place (`Ctrl+Shift+V`) where it was copied from.
+- **Copy from a point** (type `CO` and Space, or Edit › Copy the selection from a point): pick a point on the selection or anywhere else — a corner it should be held by, snapped like any other point — and the copies follow the pointer with that point under it. Each click puts a copy down and the tool goes on for another; Esc gives up the copy not put down.
+- **Copying while moving is a switch, not a key to hold**: with the Move tool, press Ctrl (⌘) once and the pointer shows a **+**, and every click leaves a copy where it is put down and goes on from the same point for another; press Ctrl again and it moves again. Esc ends it. Letting go of Ctrl no longer changes whether the object was copied or moved.
+- A door or a window dragged by one of its handles shows the lines of the wall its opening cut away, faintly and dotted, and snaps to them: its bow can be set exactly to a face, and an end put on the wall's line, where the drawing had nothing left to snap to.
+- A door or a window is stretched by either of its ends to wherever the pointer goes, and turns to lie to it, so its length can be brought out in any direction rather than only along the way it already lay. A turn of less than a degree is no turn: an end dragged along a wall stays on it.
+- A curved door or window is bowed by two handles at the middle of its sides, one on each side, instead of a bow typed in Properties and a little off: dragging a handle to a wall's face snaps the arc to it exactly. Either side bows it, and its two faces stay where they were.
+
+### Fixed
+- A command word typed as letters and Space takes the first command it belongs to **that can be used now**: typing R was taken by "turn what is being placed", which does nothing unless something is being placed, so the Rectangle tool was never chosen, and the same for any word two commands share.
+- The curved door and the curved window are no longer objects of their own: the door and the window already have a Shape, so the copies that differed only in that default are gone from the object library. A drawing made with one still opens and draws as it did.
+
+
 ## 1.10.1 — 2026-11-15
 
 ### Fixed

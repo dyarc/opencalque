@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { eventKey } from './shortcuts'
 import { readShortcutsFile, settleShortcuts, shortcutsFile } from './shortcuts'
 
 describe('a file of keyboard shortcuts', () => {
@@ -57,4 +58,15 @@ describe('shortcuts loaded from a file', () => {
   it('leave the other commands with their defaults', () => {
     expect(settleShortcuts({ 'file.save': ['Mod+Alt+S'] }, commands)).toEqual({ 'file.save': ['Mod+Alt+S'] })
   })
+})
+
+it('a letter held with Shift is a chord, not the start of a word', () => {
+  const key = (event: KeyboardEvent) => eventKey(event)
+  const press = (over: Record<string, unknown>) => key({ key: 'D', code: 'KeyD', ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, ...over } as unknown as KeyboardEvent)
+  expect(press({})).toBe('D')
+  expect(press({ shiftKey: true })).toBe('Shift+D')
+  expect(press({ ctrlKey: true })).toBe('Mod+D')
+  expect(press({ altKey: true })).toBe('Alt+D')
+  // Shift with a digit is the digit's key, which is where a keyboard layout puts the sign.
+  expect(key({ key: '!', code: 'Digit1', ctrlKey: false, metaKey: false, altKey: false, shiftKey: true } as unknown as KeyboardEvent)).toBe('Shift+1')
 })

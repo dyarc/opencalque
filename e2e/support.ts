@@ -53,7 +53,7 @@ export const librarySection = (page: Page, name: string) => page.locator('.wareh
  * so pressing "w" alone leaves the wall tool unselected.
  */
 export async function command(page: Page, word: string) {
-  await page.keyboard.press(word)
+  for (const key of word) await page.keyboard.press(key)
   await page.keyboard.press('Space')
 }
 

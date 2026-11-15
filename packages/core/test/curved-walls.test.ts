@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyOps, boundsOf, buildScene, bulgeThrough, createDocument, dimensionChainOps, extendWallOps, hostWall, kindOf, parseDocument, quantities, Registry, roomAt, serializeDocument, snapOpeningToWall, splitWallOps, transformOps, wallArc, wallLength, wallMiddle, wallOpenings, wallPoints, type Document, type Op, type Vec2 } from '../src'
+import { applyOps, boundsOf, buildScene, bulgeThrough, courseOf, createDocument, dimensionChainOps, extendWallOps, hostWall, kindOf, parseDocument, quantities, Registry, roomAt, serializeDocument, snapOpeningToWall, splitWallOps, transformOps, wallArc, wallLength, wallMiddle, wallOpenings, wallPoints, wallStretch, type Document, type Op, type Vec2 } from '../src'
 
 // A door 900 wide, reduced to what matters here: the stretch of wall it cuts.
 const registry = new Registry().use({
@@ -107,6 +107,21 @@ describe('a curved wall', () => {
   it('is measured round its curve', () => {
     const [measured] = quantities(half, 'page_1', registry).walls
     expect(measured.length).toBeCloseTo((Math.PI * 2000) / 1000, 3)
+  })
+
+  it('gives a stretch of its line, or of a face, between two distances along it', () => {
+    const course = courseOf(arc)
+    // Round the curve, from the circle the wall follows, and stopping at its ends.
+    const stretch = wallStretch(arc, 1000, 2000)
+    expect(stretch[0]).toEqual(course.at(1000))
+    expect(stretch[stretch.length - 1]).toEqual(course.at(2000))
+    for (const p of stretch) expect(from({ x: 2000, y: 0 }, p)).toBeCloseTo(2000, 6)
+    // A face of it, half a thickness out, likewise.
+    for (const p of wallStretch(arc, 1000, 2000, 100)) expect(from({ x: 2000, y: 0 }, p)).toBeCloseTo(1900, 6)
+    expect(wallStretch(arc, -500, 100)[0].x).toBeCloseTo(arc.a.x, 6)
+    expect(wallStretch(arc, -500, 100)[0].y).toBeCloseTo(arc.a.y, 6)
+    expect(wallStretch(arc, wallLength(arc) - 500, wallLength(arc) + 500).at(-1)!.y).toBeCloseTo(arc.b.y, 6)
+    expect(wallStretch(arc, 2000, 2000)).toEqual([])
   })
 
   it('stays on its circle when a corner is put in it', () => {

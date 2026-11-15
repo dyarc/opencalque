@@ -1,4 +1,4 @@
-import { canSplit, hitTest, newId, roomAt, snapMountToWall, snapOpeningToWall, splitOps, splitPlace, trimOps, trimPlace, viewOfFace, wallFaceAt, wallSides, type Document, type NodeInput, type Op, type Vec2 } from '@opencalque/core'
+import { canSplit, hitTest, moveOps, newId, roomAt, snapMountToWall, snapOpeningToWall, splitOps, splitPlace, sub, trimOps, trimPlace, viewOfFace, wallFaceAt, wallSides, type Document, type NodeInput, type Op, type Vec2 } from '@opencalque/core'
 import { libraryOps, pickStyle } from '../../actions'
 import { registry } from '../../extensions'
 import { t } from '../../i18n'
@@ -20,6 +20,20 @@ import { extendHover, filletHover } from './fit'
  * tool. With nothing in progress, the pointer also shows where a drawing tool's point would go.
  */
 
+/**
+ * A paste put down with its middle at `p`: first the operations that add what was copied where it
+ * was copied from, then those that take it from there to the pointer (`Placing` 'paste').
+ */
+function pasteAt(placing: Extract<Placing, { type: 'paste' }>, p: Vec2): Op[] {
+  const delta = sub(p, placing.mid)
+  if (Math.abs(delta.x) < 1e-9 && Math.abs(delta.y) < 1e-9) return placing.ops
+  const moves = placing.ids.flatMap((id): Op[] => {
+    const node = placing.doc.nodes[id]
+    return node ? moveOps(placing.doc, node, delta) : []
+  })
+  return [...placing.ops, ...moves]
+}
+
 /** The look of what is clicked goes to the selection, or to what is drawn next. */
 export const eyedropperDown: Press = (c, _e, _at, world) => {
   const source = hitTest(c.scene, world, 5 / get().view.zoom)
@@ -31,8 +45,16 @@ export const eyedropperDown: Press = (c, _e, _at, world) => {
  * in with the first: the next ones are placements of that same one, not further copies. A table of
  * quantities, or an elevation, is put down once, and selected, to be set up.
  */
-export const placeDown: Press = (c) => {
+export const placeDown: Press = (c, e, _at, world) => {
   const { base, placing } = get()
+  // A paste is put down where the pointer is, whether or not it has been seen to follow it yet.
+  if (placing?.type === 'paste') {
+    if (!preview(pasteAt(placing, snap(c, world, e, placing.ids).p))) return
+    commit()
+    setTool('select')
+    select(placing.ids)
+    return
+  }
   if (!base) return
   if (placing?.type === 'table' || placing?.type === 'elevation') {
     const id = c.placed
@@ -172,7 +194,12 @@ export const toolHover: Move<'idle'> = (c, _g, e, _at, world, out) => {
     const face = wallFaceAt(s.base ?? s.doc, s.scope, world, MOUNT_REACH / s.view.zoom)
     if (face) out.face = [[face.a, face.b]]
     else out.marker = snap(c, world, e, []).marker
-  } else if (s.tool === 'place' && s.placing) {
+  } else if (s.tool === 'place' && s.placing?.type === 'paste') {
+    // What was pasted follows the pointer, its middle under it, until it is put down.
+    const target = snap(c, world, e, s.placing.ids)
+    out.marker = target.marker
+    out.previewed = preview(pasteAt(s.placing, target.p))
+  } else if (s.tool === 'place' && s.placing && s.placing.type !== 'paste') {
     const target = snap(c, world, e, [c.placed])
     out.marker = target.marker
     const common = { id: c.placed, rotation: s.placingRotation, parent: s.scope, ...layerHere(s), x: target.p.x, y: target.p.y }

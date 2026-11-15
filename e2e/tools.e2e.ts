@@ -379,20 +379,87 @@ test('moves the selection by a point of it onto a point of something else, and l
   await click(page, at(4000, 0))
   let rects = (await saved(page)).filter((n) => n.type === 'rect')
   expect(rects.map((r) => [r.x, r.y])).toEqual([[3500, -300], [3000, 0]])
-  // Taken again by its corner: with Ctrl each click leaves a copy and the tool goes on, the original staying.
+  // Taken again by its corner: Ctrl, pressed once, switches copying on, so each click leaves a copy
+  // where it is and the tool goes on from the same point, the original staying where it was.
   await click(page, at(3500, -300))
-  await page.keyboard.down('Control')
+  await page.keyboard.press('Control')
   await click(page, at(3000, 1000))
   await click(page, at(4000, 1000))
-  await page.keyboard.up('Control')
   await page.keyboard.press('Escape')
   rects = (await saved(page)).filter((n) => n.type === 'rect')
   expect(rects.map((r) => [r.x, r.y])).toEqual([[3500, -300], [3000, 0], [3000, 1000], [4000, 1000]])
 })
 
+/** The pointer the canvas shows, as the browser renders it: its own picture and the word it falls back on, so `, copy` is the + a moving copy shows. */
+const pointer = (page: Page) => canvas(page).evaluate((el) => getComputedStyle(el).cursor)
+
+test('switches copying on and off with Ctrl while moving, and goes on for another copy until Esc', async ({ page }) => {
+  const at = await blank(page)
+  await command(page, 'r')
+  await click(page, at(0, 0))
+  await click(page, at(1000, 600))
+  await command(page, 'v')
+  await objectRows(page).first().click()
+  await page.keyboard.press('Shift+E')
+  // Taken by its top-left corner. Nothing is held down: Ctrl is pressed once to switch copying on.
+  await click(page, at(0, 0))
+  await page.keyboard.press('Control')
+  await expect.poll(() => pointer(page)).toContain(', copy')
+  await page.mouse.move(at(2000, 0).x, at(2000, 0).y, { steps: 4 })
+  await expect(status(page)).toContainText('Copy, 2000')
+  await click(page, at(2000, 0))
+  // It stays there, and the tool goes on for another: the copies are not read back until the end,
+  // as saving ends the move (`file.save` interrupts).
+  await click(page, at(3000, 0))
+  // Ctrl again: it moves again, so the original goes, and that ends the move.
+  await page.keyboard.press('Control')
+  await expect.poll(() => pointer(page)).toContain(', crosshair')
+  await page.mouse.move(at(0, 1000).x, at(0, 1000).y, { steps: 4 })
+  await expect(status(page)).toContainText('Move by 1000')
+  await click(page, at(0, 1000))
+  const rects = (await saved(page)).filter((n) => n.type === 'rect')
+  expect(rects.map((r) => [r.x, r.y])).toEqual([
+    [0, 1000],
+    [2000, 0],
+    [3000, 0],
+  ])
+})
+
+test('copies the selection from a point picked on it, the copy keeping that point under the pointer', async ({ page }) => {
+  const at = await blank(page)
+  await command(page, 'r')
+  await click(page, at(0, 0))
+  await click(page, at(1000, 600))
+  await command(page, 'v')
+  await objectRows(page).first().click()
+  // CO copies the selection from a point: its top-left corner is picked, and every click puts a
+  // copy down with that corner where the pointer is.
+  await command(page, 'co')
+  await click(page, at(0, 0))
+  await click(page, at(2000, 1000))
+  await click(page, at(3000, 1000))
+  let rects = (await saved(page)).filter((n) => n.type === 'rect')
+  expect(rects.map((r) => [r.x, r.y])).toEqual([
+    [0, 0],
+    [2000, 1000],
+    [3000, 1000],
+  ])
+  // Esc gives up a copy not put down: nothing is added, and the tool is done with.
+  await page.keyboard.press('Escape')
+  await command(page, 'v')
+  await objectRows(page).first().click()
+  await command(page, 'co')
+  await click(page, at(0, 0))
+  await page.mouse.move(at(1000, 2000).x, at(1000, 2000).y, { steps: 5 })
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('Escape')
+  rects = (await saved(page)).filter((n) => n.type === 'rect')
+  expect(rects).toHaveLength(3)
+})
+
 test('reads a distance and an angle without adding anything', async ({ page }) => {
   const at = await blank(page)
-  await command(page, 'm')
+  await command(page, 'di')
   await click(page, at(0, 0))
   await page.mouse.move(at(3000, 0).x, at(3000, 0).y, { steps: 5 })
   await expect(status(page)).toContainText('Distance 3000')
@@ -404,6 +471,55 @@ test('reads a distance and an angle without adding anything', async ({ page }) =
   await expect(status(page)).toHaveText(/^Angle (90° · 270|270° · 90)°$/)
   await click(page, at(0, -1000))
   expect(await saved(page)).toEqual([])
+})
+
+test('the format painter takes its look from what is selected, or from a click, and paints with a brush', async ({ page }) => {
+  await startWith(page)
+  await recordSaves(page)
+  await openEditor(page)
+  const red = { stroke: '#e5484d' }
+  await choose(
+    page,
+    () => page.keyboard.press('Control+o'),
+    'paint.adg',
+    drawing({
+      a: { id: 'a', type: 'rect', parent: 'page_1', layer: 'layer_1', order: 'a1', x: 0, y: 0, width: 1000, height: 600, style: red },
+      b: { id: 'b', type: 'rect', parent: 'page_1', layer: 'layer_1', order: 'a2', x: 2000, y: 0, width: 1000, height: 600 },
+      c: { id: 'c', type: 'rect', parent: 'page_1', layer: 'layer_1', order: 'a3', x: 4000, y: 0, width: 1000, height: 600 },
+    }),
+  )
+  const at = await drawingOnScreen(page)
+  const point = (x: number, y: number) => {
+    const [px, py] = at(x, y)
+    return { x: px, y: py }
+  }
+  const strokeOf = (id: string, nodes: Saved[]) => (nodes.find((n) => n.id === id) as any)?.style?.stroke
+  const field = (name: string) => page.locator('.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
+  // The red one, at the bottom of the list, is selected before the painter is taken: the brush is
+  // loaded at once, and the pointer says so.
+  await objectRows(page).nth(2).click()
+  await command(page, 'ma')
+  await expect.poll(() => pointer(page)).toContain(', copy')
+  await expect(page.locator('.hint-bar')).toContainText('Click an object to paint it with the look taken')
+  // The third, clicked on its edge, is painted.
+  await click(page, point(5000, 300))
+  await page.keyboard.press('Escape')
+  let nodes = await saved(page)
+  expect(strokeOf('c', nodes)).toBe('#e5484d')
+  expect(strokeOf('b', nodes)).toBeUndefined()
+  // With nothing selected, the pointer is an eyedropper until a click takes the look: the clicked
+  // object is then selected, so the drawing shows what is being painted with, and the brush is in hand.
+  await page.keyboard.press('Escape')
+  await command(page, 'ma')
+  await expect.poll(() => pointer(page)).toContain(', crosshair')
+  await expect(page.locator('.hint-bar')).toContainText('Click an object to take its layer, stroke and ends')
+  await click(page, point(1000, 300))
+  await expect(field('X')).toHaveValue('0')
+  await expect.poll(() => pointer(page)).toContain(', copy')
+  await click(page, point(3000, 300))
+  await page.keyboard.press('Escape')
+  nodes = await saved(page)
+  expect([strokeOf('a', nodes), strokeOf('b', nodes), strokeOf('c', nodes)]).toEqual(['#e5484d', '#e5484d', '#e5484d'])
 })
 
 test('selects what a box is dragged around, then scales it all by a corner of the box around it', async ({ page }) => {
@@ -868,7 +984,7 @@ test('copies a view as another view of the same line, which stays on the plan', 
   await planWithElevation(page)
   await objectRows(page).filter({ hasText: 'North' }).click()
   await page.keyboard.press('Control+c')
-  await page.keyboard.press('Control+v')
+  await page.keyboard.press('Control+Shift+v')
   const nodes = await saved(page)
   expect(nodes.filter((n) => n.type === 'viewline')).toMatchObject([{ id: 'l', a: { x: 0, y: 1100 }, b: { x: 4000, y: 1100 } }])
   expect(nodes.filter((n) => n.type === 'elevation').map((n) => n.line)).toEqual(['l', 'l'])

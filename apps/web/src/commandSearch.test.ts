@@ -16,9 +16,9 @@ describe('searching the commands', () => {
   })
 
   it('does so in another language, from the English names', () => {
-    setLanguage('fr')
+    setLanguage('zh')
     // Commands made from the drawing have their title in the language already, and their English in the keywords.
-    const placed = command('Placer le composant : Canapé', 'Insert', 'Place component')
+    const placed = command('放置组件：沙发', 'Insert', 'Place component')
     expect(titles(searchCommands([browse, placed], 'place component'))).toEqual([placed.title, browse.title])
   })
 

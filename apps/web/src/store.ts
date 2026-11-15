@@ -27,6 +27,12 @@ export type Placing = (
    * line's. With `sided`, a section: the side of its line it is put down on is the side it is seen from.
    */
   | { type: 'elevation'; name: string; lineId: string; line: Omit<NodeOf<'viewline'>, 'id' | 'parent' | 'order'>; sided?: boolean }
+  /**
+   * A paste: `ops` put what was copied into the drawing where it was copied from, `doc` is the
+   * drawing with it, `ids` are what was pasted and `mid` the middle of it. It follows the pointer,
+   * that middle under it, until it is put down.
+   */
+  | { type: 'paste'; ops: Op[]; doc: Document; ids: string[]; mid: Vec2 }
 ) & { carried?: boolean }
 
 /**
@@ -119,6 +125,18 @@ interface Interaction {
   contextMenu: { x: number; y: number } | null
   /** Where on the drawing the last right-click was, for commands of its menu that act at that very place. */
   menuPoint: Vec2 | null
+  /**
+   * Whether what is being moved leaves a copy where it is put down instead of moving: switched with
+   * Ctrl (⌘) while it goes, the pointer showing a +, and on from the start for a copy taken from a
+   * point (`copyFromPoint`). What is put down stays, and the move goes on for another, until Esc.
+   */
+  copyMode: boolean
+  /**
+   * The object the format painter holds, by id: its layer and look are what its next clicks paint.
+   * Set when the tool is taken with an object selected, or by the first click on one (which selects
+   * it, so it shows what the brush holds); null while the eyedropper is still to take it.
+   */
+  brush: string | null
   status: string
 }
 
@@ -205,6 +223,8 @@ const IDLE: Interaction = {
   measuring: null,
   contextMenu: null,
   menuPoint: null,
+  copyMode: false,
+  brush: null,
   status: '',
 }
 
@@ -350,13 +370,15 @@ export function loadDocument(doc: Document, file: StoredFile | null): void {
 }
 
 export function setTool(tool: Tool, placing: Placing | null = null): void {
+  // What a gesture was showing, and never finished, goes with the tool it belonged to.
+  cancel()
   const shapeTool = SHAPE_TOOLS.includes(tool) ? tool : get().shapeTool
   const roomTool = ROOM_TOOLS.includes(tool) ? tool : get().roomTool
   const textTool = TEXT_TOOLS.includes(tool) ? tool : get().textTool
   const measureTool = MEASURE_TOOLS.includes(tool) ? tool : get().measureTool
   const cutTool = CUT_TOOLS.includes(tool) ? tool : get().cutTool
   const transformTool = TRANSFORM_TOOLS.includes(tool) ? tool : get().transformTool
-  set({ tool, placing, shapeTool, roomTool, textTool, measureTool, cutTool, transformTool, corner: null, placingRotation: 0, calibration: null, measuring: null, drawLocks: {}, axisLock: null, drawLive: null, drawStep: 0, status: '' })
+  set({ tool, placing, shapeTool, roomTool, textTool, measureTool, cutTool, transformTool, corner: null, placingRotation: 0, calibration: null, measuring: null, drawLocks: {}, axisLock: null, drawLive: null, drawStep: 0, copyMode: false, brush: null, status: '' })
 }
 
 export function select(ids: string[]): void {

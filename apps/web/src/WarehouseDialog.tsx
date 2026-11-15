@@ -181,7 +181,7 @@ function Components({ libraries }: { libraries: Library[] }) {
   // its own name for those that say none; and the sections parametric objects say. They are
   // listed under the headings of HEADINGS, the others after them. Parametric objects are listed
   // among the components of their kind (a table in the dining room), marked as such.
-  const kinds = [...registry.parametric.values()]
+  const kinds = [...registry.parametric.values()].filter((kind) => !kind.hidden)
   const sectionsOf = (library: Library) => {
     const rooms = Object.values(library.categories ?? {})
     const all = library.components !== undefined && rooms.length >= library.components
@@ -201,7 +201,7 @@ function Components({ libraries }: { libraries: Library[] }) {
   // Pictures are the objects themselves, rendered the way the drawing renders them.
   const objectCards = useMemo(
     () =>
-      [...registry.parametric.values()].map((kind): Card => ({
+      [...registry.parametric.values()].filter((kind) => !kind.hidden).map((kind): Card => ({
         key: `kind ${kind.kind}`,
         group: kind.category ?? OBJECTS,
         parametric: true,

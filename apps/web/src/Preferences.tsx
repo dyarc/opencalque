@@ -468,7 +468,9 @@ function ShortcutSettings() {
     const native = e.nativeEvent
     // A command shortcut is a word of one to three letters, ended by Space; a chord with Ctrl, Alt
     // or Cmd is still taken at once, as special keys are.
-    if (!native.ctrlKey && !native.metaKey && !native.altKey && /^[a-z]$/i.test(native.key) && !native.key.startsWith('Dead')) {
+    // A letter typed on its own is the start of a word; with Shift it is a chord like any other,
+    // so that Shift+D can be given to a command.
+    if (!native.ctrlKey && !native.metaKey && !native.altKey && !native.shiftKey && /^[a-z]$/i.test(native.key) && !native.key.startsWith('Dead')) {
       if (typed.length < 3) setTyped(typed + native.key.toUpperCase())
       return
     }

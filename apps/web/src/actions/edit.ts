@@ -266,6 +266,20 @@ export function pickStyle(source: Node): void {
 }
 
 /**
+ * The format painter in hand. What was selected when it is taken is what the brush holds, so that
+ * the pointer is a brush at once and the next clicks paint; with nothing selected it holds nothing
+ * and the pointer is an eyedropper, until a click takes the look of an object (which is then
+ * selected, so the drawing shows what is being painted with).
+ */
+export function startPainter(): void {
+  const { selection, doc } = get()
+  setTool('formatPainter')
+  // A placement has no look of its own to take.
+  const source = selection.map((id) => doc.nodes[id]).find((node) => node && node.type !== 'instance')
+  useStore.setState({ brush: source?.id ?? null })
+}
+
+/**
  * Adds to the selection what is alike to it in the way said (`alikeTo`), among what can be picked
  * where the editing is: the walls of one material and thickness, the placements of one component…
  */

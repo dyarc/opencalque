@@ -1,7 +1,30 @@
-import { arcPoints, type ParametricKind, type Primitive } from '@opencalque/core'
+import { arcPoints, type BuildEnv, type ParametricKind, type Primitive, type Vec2 } from '@opencalque/core'
 import { atLeast, clamp, count, curveLine, curveOutline, curvePoint, HEAVY, HEIGHT, line, LOOSE_WALL, mirrorAcross, mirrorAlong, OTHER_SIDE, outline, pt, THIN, WIDTH } from './shared'
 
 /* Doors and windows: openings that cut the wall they are placed on, drawn along +X, the wall's line, and told its thickness. */
+
+/**
+ * How the door and the window are bowed: their Shape says whether they are, and the two handles
+ * that set it sit on the two lines they draw, half the wall to either side of their own middle,
+ * so that dragging one drags that line.
+ */
+const BOW = {
+  shapeKey: 'shape',
+  curved: 'Curved',
+  bowKey: 'bow',
+  points(props: Record<string, any>, env: BuildEnv): [Vec2, Vec2] {
+    const w = atLeast(1, props.width)
+    const h = (env.wallThickness ?? LOOSE_WALL) / 2
+    const curve = curveOf(w, props.bow)
+    return [curvePoint(w / 2, -h, curve), curvePoint(w / 2, h, curve)]
+  },
+  drag(props: Record<string, any>, index: number, p: Vec2, env: BuildEnv): Record<string, unknown> {
+    const h = (env.wallThickness ?? LOOSE_WALL) / 2
+    // The line a handle is on stands half the wall to one side of the bow's own middle: what
+    // is left of the pointer once that half is taken off is the bow.
+    return { bow: Math.round((p.y + (index === 0 ? h : -h)) * 1000) / 1000 }
+  },
+}
 
 export const door: ParametricKind = {
   kind: 'arch.door',
@@ -20,10 +43,12 @@ export const door: ParametricKind = {
   ],
   opening: ({ width }) => ({ from: 0, to: atLeast(1, width) }),
   size: { x: 'width' },
+  bow: BOW,
   build({ width, type, hinge, angle, flip, shape, bow }, env) {
     const w = atLeast(1, width)
     const h = (env.wallThickness ?? LOOSE_WALL) / 2
-    const curve = shape === 'Curved' ? env.wallCurve ?? curveOf(w, bow) : undefined
+    // In a curved wall it is curved by the wall; off one, by its own shape and bow.
+    const curve = env.wallCurve ?? (shape === 'Curved' ? curveOf(w, bow) : undefined)
     const open = clamp(angle, 5, 180)
     // A leaf hinged on the +Y face. `dir` is +1 when it closes towards +X, -1 towards -X.
     const leaf = (hingeX: number, length: number, dir: 1 | -1): Primitive[] => {
@@ -88,11 +113,13 @@ export const windowKind: ParametricKind = {
   ],
   opening: ({ width }) => ({ from: 0, to: atLeast(1, width) }),
   size: { x: 'width' },
+  bow: BOW,
   sill: 'sillHeight',
   build({ width, panes, glazing, sill, flip, shape, bow }, env) {
     const w = atLeast(1, width)
     const h = (env.wallThickness ?? LOOSE_WALL) / 2
-    const curve = shape === 'Curved' ? env.wallCurve ?? curveOf(w, bow) : undefined
+    // In a curved wall it is curved by the wall; off one, by its own shape and bow.
+    const curve = env.wallCurve ?? (shape === 'Curved' ? curveOf(w, bow) : undefined)
     const frame = Math.min(50, w / 4)
     // A line for each pane of glass, evenly across the middle of the wall.
     const gap = Math.min(h * 0.3, 25)
@@ -133,6 +160,7 @@ export const curvedDoor: ParametricKind = {
   ...door,
   kind: 'arch.door.curved',
   label: 'Curved door',
+  hidden: true,
   params: door.params.map((param) => (param.key === 'shape' ? { ...param, default: 'Curved' } : param)),
 }
 
@@ -141,14 +169,17 @@ export const curvedWindow: ParametricKind = {
   ...windowKind,
   kind: 'arch.window.curved',
   label: 'Curved window',
+  hidden: true,
   params: windowKind.params.map((param) => (param.key === 'shape' ? { ...param, default: 'Curved' } : param)),
 }
 
 
 /** A curve of a chosen bow when an opening is not in a curved wall: the sagitta sets the radius. */
-function curveOf(width: number, bow: unknown): { radius: number; half: number; side: 1 } | undefined {
+function curveOf(width: number, bow: unknown): { radius: number; half: number; side: 1 | -1 } | undefined {
   const b = Number(bow)
   const half = atLeast(1, width) / 2
-  if (!Number.isFinite(b) || b <= 0) return undefined
-  return { radius: (half * half + b * b) / (2 * b), half, side: 1 }
+  // How far the middle of the opening stands out of its own line, on the side the sign says.
+  if (!Number.isFinite(b) || b === 0) return undefined
+  const sag = Math.abs(b)
+  return { radius: (half * half + sag * sag) / (2 * sag), half, side: b > 0 ? 1 : -1 }
 }

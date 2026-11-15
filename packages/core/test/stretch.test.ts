@@ -6,7 +6,9 @@ const registry = new Registry().use(architecture)
 const opening = (kind: string, extra: Partial<NodeOf<'parametric'>> = {}): NodeOf<'parametric'> => ({ id: 'o', type: 'parametric', parent: 'page_1', order: 'a0', kind, props: { width: 900 }, x: 1000, y: 0, rotation: 0, ...extra }) as NodeOf<'parametric'>
 const handles = (node: NodeOf<'parametric'>) => kindOf(node).handles!(node, registry)
 const drag = (node: NodeOf<'parametric'>, index: number, p: { x: number; y: number }) => ({ ...node, ...kindOf(node).moveHandle!(node, index, p, registry) }) as NodeOf<'parametric'>
-const near = (p: { x: number; y: number }, q: { x: number; y: number }) => expect(Math.hypot(p.x - q.x, p.y - q.y)).toBeLessThan(1e-6)
+// A length and a turn are kept to a thousandth, so an end that stays put is the same place to
+// within the hundredth of a millimetre that a drawing is measured in.
+const near = (p: { x: number; y: number }, q: { x: number; y: number }) => expect(Math.hypot(p.x - q.x, p.y - q.y)).toBeLessThan(0.01)
 
 describe('stretching a door or a window by its ends', () => {
   it('has its two ends to drag, on its axis', () => {
@@ -16,14 +18,19 @@ describe('stretching a door or a window by its ends', () => {
     ])
   })
 
-  it('takes its width from where its end is dragged, along it only', () => {
-    expect(drag(opening('arch.window'), 1, { x: 2200, y: 60 }).props.width).toBe(1200)
+  it('takes its length from wherever its end is dragged, and turns to lie to it', () => {
+    // Stretched at a slant: as long as the pointer is from the end that stays, and laid to it.
+    const after = drag(opening('arch.window'), 1, { x: 2200, y: 60 })
+    expect(after.props.width).toBeCloseTo(1201.499, 2)
+    expect(after.rotation).toBeCloseTo(2.862, 2)
   })
 
-  it('keeps its end where it was when its start is dragged', () => {
+  it('keeps its end where it was when its start is dragged, and lies from the pointer to it', () => {
     const before = opening('arch.window')
     const after = drag(before, 0, { x: 800, y: -30 })
-    expect(after).toMatchObject({ x: 800, y: 0, props: { width: 1100 } })
+    expect(after).toMatchObject({ x: 800, y: -30 })
+    expect(after.props.width).toBeCloseTo(1100.409, 2)
+    expect(after.rotation).toBeCloseTo(1.562, 2)
     near(handles(after)[1], handles(before)[1])
   })
 
@@ -32,13 +39,16 @@ describe('stretching a door or a window by its ends', () => {
     const end = handles(before)[1]
     near(end, applyTransform({ x: 900, y: 0 }, before))
     const after = drag(before, 0, applyTransform({ x: -200, y: 40 }, before))
-    expect(after.props.width).toBeCloseTo(1100)
+    expect(after.props.width).toBeCloseTo(1100.727, 2)
     near(handles(after)[1], end)
   })
 
-  it('never goes thinner than a centimetre, nor inside out', () => {
-    expect(drag(opening('arch.door'), 1, { x: 500, y: 0 }).props.width).toBe(10)
-    expect(drag(opening('arch.door'), 0, { x: 3000, y: 0 }).props.width).toBe(10)
+  it('never goes thinner than a centimetre, and turns right round when dragged past its start', () => {
+    expect(drag(opening('arch.door'), 1, { x: 1005, y: 0 }).props.width).toBe(10)
+    expect(drag(opening('arch.door'), 0, { x: 1895, y: 0 }).props.width).toBe(10)
+    // Past the end that stays it is an opening of the other way, not a thinner one.
+    const turned = drag(opening('arch.door'), 1, { x: 500, y: 0 })
+    expect([turned.props.width, turned.rotation]).toEqual([500, 180])
   })
 
   it('leaves objects that say no size to be scaled as a whole', () => {

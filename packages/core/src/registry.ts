@@ -42,7 +42,15 @@ export interface BuildEnv {
    * How the wall the opening sits in bends under it: the radius at its middle, how wide the
    * opening is, and which side of its own +Y the wall's middle bows to. Set only on a curved wall.
    */
-  wallCurve?: { radius: number; half: number; side: 1 | -1 }
+  wallCurve?: {
+    radius: number
+    /** Half the chord the opening makes on the wall. */
+    half: number
+    /** Which side of the opening's own +Y the wall bows to. */
+    side: 1 | -1
+    /** The length of wall the opening takes, round the curve: the length its own X runs over. */
+    span?: number
+  }
 }
 
 /** An object type drawn from parameters. `build` returns primitives in local coordinates (origin = insertion point). */
@@ -85,6 +93,25 @@ export interface ParametricKind {
    */
   size?: { x: string }
   /**
+   * For an opening whose shape can be curved (a door, a window): the parameter that says so
+   * (`shapeKey`, whose value `curved` bows it) and the one that is how far it bows (`bowKey`).
+   * With it, two handles stand at the middle of each side of the opening, and dragging either
+   * sets the bow by how far out from its middle line it goes; a bow to the other side is
+   * negative.
+   */
+  bow?: {
+    shapeKey: string
+    curved: string
+    bowKey: string
+    /**
+     * Where the two handles are on it, in its own coordinates, one at the middle of each of
+     * its sides: on the lines it draws, so that dragging one drags that line.
+     */
+    points(props: Record<string, any>, env: BuildEnv): { x: number; y: number }[]
+    /** What its parameters become when the handle at `index` is dragged to `p`, in its own coordinates. */
+    drag(props: Record<string, any>, index: number, p: { x: number; y: number }, env: BuildEnv): Record<string, unknown>
+  }
+  /**
    * The object as a box to resize on the canvas, as a rectangle is, its knob above turning it.
    * `bounds` is the box it fills in its own coordinates (the insertion point at 0, 0); `resize`
    * gives the parameters that make it fill a box of another width or height (only what changed is
@@ -95,6 +122,12 @@ export interface ParametricKind {
     bounds(props: Record<string, any>): { left: number; top: number; right: number; bottom: number }
     resize(props: Record<string, any>, size: { width?: number; height?: number }): Record<string, unknown>
   }
+  /**
+   * Kept out of the object library: a kind that is no longer offered, but that drawings made
+   * with it still hold and must still draw (the curved door and the curved window, which are
+   * now a shape of the door and of the window).
+   */
+  hidden?: boolean
   build(props: Record<string, any>, env: BuildEnv): Primitive[]
   /**
    * How it looks in an elevation, seen from in front, in its own coordinates: X along its own X,

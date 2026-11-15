@@ -1,8 +1,9 @@
 import { useWindows } from '../windows'
 import { stopBrowsing } from '../actions/instances'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { type NodeOf, type Primitive, dist, lineOf, rootOf, seenArea, shownInElevations, viewsOf, gridlineBubbles, wallEndState, boundsFrame, buildScene, connectedWalls, frameContains, frameGrips, hitTest, kindOf, modifierKind, modifierParams, newId, placedScene, resizeFrame, rotate, sceneBounds, turnedBox, wallEdgeLines, wallLength, wallMiddle } from '@opencalque/core'
+import { type NodeOf, type Primitive, arcLengthOfChord, dist, lineOf, openingArc, rootOf, seenArea, shownInElevations, viewsOf, gridlineBubbles, wallEndState, boundsFrame, buildScene, connectedWalls, frameContains, frameGrips, hitTest, kindOf, modifierKind, modifierParams, newId, placedScene, resizeFrame, rotate, sceneBounds, turnedBox, wallEdgeLines, wallLength, wallMiddle } from '@opencalque/core'
 import { t } from '../i18n'
+import { pointer } from '../cursors'
 import { finishTextEdit, zoomToFit } from '../actions'
 import { commandFor, handleCommandBuffer, onCommand } from '../commands'
 import { registry, useExtensions } from '../extensions'
@@ -92,7 +93,7 @@ export function CanvasView() {
 
   const handles = useMemo(() => {
     const node = selection.length === 1 ? doc.nodes[selection[0]] : undefined
-    return node && !lockedAmong(doc, selection) ? (kindOf(node).handles?.(node, registry) ?? []) : []
+    return node && !lockedAmong(doc, selection) ? (kindOf(node).handles?.(node, registry, doc) ?? []) : []
   }, [doc, selection])
 
   /**
@@ -178,8 +179,15 @@ export function CanvasView() {
     // A curved wall is as long as its curve, which is written at the top of it.
     if (node?.type === 'wall' && node.bulge) return [{ at: wallMiddle(node), dx: 0, dy: -18, text: formatLength(wallLength(node)) }]
     if (node?.type === 'line' || node?.type === 'wall') return sizes('line', node.a, node.b).labels
-    // A door or a window: the width its two ends stretch.
-    if (node?.type === 'parametric' && handles.length === 2) return sizes('line', handles[0], handles[1]).labels
+    // A door or a window: the width its two ends stretch, said round the curve in a curved wall, as
+    // its properties say it.
+    if (node?.type === 'parametric' && handles.length >= 2) {
+      const labels = sizes('line', handles[0], handles[1]).labels
+      const arc = openingArc(doc, node, registry)
+      if (!arc) return labels
+      const text = formatLength(arcLengthOfChord(arc.radius, dist(handles[0], handles[1])))
+      return labels.map((label) => ({ ...label, text }))
+    }
     return []
   }, [doc, selection, tool, handles, frame])
 
@@ -253,9 +261,10 @@ export function CanvasView() {
 
   // Switching tool or container abandons whatever was in progress.
   useEffect(() => {
-    // A polyline in progress is kept as far as it got; anything else half-done is dropped.
+    // A polyline in progress is kept as far as it got; anything else half-done is dropped. What the
+    // move was switching, copying or moving, is the tool's to say (`setTool`), not this.
     if (c.gesture.kind === 'poly') finishPoly(c, c.gesture, false)
-    else reset(c)
+    else reset(c, true)
     c.placed = newId()
   }, [tool, placing, scope])
 
@@ -368,7 +377,7 @@ export function CanvasView() {
     // A finished measurement stays on screen until the next one starts.
     const { marker } = out
     const tracked = trackedPoints(c)
-    setOverlay((o) => ({ tracked: tracked.length > 0 ? tracked : undefined, cut: out.cut, trim: out.trim, lit: out.lit, face: out.face, box: out.turning, marker: marker && { ...marker, label: snapName(marker.kind) }, smart: out.smart ?? (marker?.guides ? { lines: marker.guides, gaps: [], dashed: marker.kind === 'extension' } : undefined), link: out.link, labels: out.labels, angle: out.angle, axis: out.axis, guide: out.guide, ghosts: out.ghosts, marquee: out.marquee, moved: out.moved, clearanceHover: out.clearanceHover, measure: out.measure ?? o.measure, angleReading: out.angleReading ?? o.angleReading }))
+    setOverlay((o) => ({ tracked: tracked.length > 0 ? tracked : undefined, cut: out.cut, trim: out.trim, lit: out.lit, face: out.face, wallGhost: out.wallGhost, box: out.turning, marker: marker && { ...marker, label: snapName(marker.kind) }, smart: out.smart ?? (marker?.guides ? { lines: marker.guides, gaps: [], dashed: marker.kind === 'extension' } : undefined), link: out.link, labels: out.labels, angle: out.angle, axis: out.axis, guide: out.guide, ghosts: out.ghosts, marquee: out.marquee, moved: out.moved, clearanceHover: out.clearanceHover, measure: out.measure ?? o.measure, angleReading: out.angleReading ?? o.angleReading }))
     // A failed preview has put its reason in the status bar; keep it there.
     if (out.previewed) useStore.setState({ status: out.status, drawLive: out.live })
   }
@@ -464,6 +473,16 @@ export function CanvasView() {
       if ((e.target as HTMLElement).closest('input, textarea, select')) return
       // A command being typed takes its letters, Space and Backspace before the canvas sees them.
       if (handleCommandBuffer(e)) return
+      // Ctrl (⌘) is a switch while the move tool is at work — from the moment it is chosen, so that
+      // a move can be made a copying one before it is taken: pressed once it says that what is put
+      // down is a copy, shown by a + by the pointer; pressed again, that it moves again.
+      if ((e.key === 'Control' || e.key === 'Meta') && !e.repeat && (c.gesture.kind === 'displace' || (c.gesture.kind === 'idle' && get().tool === 'move'))) {
+        const copy = !get().copyMode
+        useStore.setState({ copyMode: copy })
+        c.setGripCursor(copy ? 'copy' : null)
+        e.preventDefault()
+        return
+      }
       if (e.ctrlKey || e.metaKey || e.altKey) return
       const s = get()
       // Space with Shift flips what is drawn or selected (a command, which can be given plain Space
@@ -512,15 +531,17 @@ export function CanvasView() {
     }
   }, [])
 
-  const brush = `url("data:image/svg+xml,${encodeURIComponent(
-    "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M4 20c3 0 4-2 4-4l7-7 3 3-7 7c-2 2-4 1-7 1z' fill='#ffffff' stroke='#1f1f1f' stroke-width='1.5' stroke-linejoin='round'/><path d='M14 6l4 4 3-3-4-4z' fill='#1f1f1f'/></svg>",
-  )}") 4 20, copy`
-  const cursor = tool === 'formatPainter' ? brush : tool === 'hand' ? 'grab' : tool === 'select' ? (gripCursor ?? 'default') : 'crosshair'
+  // The pointer is the canvas's own set (`cursors.ts`): an arrow for selecting, a cross for drawing,
+  // a hand for panning, a + for copying while moving, and the side and corner cursors of a box. The
+  // format painter is an eyedropper until it holds an object's look, and a brush after.
+  const brushing = useStore((s) => s.brush !== null)
+  const cursor =
+    tool === 'formatPainter' ? (brushing ? 'brush' : 'eyedropper') : tool === 'eyedropper' ? 'eyedropper' : tool === 'hand' ? 'grab' : tool === 'select' ? (gripCursor ?? 'default') : tool === 'move' && gripCursor === 'copy' ? 'copy' : 'crosshair'
   return (
     <canvas
       ref={canvasRef}
       className="canvas"
-      style={{ cursor }}
+      style={{ cursor: pointer(cursor) }}
       onPointerDown={(e) => (onPointerDown(e), syncStep(c))}
       // A press that has just opened words to type in place (a text, a note) leaves the focus in
       // them: the browser would otherwise move it as the mouse goes down, after the box took it.

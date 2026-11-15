@@ -6,11 +6,13 @@ import {
   isLocked,
   alignMove,
   boundsOfPoints,
+  courseOf,
   dist,
   frameContains,
   frameGrips,
   frameMiddle,
   hitTest,
+  hostWall,
   itemsInside,
   itemsTouching,
   kindOf,
@@ -37,11 +39,16 @@ import {
   wallEndsAt,
   wallEndsOf,
   wallFollowOps,
+  wallSides,
   wallSpot,
+  wallStretch,
   wallThicknessOps,
   type Modifier,
   type Node,
+  type NodeOf,
   type Op,
+  type Primitive,
+  type SceneItem,
   type Vec2,
 } from '@opencalque/core'
 import { registry } from '../../extensions'
@@ -126,17 +133,19 @@ export const selectDown: Press = (c, e, at, world) => {
     c.gesture = { kind: 'handle', node: s.doc.nodes[s.selection[0]], index: loose }
     return
   }
+  // The handles of what is selected come first: where one lies on a wall corner (a door end at the
+  // end of its wall), the press takes the handle, and the corner is only taken when none is there.
+  const index = handleAt(c, at)
   // A wall end is a corner of the plan, shared by the walls that meet there: pressing on one
   // selects the corner, and dragging takes them all. With Alt, only the wall that was selected.
   // The selected view line's own points and edges come first: its far corners lie at the corners of a room.
-  const corner = viewLineHandleAt(c, at) ? null : cornerAt(c, at)
+  const corner = index >= 0 || viewLineHandleAt(c, at) ? null : cornerAt(c, at)
   if (corner) {
     const alone = e.altKey && s.selection.length === 1 && s.doc.nodes[s.selection[0]]?.type === 'wall' ? s.selection[0] : undefined
     selectCorner(corner)
     c.gesture = { kind: 'corner', from: corner, only: alone }
     return
   }
-  const index = handleAt(c, at)
   if (index >= 0) {
     const node = s.doc.nodes[s.selection[0]]
     // An end of a view line is taken by its arrow, anywhere along it: the end keeps that far from the pointer.
@@ -245,6 +254,24 @@ export const moveMove: Move<'move'> = (_c, g, e, _at, world, out) => {
   }
 }
 
+/**
+ * The lines of a wall under an opening, as a thing to snap to, and to show: the opening cuts the
+ * wall's faces and line away where it is set, so there is nothing there to set a bow to. They run a
+ * thickness past either end of the opening, to meet what is drawn of the wall.
+ */
+function wallGhost(wall: NodeOf<'wall'>, node: NodeOf<'parametric'>): { lines: Vec2[][]; item: SceneItem } | null {
+  const span = openingSpan(node, registry)
+  if (!span) return null
+  const course = courseOf(wall)
+  const [a, b] = span.map((p) => course.project(p).along)
+  const [from, to] = [Math.min(a, b) - wall.thickness, Math.max(a, b) + wall.thickness]
+  const { left, right } = wallSides(wall)
+  const lines = [wallStretch(wall, from, to, -left), wallStretch(wall, from, to, right)].filter((line) => line.length > 1)
+  if (lines.length === 0) return null
+  const item: SceneItem = { id: `wall-ghost:${wall.id}`, node: wall, prims: lines.map((points): Primitive => ({ kind: 'path', points })), bounds: boundsOfPoints(lines.flat()), locked: false }
+  return { lines, item }
+}
+
 export const handleMove: Move<'handle'> = (c, g, e, _at, world, out) => {
   const s = get()
   if (g.node.type === 'paper' && !e.altKey) {
@@ -272,13 +299,19 @@ export const handleMove: Move<'handle'> = (c, g, e, _at, world, out) => {
   // Taken by an arrow away from its point, it goes by the grid (Alt: exactly where the pointer says).
   const step = e.altKey ? 0 : gridStep(s.view.zoom)
   const grabbed = g.grab && sub(world, g.grab)
+  // A door or a window cuts the wall it is in, its faces and line gone where it is set: while a
+  // handle is dragged, they are shown as a ghost, and snapped to, so a bow can meet a face exactly.
+  const host = !e.altKey && g.node.type === 'parametric' ? hostWall(s.base ?? s.doc, g.node, registry) : null
+  const live = g.node.type === 'parametric' ? s.doc.nodes[g.node.id] : undefined
+  const ghost = host && live?.type === 'parametric' ? wallGhost(host, live) : null
+  if (ghost) out.wallGhost = ghost.lines
   const target: Target = grabbed
     ? { p: step > 0 ? { x: Math.round(grabbed.x / step) * step, y: Math.round(grabbed.y / step) * step } : grabbed, marker: null }
     : was
       ? lineEnd(c, world, e, [g.node.id], was)
       : held
         ? held.target
-        : snap(c, world, { altKey: e.altKey, shiftKey: false }, [g.node.id], ends?.fixed, carriedOn)
+        : snap(c, world, { altKey: e.altKey, shiftKey: false }, [g.node.id], ends?.fixed, carriedOn, ghost ? [ghost.item] : [])
   if (was && s.axisLock) out.guide = { at: was, angle: s.axisLock === 'x' ? 0 : Math.PI / 2 }
   else if (held) out.guide = held.line
   out.link = target.link
@@ -286,7 +319,7 @@ export const handleMove: Move<'handle'> = (c, g, e, _at, world, out) => {
   // The other walls that end at a wall's corner come along with it, unless Alt is held.
   const joined = e.altKey ? [] : wallEndFollowOps(s.base ?? s.doc, g.node, g.index, target.p)
   // A corner of what a view line sees turns it about the corner across; with Shift, it keeps its way and sets its depth.
-  const patch = g.node.type === 'viewline' && g.index >= 3 && g.index <= 6 ? moveViewCorner(g.node, (g.index - 3) as 0 | 1 | 2 | 3, target.p, e.shiftKey ? 'stretch' : 'turn') : kindOf(g.node).moveHandle!(g.node, g.index, target.p, registry)
+  const patch = g.node.type === 'viewline' && g.index >= 3 && g.index <= 6 ? moveViewCorner(g.node, (g.index - 3) as 0 | 1 | 2 | 3, target.p, e.shiftKey ? 'stretch' : 'turn') : kindOf(g.node).moveHandle!(g.node, g.index, target.p, registry, s.doc)
   // Its views keep what they still show where it was on the sheet.
   const views = g.node.type === 'viewline' ? keepViewsOps(s.base ?? s.doc, g.node, patch) : []
   out.previewed = preview([{ op: 'update_node', id: g.node.id, patch }, ...views, ...joined])
@@ -496,11 +529,12 @@ export const hover: Move<'idle'> = (c, _g, _e, at, world, out) => {
   const grip = framed !== null ? null : (frameCornerAt(c, at) ?? gripAt(c, at))
   // On the line across a free end of the selected wall, a press makes it longer or shorter.
   const ending = framed === null && !grip ? endAt(c, at) : null
-  const onCorner = s.tool === 'select' && framed === null && !grip && !ending && !viewLineHandleAt(c, at) && cornerAt(c, at) !== null
-  const own = onCorner ? 0 : s.tool === 'select' ? handleAt(c, at) : -1
+  // A handle of what is selected wins over a corner of the plan it lies on.
+  const own = s.tool === 'select' ? handleAt(c, at) : -1
+  const onCorner = own < 0 && s.tool === 'select' && framed === null && !grip && !ending && !viewLineHandleAt(c, at) && cornerAt(c, at) !== null
   const boxed = ['rect', 'paper'].includes(s.doc.nodes[s.selection[0]]?.type ?? '')
   const diagonal = (corner: number, turn = 0) => resizeCursor(rotate({ x: corner === 1 || corner === 2 ? 1 : -1, y: corner >= 2 ? 1 : -1 }, turn))
-  const stretched = s.doc.nodes[s.selection[0]]?.type === 'parametric' && handles.length === 2
+  const stretched = s.doc.nodes[s.selection[0]]?.type === 'parametric' && handles.length >= 2
   // On an edge of what a view line sees (not on one of its corners), a press drags it across: the edge is shown, and the pointer says across.
   const edged = own === 0 || own >= 7 ? viewEdgeAt(c, at) : null
   if (edged) out.face = [edged.edge]

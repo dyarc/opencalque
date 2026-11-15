@@ -1,4 +1,4 @@
-import { type Document, lengthOf, newId, type Node, type NodeOf, resolveColor, DEFAULT_INK, type Op, type Pattern, wallEndsOf, wallLength, turnToOps } from '@opencalque/core'
+import { type Document, arcLengthOfChord, chordOfArcLength, lengthOf, newId, type Node, type NodeOf, resolveColor, DEFAULT_INK, type Op, type Pattern, wallEndsOf, wallLength, turnToOps } from '@opencalque/core'
 import { useState } from 'react'
 import { Pipette, Link2, Undo2, SquareSplitHorizontal } from 'lucide-react'
 import { msg, t } from '../../i18n'
@@ -51,20 +51,33 @@ const SIZES = /(^|\.)(width|height|thickness|rx|ry|size|markerSize|extensionGap|
 
 export function FieldRow({ node, nodes, field, update }: { node: Node; nodes: Node[]; field: FieldSpec; update: Update }) {
   const doc = useStore((s) => s.doc)
+  // A width kept in the drawing as a chord (`field.arc` is the radius it is measured round) is shown
+  // and typed round its curve: the length of wall the opening takes.
+  const round = (value: unknown) => (field.arc && typeof value === 'number' ? arcLengthOfChord(field.arc, value) : value)
   // With several objects selected, a property they do not all agree on is shown as mixed, with no
   // value of its own; setting it gives them all the same.
-  const seen = (n: Node) => JSON.stringify(read(n, field.path) ?? field.fallback ?? null)
+  const seen = (n: Node) => JSON.stringify(round(read(n, field.path) ?? field.fallback ?? null))
   const mixed = nodes.some((n) => seen(n) !== seen(node))
   const stored = mixed ? undefined : read(node, field.path)
-  const value = mixed ? undefined : (stored ?? field.fallback)
+  const value = mixed ? undefined : round(stored ?? field.fallback)
   const commit = (next: unknown) => {
-    // An angle turns each object about its own middle, as the knob above a box does, not about
-    // the point its position is measured from. Read afresh: dragging the number writes many times.
+    // Read afresh: dragging the number writes many times.
     const now = useStore.getState().doc
+    // An angle turns each object about its own middle, as the knob above a box does, not about
+    // the point its position is measured from.
     if (field.path === 'rotation' && typeof next === 'number' && now.nodes[node.id]) {
       return apply(turnToOps(now, nodes.map((n) => now.nodes[n.id]).filter(Boolean), next, registry))
     }
-    update((n) => patchFor(n, field.path, next))
+    update((n) => patchFor(n, field.path, field.arc && typeof next === 'number' ? chordOfArcLength(field.arc, next) : next))
+  }
+  // What where the object is fixes, which is shown but not set: an opening's Shape in a curved wall.
+  if (field.fixed !== undefined) {
+    return (
+      <div className="field">
+        <span>{t(field.label)}</span>
+        <output>{t(field.options?.find((option) => option.value === field.fixed)?.label ?? field.fixed)}</output>
+      </div>
+    )
   }
   if (field.type === 'number' || (field.type === 'string' && !field.options)) {
     return (

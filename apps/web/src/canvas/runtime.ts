@@ -98,6 +98,7 @@ export interface Shown {
   lit?: Overlay['lit']
   angleReading?: Overlay['angleReading']
   face?: Overlay['face']
+  wallGhost?: Overlay['wallGhost']
   turning?: Overlay['box']
   marquee?: Overlay['marquee']
   moved?: Overlay['moved']
@@ -128,13 +129,19 @@ export function syncStep(c: Canvas): void {
   if (get().drawStep !== step) useStore.setState({ drawStep: step })
 }
 
-/** Abandons the gesture in progress. */
-export function reset(c: Canvas): void {
+/**
+ * Abandons the gesture in progress. `keepCopying` leaves the move's copy switch as it is, for a
+ * tool change, which has already said whether it still applies (`setTool` puts it out).
+ */
+export function reset(c: Canvas, keepCopying = false): void {
   cancel()
   c.tracked = { tool: get().tool, points: [], resting: null }
   if (get().axisLock) useStore.setState({ axisLock: null })
   if (get().wallFace) useStore.setState({ wallFace: null })
+  // A move given up is a plain move again, and the pointer a plain one.
+  if (!keepCopying && get().copyMode) useStore.setState({ copyMode: false })
   c.gesture = { kind: 'idle' }
+  c.setGripCursor(null)
   c.setOverlay({})
   syncStep(c)
 }
