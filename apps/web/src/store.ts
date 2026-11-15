@@ -90,15 +90,8 @@ interface Interaction {
    * `a` is the length and `b` the angle in degrees, counter-clockwise from the right.
    */
   drawLocks: { a?: number; b?: number }
-  /**
-   * The direction the line being drawn is held to, with the arrow keys: 'x' keeps it level, 'y'
-   * upright. The pointer then only says how far it goes, and may say so by pointing at something
-   * elsewhere. Let go when the line is finished.
-   */
-  axisLock: 'x' | 'y' | null
   /** The same two sizes as they currently are while drawing, to show in the quick bar. */
-  drawLive: { a: number; b: number } | null
-  /**
+  drawLive: { a: number; b: number } | null  /**
    * How far the shape being drawn has got: 0 when nothing is started, then the number of points
    * placed so far. Hints and the size fields show only what applies at that step.
    */
@@ -213,7 +206,6 @@ const IDLE: Interaction = {
   placing: null,
   placingRotation: 0,
   drawLocks: {},
-  axisLock: null,
   drawLive: null,
   drawStep: 0,
   calibration: null,
@@ -378,7 +370,7 @@ export function setTool(tool: Tool, placing: Placing | null = null): void {
   const measureTool = MEASURE_TOOLS.includes(tool) ? tool : get().measureTool
   const cutTool = CUT_TOOLS.includes(tool) ? tool : get().cutTool
   const transformTool = TRANSFORM_TOOLS.includes(tool) ? tool : get().transformTool
-  set({ tool, placing, shapeTool, roomTool, textTool, measureTool, cutTool, transformTool, corner: null, placingRotation: 0, calibration: null, measuring: null, drawLocks: {}, axisLock: null, drawLive: null, drawStep: 0, copyMode: false, brush: null, status: '' })
+  set({ tool, placing, shapeTool, roomTool, textTool, measureTool, cutTool, transformTool, corner: null, placingRotation: 0, calibration: null, measuring: null, drawLocks: {}, drawLive: null, drawStep: 0, copyMode: false, brush: null, status: '' })
 }
 
 export function select(ids: string[]): void {

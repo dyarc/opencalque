@@ -122,6 +122,8 @@ export function darkInk(color: string, line = false): string {
 
 export interface Overlay {
   marquee?: { a: Vec2; b: Vec2; crossing: boolean }
+  /** How many of the handles at the end are the middles of the object's edges (`handleMiddles`), drawn as small rectangles. */
+  middles?: number
   /** What the cursor snapped to, marked by a sign that tells its kind, with a word beside it for those that need one. */
   marker?: (Snap & { label?: string }) | null
   /** From what the pointer is on to where the line being drawn ends, when that end is only level with it. */
@@ -783,9 +785,22 @@ export function drawScene(
   }
   // The points of an object (the ends of a line or a wall, the corners of a shape) are round and
   // a little larger than the square grips of a selection box, which scale rather than move a point.
+  // The middle of an edge is a small rectangle in the same colours: it moves the edge, where a point
+  // is dragged on its own. Drawn first, so a point wins a click.
+  const middles = Math.max(0, Math.min(overlay.middles ?? 0, handles.length))
+  const points = handles.length - middles
   ctx.fillStyle = '#ffffff'
   ctx.lineWidth = 1.5
-  for (const h of handles) {
+  if (middles > 0) {
+    for (const h of handles.slice(points)) {
+      const p = toScreen(h)
+      ctx.beginPath()
+      ctx.roundRect(p.x - 3.5, p.y - 2.5, 7, 5, 1.8)
+      ctx.fill()
+      ctx.stroke()
+    }
+  }
+  for (const h of handles.slice(0, points)) {
     const p = toScreen(h)
     ctx.beginPath()
     ctx.arc(p.x, p.y, 5, 0, Math.PI * 2)

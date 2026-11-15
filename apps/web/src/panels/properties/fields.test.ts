@@ -69,3 +69,25 @@ describe('the properties of a window in a straight wall', () => {
     expect(fieldOf(own, 'win', 'props.shape')?.fixed).toBeUndefined()
   })
 })
+
+describe('the properties of a column', () => {
+  const doc = applyOps(createDocument(), [
+    { op: 'add_material', material: { id: 'concrete', name: 'Concrete', fill: '#c9c5c0' } },
+    { op: 'add_node', node: { id: 'col', type: 'column', parent: 'page_1', layer: 'layer_1', order: 'a1', x: 0, y: 0, width: 400, height: 400 } } as never,
+  ])
+  const fields = fieldsOf(doc.nodes.col as NodeOf<'column'>, doc)
+
+  it('takes its fill from a material, and has no fill of its own to set', () => {
+    expect(fields.some((field) => field.path === 'style.fill')).toBe(false)
+    expect(fields.find((field) => field.path === 'material')).toMatchObject({ label: 'Material', material: true })
+  })
+
+  it('offers the default material first, then the drawing’s own', () => {
+    expect(fields.find((field) => field.path === 'material')?.options).toEqual([
+      { value: '', label: 'Default' },
+      { value: 'concrete', label: 'Concrete' },
+    ])
+    // Its stroke is still its own.
+    expect(fields.find((field) => field.path === 'style.stroke')).toBeDefined()
+  })
+})

@@ -111,16 +111,6 @@ const onlyPlacement = () => get().selection.length === 1 && ['instance', 'parame
 const browsing = () => useWindows.getState().browsing !== null
 /** One parametric object or one table of quantities selected: what can be made into the shapes it draws. */
 const onlyVectorizable = () => get().selection.length === 1 && ['parametric', 'table'].includes(get().doc.nodes[get().selection[0]]?.type ?? '')
-/** A line, a wall or a divider has its first point and is waiting for the next. */
-const drawingLine = () => get().drawStep > 0 && ['line', 'curve', 'wall', 'divider', 'move'].includes(get().tool)
-/** Something is being dragged with the select tool: moved, or reshaped by one of its points. */
-const dragging = () => get().tool === 'select' && get().base !== null && !get().editingText
-const canHold = () => drawingLine() || dragging()
-/** Holds what is being drawn or dragged level or upright, or lets it go when it is already held that way. */
-const lockAxis = (axis: 'x' | 'y') => {
-  useStore.setState({ axisLock: get().axisLock === axis ? null : axis })
-  drawing.refresh?.()
-}
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform)
 const STORAGE_KEY = 'opencalque.shortcuts'
 const SHORTCUTS_FILE = 'opencalque-shortcuts.json'
@@ -220,9 +210,9 @@ const STATIC: Command[] = [
   { id: 'edit.flipVertical', title: msg('Mirror vertically'), category: 'Edit', keys: ['Shift+V'], when: selected, run: () => transformSelection({ mirror: 'vertical' }) },
   { id: 'edit.scaleUp', title: msg('Scale up by 10%'), category: 'Edit', when: selected, run: () => transformSelection({ scale: 1.1 }) },
   { id: 'edit.scaleDown', title: msg('Scale down by 10%'), category: 'Edit', when: selected, run: () => transformSelection({ scale: 1 / 1.1 }) },
-  // Listed before the arrow keys' other use: while a line is being drawn there is nothing selected to move.
-  { id: 'draw.lockLevel', title: msg('Keep what is being drawn or dragged level'), category: 'Tools', keys: ['ArrowLeft', 'ArrowRight'], keywords: 'axis lock horizontal', when: canHold, run: () => lockAxis('x') },
-  { id: 'draw.lockUpright', title: msg('Keep what is being drawn or dragged upright'), category: 'Tools', keys: ['ArrowUp', 'ArrowDown'], keywords: 'axis lock vertical', when: canHold, run: () => lockAxis('y') },
+  // Ortho holds every movement to the axes until it is switched off again: what is moved, the points
+  // of what is moved, and what is drawn. Its state is shown beside the pointer reading.
+  { id: 'draw.ortho', title: msg('Ortho'), category: 'Tools', keys: ['F8'], keywords: 'orthogonal axis lock free x y', run: () => { setPrefs({ ortho: !usePrefs.getState().ortho }); drawing.refresh?.() } },
   { id: 'edit.nudgeLeft', title: msg('Move left by one grid step'), category: 'Edit', keys: ['ArrowLeft'], when: selected, run: () => nudgeSelection(-1, 0) },
   { id: 'edit.nudgeRight', title: msg('Move right by one grid step'), category: 'Edit', keys: ['ArrowRight'], when: selected, run: () => nudgeSelection(1, 0) },
   { id: 'edit.nudgeUp', title: msg('Move up by one grid step'), category: 'Edit', keys: ['ArrowUp'], when: selected, run: () => nudgeSelection(0, -1) },

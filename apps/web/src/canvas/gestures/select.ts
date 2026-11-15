@@ -57,7 +57,7 @@ import { usePrefs } from '../../prefs'
 import { commit, preview, select, selectCorner, useStore, cancel } from '../../store'
 import { gridStep } from '../../view'
 import { formatLength, formatNumber } from '../../units'
-import { heldNearest, lineEnd, snap, squareFrom, type Target } from '../aim'
+import { heldNearest, heldOrtho, lineEnd, ortho, orthoAxis, snap, squareFrom, type Target } from '../aim'
 import { ALIGN_REACH, MOUNT_REACH, SNAP_REACH, type GestureOf } from '../gesture'
 import { clearanceAt, cornerAt, endAt, faceAt, looseEndAt, frameCornerAt, frameCursor, frameGripAt, gripAt, gripBox, handleAt, lineUp, titleAt, viewEdgeAt, viewLineHandleAt } from '../picking'
 import { get, type Canvas, type Move, type Press, type Release } from '../runtime'
@@ -233,10 +233,11 @@ export const moveMove: Move<'move'> = (_c, g, e, _at, world, out) => {
     const fit = alignMove(g.moving, g.others, sub(world, g.start), ALIGN_REACH / s.view.zoom)
     d = { x: fit.x ? round(fit.d.x) : d.x, y: fit.y ? round(fit.d.y) : d.y }
   }
-  // Held level or upright by an arrow key, it only moves that way; lining up still decides how far.
-  if (s.axisLock) {
-    d = s.axisLock === 'x' ? { x: d.x, y: 0 } : { x: 0, y: d.y }
-    out.guide = { at: g.start, angle: s.axisLock === 'x' ? 0 : Math.PI / 2 }
+  // Ortho holds it level or upright, whichever the pointer is nearer to; lining up still decides how far.
+  if (ortho()) {
+    const axis = orthoAxis(g.start, world)
+    d = axis === 'x' ? { x: d.x, y: 0 } : { x: 0, y: d.y }
+    out.guide = { at: g.start, angle: axis === 'x' ? 0 : Math.PI / 2 }
   }
   if (g.moving && !e.altKey && usePrefs.getState().snapToObjects) out.smart = moveGuides(g.moving, g.others, d)
   const before = s.base ?? s.doc
@@ -295,7 +296,8 @@ export const handleMove: Move<'handle'> = (c, g, e, _at, world, out) => {
   // The end that stays put is where a perpendicular onto another line would be dropped from.
   // Held level or upright by an arrow key, the point stays on that line through where it was,
   // and may be brought level with something pointed at elsewhere.
-  const was = s.axisLock ? kindOf(g.node).handles?.(g.node, registry)[g.index] : undefined
+  const handleAt = ortho() ? kindOf(g.node).handles?.(g.node, registry) : undefined
+  const was = handleAt ? handleAt[g.index] : undefined
   // Taken by an arrow away from its point, it goes by the grid (Alt: exactly where the pointer says).
   const step = e.altKey ? 0 : gridStep(s.view.zoom)
   const grabbed = g.grab && sub(world, g.grab)
@@ -312,7 +314,7 @@ export const handleMove: Move<'handle'> = (c, g, e, _at, world, out) => {
       : held
         ? held.target
         : snap(c, world, { altKey: e.altKey, shiftKey: false }, [g.node.id], ends?.fixed, carriedOn, ghost ? [ghost.item] : [])
-  if (was && s.axisLock) out.guide = { at: was, angle: s.axisLock === 'x' ? 0 : Math.PI / 2 }
+  if (was) out.guide = { at: was, angle: orthoAxis(was, world) === 'x' ? 0 : Math.PI / 2 }
   else if (held) out.guide = held.line
   out.link = target.link
   out.marker = target.marker
@@ -334,9 +336,9 @@ export const cornerMove: Move<'corner'> = (c, g, e, _at, world, out) => {
   // a free end), or to a level, upright or 45° line through the other end of one of them, so that
   // the wall comes level or upright: whichever line the pointer is nearest to, shown across the view.
   const lines = ends.flatMap(({ wall, end }) => [{ at: g.from, angle: Math.atan2(wall.b.y - wall.a.y, wall.b.x - wall.a.x) }, ...squareFrom(end === 'a' ? wall.b : wall.a)])
-  const held = e.shiftKey && !s.axisLock && lines.length > 0 ? heldNearest(c, world, lines, ends.map((end) => end.wall.id)) : null
-  const target: Target = s.axisLock ? lineEnd(c, world, e, ends.map((end) => end.wall.id), g.from) : held ? held.target : snap(c, world, e, ends.map((end) => end.wall.id))
-  if (s.axisLock) out.guide = { at: g.from, angle: s.axisLock === 'x' ? 0 : Math.PI / 2 }
+  const held = e.shiftKey && !ortho() && lines.length > 0 ? heldNearest(c, world, lines, ends.map((end) => end.wall.id)) : null
+  const target: Target = ortho() ? lineEnd(c, world, e, ends.map((end) => end.wall.id), g.from) : held ? held.target : snap(c, world, e, ends.map((end) => end.wall.id))
+  if (ortho()) out.guide = { at: g.from, angle: orthoAxis(g.from, world) === 'x' ? 0 : Math.PI / 2 }
   else if (held) out.guide = held.line
   out.link = target.link
   out.marker = target.marker
@@ -409,8 +411,15 @@ export const cropMove: Move<'crop'> = (c, g, e, _at, world, out) => {
 export const resizeMove: Move<'resize'> = (c, g, e, _at, world, out) => {
   const s = get()
   // The grip follows the pointer, snapped as a point would be; Shift keeps the proportions from a corner.
-  const target = snap(c, world, { altKey: e.altKey, shiftKey: false }, [g.node.id])
+  // Ortho holds it to the axis the pointer has gone further along from where the grip was, so a box
+  // grows one way at a time.
+  const frame = resizeFrame(g.node, registry, s.base ?? s.doc)
+  const gripStart = frame ? frameGrips(frame)[g.grip] : null
+  const held = ortho() && gripStart ? heldOrtho(c, world, [g.node.id], gripStart) : null
+  const target = held ?? snap(c, world, { altKey: e.altKey, shiftKey: false }, [g.node.id])
   out.marker = target.marker
+  out.link = target.link
+  if (held && gripStart) out.guide = { at: gripStart, angle: orthoAxis(gripStart, world) === 'x' ? 0 : Math.PI / 2 }
   const patch = resizePatch(g.node, g.grip, target.p, e.shiftKey, registry, s.base ?? s.doc)
   if (patch) {
     out.previewed = preview([{ op: 'update_node', id: g.node.id, patch }])
@@ -562,7 +571,6 @@ export function dragUp(c: Canvas): void {
   const s = get()
   // The box has changed under the pointer; the next movement works out what is there now.
   c.setGripCursor(null)
-  if (s.axisLock) useStore.setState({ axisLock: null })
   if (s.wallFace) useStore.setState({ wallFace: null })
   // A preview drawn by shifting the scene has not changed the document yet: make the move once,
   // now that the pointer is down.

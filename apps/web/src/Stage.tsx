@@ -628,9 +628,14 @@ function Breadcrumb() {
  */
 function Status() {
   const status = useStore((s) => s.status)
+  // Whether movements are held to the axes (F8), said beside the pointer reading, where the eye is.
+  const ortho = usePrefs((p) => p.ortho)
   return (
     <div className="status">
       <span>{status}</span>
+      <span className="ortho" data-on={ortho || undefined}>
+        {t('Ortho')}: {ortho ? t('On') : t('Off')}
+      </span>
     </div>
   )
 }

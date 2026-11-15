@@ -3,7 +3,6 @@ import { stopBrowsing } from '../actions/instances'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { type NodeOf, type Primitive, arcLengthOfChord, dist, lineOf, openingArc, rootOf, seenArea, shownInElevations, viewsOf, gridlineBubbles, wallEndState, boundsFrame, buildScene, connectedWalls, frameContains, frameGrips, hitTest, kindOf, modifierKind, modifierParams, newId, placedScene, resizeFrame, rotate, sceneBounds, turnedBox, wallEdgeLines, wallLength, wallMiddle } from '@opencalque/core'
 import { t } from '../i18n'
-import { pointer } from '../cursors'
 import { finishTextEdit, zoomToFit } from '../actions'
 import { commandFor, handleCommandBuffer, onCommand } from '../commands'
 import { registry, useExtensions } from '../extensions'
@@ -94,6 +93,12 @@ export function CanvasView() {
   const handles = useMemo(() => {
     const node = selection.length === 1 ? doc.nodes[selection[0]] : undefined
     return node && !lockedAmong(doc, selection) ? (kindOf(node).handles?.(node, registry, doc) ?? []) : []
+  }, [doc, selection])
+
+  /** How many of those handles are the middles of the object's edges, drawn as rectangles and dragged to slide the edge. */
+  const middles = useMemo(() => {
+    const node = selection.length === 1 ? doc.nodes[selection[0]] : undefined
+    return node && !lockedAmong(doc, selection) ? (kindOf(node).handleMiddles?.(node) ?? 0) : 0
   }, [doc, selection])
 
   /**
@@ -298,8 +303,8 @@ export function CanvasView() {
       canvas.height = viewport.height * dpr
     }
     // The words being typed are shown by their editor instead; the rest of the object stays drawn.
-    drawScene(canvas.getContext('2d')!, { ...viewport, dpr }, view, drawnScene, selection, drawnHandles, { ...overlay, inViews, viewLines, viewWords: { start: t('Start'), end: t('End') }, labels: overlay.labels ?? selectionLabels, titles, frames, corner, grips: tool === 'select' && !roomsOnly(doc, selection) && !lockedAmong(doc, selection), boxless: roomsOnly(doc, selection), frame: frame && { grips: frame.grips, up: frame.up }, box: overlay.box ?? ownBox, edgeHover: edgeLines, wallLinks, clearances: clearanceLines }, showGrid, palette, around)
-  }, [drawnScene, around, view, viewport, selection, handles, frame, ownBox, selectionLabels, titles, frames, corner, overlay, showGrid, palette, pictures, tool, edgeLines, wallLinks, clearanceLines, inViews, viewLines, drawnHandles])
+    drawScene(canvas.getContext('2d')!, { ...viewport, dpr }, view, drawnScene, selection, drawnHandles, { ...overlay, middles, inViews, viewLines, viewWords: { start: t('Start'), end: t('End') }, labels: overlay.labels ?? selectionLabels, titles, frames, corner, grips: tool === 'select' && !roomsOnly(doc, selection) && !lockedAmong(doc, selection), boxless: roomsOnly(doc, selection), frame: frame && { grips: frame.grips, up: frame.up }, box: overlay.box ?? ownBox, edgeHover: edgeLines, wallLinks, clearances: clearanceLines }, showGrid, palette, around)
+  }, [drawnScene, around, view, viewport, selection, handles, middles, frame, ownBox, selectionLabels, titles, frames, corner, overlay, showGrid, palette, pictures, tool, edgeLines, wallLinks, clearanceLines, inViews, viewLines, drawnHandles])
 
   // Lets the quick bar finish the shape in progress with the sizes typed there.
   useEffect(() => {
@@ -314,7 +319,7 @@ export function CanvasView() {
       else if (g.kind === 'poly') {
         g.points.push(polyPoint(c, g, world, keys))
         g.since = performance.now()
-        useStore.setState({ drawLocks: {}, axisLock: null })
+        useStore.setState({ drawLocks: {} })
         preview([{ op: 'add_node', node: polyline(g.id, g.points, false) }])
       }
       syncStep(c)
@@ -531,17 +536,14 @@ export function CanvasView() {
     }
   }, [])
 
-  // The pointer is the canvas's own set (`cursors.ts`): an arrow for selecting, a cross for drawing,
-  // a hand for panning, a + for copying while moving, and the side and corner cursors of a box. The
-  // format painter is an eyedropper until it holds an object's look, and a brush after.
-  const brushing = useStore((s) => s.brush !== null)
-  const cursor =
-    tool === 'formatPainter' ? (brushing ? 'brush' : 'eyedropper') : tool === 'eyedropper' ? 'eyedropper' : tool === 'hand' ? 'grab' : tool === 'select' ? (gripCursor ?? 'default') : tool === 'move' && gripCursor === 'copy' ? 'copy' : 'crosshair'
+  // The pointer says what a click does, in the system's own cursors: an arrow for selecting, a
+  // cross for drawing or painting, a hand for panning, and a + while a move copies.
+  const cursor = tool === 'formatPainter' || tool === 'eyedropper' ? 'crosshair' : tool === 'hand' ? 'grab' : tool === 'select' ? (gripCursor ?? 'default') : tool === 'move' && gripCursor === 'copy' ? 'copy' : 'crosshair'
   return (
     <canvas
       ref={canvasRef}
       className="canvas"
-      style={{ cursor: pointer(cursor) }}
+      style={{ cursor }}
       onPointerDown={(e) => (onPointerDown(e), syncStep(c))}
       // A press that has just opened words to type in place (a text, a note) leaves the focus in
       // them: the browser would otherwise move it as the mouse goes down, after the box took it.

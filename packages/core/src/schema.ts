@@ -399,6 +399,7 @@ export const NodeSchema = z
         rotation: z.number().optional().describe('Degrees clockwise on screen. Defaults to 0.'),
         top: z.number().optional().describe('Its upper face, in mm above the floor (z = 0).'),
         bottom: z.number().optional().describe('Its lower face, in mm above the floor (z = 0).'),
+        material: Id.optional().describe('What it is made of, whose fill and pattern it is drawn in, as a wall is. Left out, the default material.'),
       })
       .describe('A column standing where it is put, as wide and as deep as it says, between its bottom and its top.'),
     z

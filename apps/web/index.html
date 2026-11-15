@@ -43,6 +43,11 @@
         filter: drop-shadow(0 0 22px rgb(140 175 255 / 16%));
         animation: splash-mark-in 0.7s ease-out 0.1s forwards;
       }
+      .splash-text {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+      }
       .splash-tagline {
         margin: 0;
         color: rgb(238 243 255 / 82%);
@@ -51,6 +56,34 @@
         white-space: nowrap;
         opacity: 0;
         animation: splash-line-in 0.8s ease-out 0.85s forwards;
+      }
+      /* A thin white rule under the tagline, and the line that says what this build is, under it. */
+      .splash-rule {
+        height: 1px;
+        margin: 10px 0 9px;
+        background: rgb(255 255 255 / 85%);
+        opacity: 0;
+        animation: splash-line-in 0.8s ease-out 1s forwards;
+      }
+      .splash-modified {
+        margin: 0;
+        color: rgb(238 243 255 / 62%);
+        font: 300 11px/1.5 Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+        opacity: 0;
+        animation: splash-line-in 0.8s ease-out 1.15s forwards;
+      }
+      /* The name of what it is made from, in GitHub's blue, a link to it: the splash is a drag region,
+         so the link has to be let through. */
+      .splash-modified a {
+        color: #58a6ff;
+        text-decoration: none;
+        cursor: pointer;
+        -webkit-app-region: no-drag;
+      }
+      .splash-modified a:hover {
+        text-decoration: underline;
       }
       @keyframes splash-mark-in {
         from {
@@ -85,10 +118,15 @@
           font-size: 11px;
           letter-spacing: 0.1em;
         }
+        .splash-modified {
+          font-size: 10px;
+        }
       }
       @media (prefers-reduced-motion: reduce) {
         .splash-mark,
-        .splash-tagline {
+        .splash-tagline,
+        .splash-rule,
+        .splash-modified {
           animation-duration: 0.01s;
           animation-delay: 0s;
         }
@@ -100,7 +138,11 @@
     <div id="splash" role="status" aria-label="AxioDraw">
       <div class="splash-lockup">
         <img class="splash-mark" src="./logo-mark.png" alt="" />
-        <p class="splash-tagline">AxioDraw - Present Your Taste.</p>
+        <div class="splash-text">
+          <p class="splash-tagline">AxioDraw - Present Your Taste.</p>
+          <div class="splash-rule" role="presentation"></div>
+          <p class="splash-modified">Modified by <a href="https://github.com/laurent512/opencalque" target="_blank" rel="noreferrer">OpenCalque</a> 1.9.0</p>
+        </div>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>

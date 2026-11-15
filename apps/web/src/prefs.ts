@@ -30,6 +30,8 @@ export interface Prefs {
   showGrid: boolean
   snapToGrid: boolean
   snapToObjects: boolean
+  /** Hold every movement — of an object, of one of its points, of what is being drawn — to the level or the upright axis (F8). */
+  ortho: boolean
   /** Show how far the one object selected stands from the walls around it, as dimensions to type into. */
   showClearances: boolean
   /** How fast a pinch or Ctrl-wheel zooms the drawing, as a multiple of the usual speed. */
@@ -102,6 +104,8 @@ const DEFAULTS: Prefs = {
   showGrid: true,
   snapToGrid: true,
   snapToObjects: true,
+  // Movement is free; F8 holds it to one axis at a time (`aim.ts`).
+  ortho: false,
   showClearances: true,
   zoomSpeed: 1,
   wheelMode: 'trackpad',

@@ -3561,6 +3561,11 @@
               "bottom": {
                 "description": "Its lower face, in mm above the floor (z = 0).",
                 "type": "number"
+              },
+              "material": {
+                "description": "What it is made of, whose fill and pattern it is drawn in, as a wall is. Left out, the default material.",
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [

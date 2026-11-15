@@ -219,8 +219,8 @@ export function alongLine(c: Canvas, world: Vec2, from: Vec2, angle: number, exc
 }
 
 /**
- * Where a point goes while its direction from `from` is held (`angle`), by Shift or by an arrow
- * key: on that line, at what the pointer meets there. A point pointed at elsewhere (a corner, an
+ * Where a point goes while its direction from `from` is held (`angle`), by Shift or by ortho:
+ * on that line, at what the pointer meets there. A point pointed at elsewhere (a corner, an
  * end, a middle) brings it level with that point, with a link to show what it was taken from;
  * otherwise it stops on a line the held line crosses near the pointer, or goes by grid steps.
  */
@@ -257,15 +257,27 @@ export function heldNearest(c: Canvas, world: Vec2, lines: Held[], exclude: stri
 }
 
 /**
- * Where the end of a line being drawn from `from` goes. Usually that is `snap`. With the
- * direction held level or upright by an arrow key, the end stays on that line through `from`
- * and the pointer only says how far: by pointing at something elsewhere, in which case the end
- * comes level with it (`link` joins the two, to show what it was taken from), or else by grid
- * steps, stopping on a wall the line crosses.
+ * Which axis holds a point from where it started, when ortho is on (F8): the one the pointer has
+ * gone further along. Movement is then level or upright, whichever it is nearer to.
+ */
+export const orthoAxis = (from: Vec2, world: Vec2): 'x' | 'y' => (Math.abs(world.x - from.x) >= Math.abs(world.y - from.y) ? 'x' : 'y')
+
+/** Whether movements are held to the axes (F8, the preference `ortho`). */
+export const ortho = (): boolean => usePrefs.getState().ortho
+
+/** Where a point ends up when ortho holds it: on the level or upright line through `from`, at what lies on that line. */
+export function heldOrtho(c: Canvas, world: Vec2, exclude: string[], from: Vec2): Target {
+  return heldLine(c, world, from, orthoAxis(from, world) === 'x' ? 0 : Math.PI / 2, exclude)
+}
+
+/**
+ * Where the end of a line being drawn from `from` goes. Usually that is `snap`. With ortho on
+ * (F8), the end stays on the level or upright line through `from` the pointer is nearer to, and
+ * the pointer only says how far: by pointing at something elsewhere, in which case the end comes
+ * level with it (`link` joins the two, to show what it was taken from), or else by grid steps,
+ * stopping on a wall the line crosses.
  */
 export function lineEnd(c: Canvas, world: Vec2, e: Keys, exclude: string[], from: Vec2): Target {
-  const lock = get().axisLock
-  if (!lock) return snap(c, world, e, exclude, from)
-  if (e.altKey) return { p: lock === 'x' ? { x: world.x, y: from.y } : { x: from.x, y: world.y }, marker: null }
-  return heldLine(c, world, from, lock === 'x' ? 0 : Math.PI / 2, exclude)
+  if (!usePrefs.getState().ortho) return snap(c, world, e, exclude, from)
+  return heldOrtho(c, world, exclude, from)
 }

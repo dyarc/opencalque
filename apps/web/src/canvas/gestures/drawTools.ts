@@ -3,7 +3,7 @@ import { t } from '../../i18n'
 import { apply, cancel, commit, layerHere, preview, useStore } from '../../store'
 import { formatLength, formatNumber } from '../../units'
 import { gridStep } from '../../view'
-import { lineEnd, snap, type Target } from '../aim'
+import { lineEnd, ortho, orthoAxis, snap, type Target } from '../aim'
 import { BOXES, CHAINED, DRAG_DISTANCE, DRAG_TIME, SAME_POINT, type GestureOf, type Keys } from '../gesture'
 import { get, reset, syncStep, type Canvas, type Move, type Press, type Release } from '../runtime'
 import { arcNode, axisOf, constrain, currentStyle, paperFormats, polyline, shape, sizes, wallOps } from '../shapes'
@@ -59,7 +59,7 @@ export function finishShape(c: Canvas, g: GestureOf<'draw'>, end: Vec2, chain: b
     return
   }
   p = constrain(tool, g.start, p, c.lastWorld.altKey)
-  useStore.setState({ drawLocks: {}, axisLock: null, drawLive: null })
+  useStore.setState({ drawLocks: {}, drawLive: null })
   if (tool === 'dimension') {
     // Not done yet: the next click places the dimension line.
     preview([{ op: 'add_node', node: shape(tool, g.id, g.start, p) }])
@@ -108,7 +108,7 @@ export function finishPoly(c: Canvas, g: GestureOf<'poly'>, closed: boolean): vo
   else cancel()
   c.gesture = { kind: 'idle' }
   c.setOverlay({})
-  useStore.setState({ drawLocks: {}, axisLock: null, drawLive: null })
+  useStore.setState({ drawLocks: {}, drawLive: null })
   syncStep(c)
 }
 
@@ -152,7 +152,7 @@ export const lineDown: Press = (c, e, at, world) => {
   if (g.points.length >= 3 && p === g.points[0]) return finishPoly(c, g, true)
   g.points.push(p)
   g.since = performance.now()
-  useStore.setState({ drawLocks: {}, axisLock: null })
+  useStore.setState({ drawLocks: {} })
 }
 
 /** The two-point tools: the first click starts a shape, the next finishes it (and, for a dimension, a third places its line). */
@@ -199,7 +199,7 @@ export const drawMove: Move<'draw'> = (c, g, e, _at, world, out) => {
   out.marker = target.marker
   out.link = target.link
   // The line it is held to is shown across the view, as when Shift holds a wall end on its line.
-  if (s.axisLock && CHAINED.includes(s.tool)) out.guide = { at: g.start, angle: s.axisLock === 'x' ? 0 : Math.PI / 2 }
+  if (ortho() && CHAINED.includes(s.tool)) out.guide = { at: g.start, angle: orthoAxis(g.start, world) === 'x' ? 0 : Math.PI / 2 }
   const end = constrain(s.tool, g.start, target.p, e.altKey)
   // The formats on offer follow the pointer itself, so one stays lit while the paper is held on it.
   if (s.tool === 'paper' && s.drawLocks.a === undefined && s.drawLocks.b === undefined && !e.altKey) out.ghosts = paperFormats(g.start, target.p)
@@ -214,11 +214,11 @@ export const polyMove: Move<'poly'> = (c, g, e, _at, world, out) => {
   const s = get()
   const last = g.points[g.points.length - 1]
   const end = polyPoint(c, g, world, e)
-  if (s.axisLock) {
+  if (ortho()) {
     const target = lineEnd(c, world, e, [g.id], last)
     out.marker = target.marker
     out.link = target.link
-    out.guide = { at: last, angle: s.axisLock === 'x' ? 0 : Math.PI / 2 }
+    out.guide = { at: last, angle: orthoAxis(last, world) === 'x' ? 0 : Math.PI / 2 }
   }
   out.previewed = preview([{ op: 'add_node', node: polyline(g.id, [...g.points, end], false) }])
   out.status = t('Length {value}', { value: formatLength(dist(last, end)) })

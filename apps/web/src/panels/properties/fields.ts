@@ -110,6 +110,8 @@ const stroke = (section: string): FieldSpec[] => [
 export const STROKE = msg('Stroke')
 
 const FILL = msg('Fill')
+/** The heading a column's material is shown under, as a wall's is in the panel above it. */
+const MATERIAL = msg('Material')
 
 /**
  * What covers the inside of a shape: none, a colour, or a pattern over one, in one window. `fallback`
@@ -262,7 +264,8 @@ const FIELDS: Partial<Record<Node['type'], FieldSpec[]>> = {
     num('rotation', msg('Rotation'), 0),
     { ...len('top', msg('Top'), undefined, msg('3D')), optional: true },
     { ...len('bottom', msg('Bottom'), undefined, msg('3D')), optional: true },
-    ...SHAPE_STYLE,
+    // Its fill is its material's, as a wall's is: there is no fill of its own to set.
+    ...stroke(STROKE),
   ],
   beam: [
     len('width', msg('Width')),
@@ -383,6 +386,23 @@ function roomFields(node: Extract<Node, { type: 'room' }>, doc: Document): Field
   )
 }
 
+/**
+ * The properties of a column, with the material its fill comes from, as a wall has: the default
+ * material, which walls are made of when they say none, and then the drawing's own.
+ */
+function columnFields(doc: Document): FieldSpec[] {
+  const materials = Object.values(doc.materials ?? {}).filter((m) => m.id !== DEFAULT_MATERIAL)
+  const choice: FieldSpec = {
+    path: 'material',
+    label: msg('Material'),
+    type: 'string',
+    section: MATERIAL,
+    material: true,
+    options: [{ value: '', label: msg('Default') }, ...materials.map((m) => ({ value: m.id, label: m.name }))],
+  }
+  return [...(FIELDS.column ?? []), choice]
+}
+
 /** The properties several objects all have, to be set on all of them at once. */
 export function commonFields(nodes: Node[], doc: Document): FieldSpec[] {
   const [first, ...rest] = nodes.map((node) => fieldsOf(node, doc))
@@ -420,7 +440,7 @@ const RECESS_FIELDS: FieldSpec[] = [
 ]
 
 export function fieldsOf(node: Node, doc: Document): FieldSpec[] {
-  const base = node.type === 'room' ? roomFields(node, doc) : node.type === 'elevation' ? viewFields(doc) : (FIELDS[node.type] ?? [])
+  const base = node.type === 'room' ? roomFields(node, doc) : node.type === 'column' ? columnFields(doc) : node.type === 'elevation' ? viewFields(doc) : (FIELDS[node.type] ?? [])
   // A sunken box is a part of the rectangle it is cut into: its fields appear only once it has one;
   // a polygon's heights only once it is closed.
   const fields = node.type === 'rect' && node.recess ? [...base, ...RECESS_FIELDS] : node.type === 'polyline' && node.closed ? [...base, ...POLYGON_HEIGHT_FIELDS] : base

@@ -1,9 +1,9 @@
 import { isVisible } from '../document'
-import { dist, mid, scale, type Vec2 } from '../geometry'
+import { dist, mid, perp, scale, type Vec2 } from '../geometry'
 import type { Op } from '../ops'
 import type { Registry } from '../registry'
-import type { Document, WallEdge } from '../schema'
-import { courseOf, wallPoints, wallSides, type Wall } from './course'
+import type { Document, NodeOf, WallEdge } from '../schema'
+import { courseOf, cross, dot, wallArc, wallPoints, wallSides, type Wall } from './course'
 import { cap, cornerJoin, wallEndsAt, wallEndsOf, type Stop } from './joints'
 import { openingIndex, openingSpan, overlap } from './openings'
 import { current, drawnWith } from './spatial'
@@ -29,9 +29,85 @@ export interface WallParts {
   stops: { a?: Stop; b?: Stop }
 }
 
-/** Where a column's footprint crosses a wall's line, as stretches of the line (distances from `a`). */
-function columnCuts(wall: Wall, doc: Document): [number, number][] {
-  const out: [number, number][] = []
+/**
+ * A stretch of a wall taken out of it (distances along its line), and where the cut runs on its two
+ * faces. A door or a window cuts square across; a column is cut along its own sides, so its footprint
+ * is what is missing from the wall, `start` being the left face's point then the right's, and `end`
+ * the right's then the left's, as a piece's ends are.
+ */
+interface WallCut {
+  from: number
+  to: number
+  start?: [Vec2, Vec2]
+  end?: [Vec2, Vec2]
+}
+
+/** The four corners of a column's footprint, in the drawing. */
+function columnCorners(node: NodeOf<'column'>): Vec2[] {
+  const angle = ((node.rotation ?? 0) * Math.PI) / 180
+  const [cos, sin] = [Math.cos(angle), Math.sin(angle)]
+  return [
+    [0, 0],
+    [node.width, 0],
+    [node.width, node.height],
+    [0, node.height],
+  ].map(([x, y]) => ({ x: node.x + x * cos - y * sin, y: node.y + x * sin + y * cos }))
+}
+
+/**
+ * Where a straight wall's left and right faces cross a column's own outline, as distances along the
+ * wall and the face each is on. Four of them when the column goes through the wall as a door would,
+ * two on each face; fewer when it only reaches into it, and none for a curved wall.
+ */
+function columnCrossings(wall: Wall, node: NodeOf<'column'>): { along: number; left: boolean; p: Vec2 }[] {
+  const course = courseOf(wall)
+  const { left, right } = wallSides(wall)
+  const dir = course.dir(0)
+  const normal = perp(dir)
+  const corners = columnCorners(node)
+  const found: { along: number; left: boolean; p: Vec2 }[] = []
+  for (let i = 0; i < 4; i++) {
+    const p = corners[i]
+    const q = corners[(i + 1) % 4]
+    const edge = { x: q.x - p.x, y: q.y - p.y }
+    const denom = cross(edge, dir)
+    if (Math.abs(denom) < 1e-9) continue
+    for (const [across, isLeft] of [
+      [-left, true],
+      [right, false],
+    ] as const) {
+      const o = { x: wall.a.x + normal.x * across, y: wall.a.y + normal.y * across }
+      const u = cross({ x: o.x - p.x, y: o.y - p.y }, dir) / denom
+      if (u < -1e-9 || u > 1 + 1e-9) continue
+      const at = { x: p.x + edge.x * u, y: p.y + edge.y * u }
+      const along = dot({ x: at.x - wall.a.x, y: at.y - wall.a.y }, dir)
+      if (along < -1e-6 || along > course.length + 1e-6) continue
+      found.push({ along, left: isLeft, p: at })
+    }
+  }
+  return found
+}
+
+/** How the two ends of a column's cut run across a straight wall: along its own sides, or square across when that cannot be told. */
+function columnCaps(wall: Wall, node: NodeOf<'column'>): { start?: [Vec2, Vec2]; end?: [Vec2, Vec2] } {
+  if (wallArc(wall)) return {}
+  const found = columnCrossings(wall, node)
+  if (found.length !== 4) return {}
+  found.sort((a, b) => a.along - b.along)
+  const [one, two, three, four] = found
+  // Each end of the cut is one stretch of the column's own outline, from one face to the other.
+  if (one.left === two.left || three.left === four.left) return {}
+  // A piece's own ends are told apart: it starts on its left face and ends on its right, so the cut
+  // that ends the piece before this one is given the right first, and the cut that starts the piece
+  // after it, the left first.
+  const faces = (a: typeof one, b: typeof two) => ({ left: (a.left ? a : b).p, right: (a.left ? b : a).p })
+  const [entry, exit] = [faces(one, two), faces(three, four)]
+  return { start: [entry.right, entry.left], end: [exit.left, exit.right] }
+}
+
+/** Where a column's footprint crosses a wall's line, as stretches of the line (distances from `a`), cut along its own sides where the wall is straight. */
+function columnCuts(wall: Wall, doc: Document): WallCut[] {
+  const out: WallCut[] = []
   const points = wallPoints(wall)
   for (const node of drawnWith(doc, wall.parent)) {
     if (node.type !== 'column' || !isVisible(doc, node)) continue
@@ -64,7 +140,7 @@ function columnCuts(wall: Wall, doc: Document): [number, number][] {
           else leave = Math.min(leave, t)
         }
       }
-      if (inside && enter < leave - 1e-9) out.push([along + enter * length, along + leave * length])
+      if (inside && enter < leave - 1e-9) out.push({ from: along + enter * length, to: along + leave * length, ...columnCaps(wall, node) })
       along += length
     }
   }
@@ -72,19 +148,19 @@ function columnCuts(wall: Wall, doc: Document): [number, number][] {
 }
 
 /** The doors, windows and columns of a wall, as the stretches of its line they take (distances from `a`), in order. */
-function openingCuts(wall: Wall, doc: Document, registry: Registry): [number, number][] {
-  const cuts: [number, number][] = []
+function openingCuts(wall: Wall, doc: Document, registry: Registry): WallCut[] {
+  const cuts: WallCut[] = []
   if (current(doc, wall)) {
-    for (const cut of openingIndex(doc, wall.parent, registry).cuts.get(wall.id) ?? []) if (cut.visible) cuts.push([cut.from, cut.to])
+    for (const cut of openingIndex(doc, wall.parent, registry).cuts.get(wall.id) ?? []) if (cut.visible) cuts.push({ from: cut.from, to: cut.to })
   } else {
     for (const node of drawnWith(doc, wall.parent)) {
       const span = isVisible(doc, node) ? openingSpan(node, registry) : null
       const cut = span && overlap(wall, span)
-      if (cut) cuts.push(cut)
+      if (cut) cuts.push({ from: cut[0], to: cut[1] })
     }
   }
   cuts.push(...columnCuts(wall, doc))
-  return cuts.sort((x, y) => x[0] - y[0])
+  return cuts.sort((x, y) => x.from - y.from)
 }
 
 /**
@@ -155,7 +231,7 @@ function withoutSpikes(points: Vec2[]): Vec2[] {
 }
 
 /** The outline of a wall in solid stretches, between the given cuts (distances along it, in order). */
-function wallPieces(wall: Wall, doc: Document, cuts: [number, number][]): WallParts {
+function wallPieces(wall: Wall, doc: Document, cuts: WallCut[]): WallParts {
   const course = courseOf(wall)
   const length = course.length
   const { left: l, right: r } = wallSides(wall)
@@ -165,9 +241,11 @@ function wallPieces(wall: Wall, doc: Document, cuts: [number, number][]): WallPa
   const capB = cap(wall.b, wall, scale(course.dir(length), -1), doc, undefined, stopB)
 
   const pieces: WallPiece[] = []
-  const piece = (from: number, to: number) => {
-    const start = from <= 0 ? capA : [course.offset(from, -l), course.offset(from, r)]
-    const end = to >= length ? capB : [course.offset(to, r), course.offset(to, -l)]
+  // `after` is where the cut before this one left the wall, when it did not leave it square across:
+  // a column's own side, which the piece then starts from.
+  const piece = (from: number, to: number, after?: [Vec2, Vec2], before?: [Vec2, Vec2]) => {
+    const start = after ?? (from <= 0 ? capA : [course.offset(from, -l), course.offset(from, r)])
+    const end = before ?? (to >= length ? capB : [course.offset(to, r), course.offset(to, -l)])
     // Between its two ends a curved wall follows its curve, along one face and back along the
     // other. Each face starts where the end before it left off, which at a mitred corner is some
     // way along the wall, or behind its end.
@@ -179,11 +257,15 @@ function wallPieces(wall: Wall, doc: Document, cuts: [number, number][]): WallPa
     pieces.push({ start, end, from, to, outline: withoutSpikes([...start, ...face(1, start[start.length - 1], end[0]), ...end, ...face(-1, start[0], end[end.length - 1]).reverse()]) })
   }
   let start = 0
-  for (const [from, to] of cuts) {
-    if (from > start + 1e-6) piece(start, from)
-    start = Math.max(start, to)
+  let after: [Vec2, Vec2] | undefined
+  for (const cut of cuts) {
+    if (cut.from > start + 1e-6) piece(start, cut.from, after, cut.start)
+    if (cut.to > start + 1e-6) {
+      after = cut.end
+      start = cut.to
+    }
   }
-  if (start < length - 1e-6) piece(start, length)
+  if (start < length - 1e-6) piece(start, length, after)
   return { pieces, stops: { ...(stopA.stop ? { a: stopA.stop } : {}), ...(stopB.stop ? { b: stopB.stop } : {}) } }
 }
 

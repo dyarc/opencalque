@@ -136,7 +136,6 @@ export function syncStep(c: Canvas): void {
 export function reset(c: Canvas, keepCopying = false): void {
   cancel()
   c.tracked = { tool: get().tool, points: [], resting: null }
-  if (get().axisLock) useStore.setState({ axisLock: null })
   if (get().wallFace) useStore.setState({ wallFace: null })
   // A move given up is a plain move again, and the pointer a plain one.
   if (!keepCopying && get().copyMode) useStore.setState({ copyMode: false })

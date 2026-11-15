@@ -1426,6 +1426,12 @@ body.scrubbing .quick-field input[title] {
   pointer-events: none;
 }
 
+/* Whether movement is held to the axes: quiet when off, in the accent when on. */
+.status .ortho[data-on] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* The drawing's name and saved state, where the drawing starts: as quiet as the pointer reading below. */
 .canvas-name {
   position: absolute;

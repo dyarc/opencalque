@@ -42,7 +42,8 @@ async function saved(page: Page): Promise<Saved[]> {
   return Object.values(doc.nodes as Record<string, Saved>).filter((node) => node.type !== 'page')
 }
 
-const status = (page: Page) => page.locator('.status span')
+// The pointer reading, which is the first of what the corner says: the state of ortho follows it.
+const status = (page: Page) => page.locator('.status > span').first()
 
 test('draws a line, and a closed shape by coming back to its first point, with the line tool', async ({ page }) => {
   const at = await blank(page)
@@ -404,7 +405,7 @@ test('switches copying on and off with Ctrl while moving, and goes on for anothe
   // Taken by its top-left corner. Nothing is held down: Ctrl is pressed once to switch copying on.
   await click(page, at(0, 0))
   await page.keyboard.press('Control')
-  await expect.poll(() => pointer(page)).toContain(', copy')
+  await expect.poll(() => pointer(page)).toBe('copy')
   await page.mouse.move(at(2000, 0).x, at(2000, 0).y, { steps: 4 })
   await expect(status(page)).toContainText('Copy, 2000')
   await click(page, at(2000, 0))
@@ -413,7 +414,7 @@ test('switches copying on and off with Ctrl while moving, and goes on for anothe
   await click(page, at(3000, 0))
   // Ctrl again: it moves again, so the original goes, and that ends the move.
   await page.keyboard.press('Control')
-  await expect.poll(() => pointer(page)).toContain(', crosshair')
+  await expect.poll(() => pointer(page)).toBe('crosshair')
   await page.mouse.move(at(0, 1000).x, at(0, 1000).y, { steps: 4 })
   await expect(status(page)).toContainText('Move by 1000')
   await click(page, at(0, 1000))
@@ -521,10 +522,9 @@ test('the format painter takes its look from what is selected, or from a click, 
   const strokeOf = (id: string, nodes: Saved[]) => (nodes.find((n) => n.id === id) as any)?.style?.stroke
   const field = (name: string) => page.locator('.field', { has: page.locator(`span:text-is("${name}")`) }).locator('input')
   // The red one, at the bottom of the list, is selected before the painter is taken: the brush is
-  // loaded at once, and the pointer says so.
+  // loaded at once, and the hints say so (the pointer is the system's, a cross in either half).
   await objectRows(page).nth(2).click()
   await command(page, 'ma')
-  await expect.poll(() => pointer(page)).toContain(', copy')
   await expect(page.locator('.hint-bar')).toContainText('Click an object to paint it with the look taken')
   // The third, clicked on its edge, is painted.
   await click(page, point(5000, 300))
@@ -532,15 +532,15 @@ test('the format painter takes its look from what is selected, or from a click, 
   let nodes = await saved(page)
   expect(strokeOf('c', nodes)).toBe('#e5484d')
   expect(strokeOf('b', nodes)).toBeUndefined()
-  // With nothing selected, the pointer is an eyedropper until a click takes the look: the clicked
-  // object is then selected, so the drawing shows what is being painted with, and the brush is in hand.
+  // With nothing selected, the eyedropper waits for a click: the clicked object is then selected, so
+  // the drawing shows what is being painted with, and the brush is in hand.
   await page.keyboard.press('Escape')
   await command(page, 'ma')
-  await expect.poll(() => pointer(page)).toContain(', crosshair')
+  await expect.poll(() => pointer(page)).toBe('crosshair')
   await expect(page.locator('.hint-bar')).toContainText('Click an object to take its layer, stroke and ends')
   await click(page, point(1000, 300))
   await expect(field('X')).toHaveValue('0')
-  await expect.poll(() => pointer(page)).toContain(', copy')
+  await expect(page.locator('.hint-bar')).toContainText('Click an object to paint it with the look taken')
   await click(page, point(3000, 300))
   await page.keyboard.press('Escape')
   nodes = await saved(page)
@@ -1131,4 +1131,107 @@ test('resizes what an elevation sees by a corner of it, a rectangle still', asyn
   const turned = (await saved(page)).find((n) => n.type === 'viewline')!
   expect(turned).toMatchObject({ a: { x: 1000, y: 1100 }, depth: 700 })
   expect(turned.b.y).toBeLessThan(1000)
+})
+
+test('holds movement to the axes with F8, and says so beside the coordinates', async ({ page }) => {
+  await startWith(page)
+  await recordSaves(page)
+  await openEditor(page)
+  await choose(
+    page,
+    () => page.keyboard.press('Control+o'),
+    'ortho.adg',
+    drawing({ a: { id: 'a', type: 'rect', parent: 'page_1', layer: 'layer_1', order: 'a1', x: 0, y: 0, width: 1000, height: 600, style: { fill: '#dfe6f0' } } }),
+  )
+  const at = await drawingOnScreen(page)
+  const where = async () => {
+    const rect = (await saved(page)).find((one) => one.id === 'a') as { x: number; y: number }
+    return { x: rect.x, y: rect.y }
+  }
+  // The Move tool takes the point to move by, then the point it goes to: two clicks, diagonally
+  // away from the middle of the drawing, far enough to leave both axes.
+  const move = async () => {
+    await objectRows(page).first().click()
+    await command(page, 'm')
+    const [x, y] = at(500, 300)
+    await click(page, { x, y })
+    await click(page, { x: x + 90, y: y + 60 })
+  }
+  await expect(page.locator('.status .ortho')).toHaveText('Ortho: Off')
+  await move()
+  const free = await where()
+  expect(free.x).toBeGreaterThan(0)
+  expect(free.y).toBeGreaterThan(0)
+  // F8 holds it to the axis the pointer has gone further along: sideways here, so upright stays put.
+  await page.keyboard.press('F8')
+  await expect(page.locator('.status .ortho')).toHaveText('Ortho: On')
+  const before = await where()
+  await move()
+  const held = await where()
+  expect(held.x).toBeGreaterThan(before.x + 10)
+  expect(held.y).toBe(before.y)
+  // And F8 again lets it go: the corner says Off, and the next drag moves both ways again.
+  await page.keyboard.press('F8')
+  await expect(page.locator('.status .ortho')).toHaveText('Ortho: Off')
+  const freeAgain = await where()
+  await move()
+  const again = await where()
+  expect(again.y).toBeGreaterThan(freeAgain.y + 10)
+})
+test('holds a point of a wall being dragged to the axes as well', async ({ page }) => {
+  await startWith(page)
+  await recordSaves(page)
+  await openEditor(page)
+  await choose(page, () => page.keyboard.press('Control+o'), 'ortho2.adg', drawing({ w: { id: 'w', type: 'wall', parent: 'page_1', layer: 'layer_1', order: 'a1', a: { x: 0, y: 0 }, b: { x: 3000, y: 0 }, thickness: 200 } }))
+  await page.keyboard.press('F8')
+  await expect(page.locator('.status .ortho')).toHaveText('Ortho: On')
+  await objectRows(page).first().click()
+  const at = await drawingOnScreen(page)
+  // Its far end, dragged away both ways: held sideways, it only goes along the way it has gone further.
+  const [x, y] = at(3000, 0)
+  const [toX, toY] = at(3800, 400)
+  await drag(page, { x, y }, { x: toX, y: toY })
+  const wall = (await saved(page)).find((one) => one.id === 'w') as { b: { x: number; y: number } }
+  expect(wall.b.x).toBeGreaterThan(3100)
+  expect(wall.b.y).toBe(0)
+})
+test('holds a box being grown by its corner to one axis as well', async ({ page }) => {
+  await startWith(page)
+  await recordSaves(page)
+  await openEditor(page)
+  await choose(page, () => page.keyboard.press('Control+o'), 'ortho3.adg', drawing({ a: { id: 'a', type: 'rect', parent: 'page_1', layer: 'layer_1', order: 'a1', x: 0, y: 0, width: 1000, height: 600, style: { fill: '#dfe6f0' } } }))
+  await page.keyboard.press('F8')
+  await objectRows(page).first().click()
+  const at = await drawingOnScreen(page)
+  // Its bottom-right grip, dragged away both ways: held sideways, only its width grows.
+  const [x, y] = at(1000, 600)
+  const [toX, toY] = at(1400, 900)
+  await drag(page, { x, y }, { x: toX, y: toY })
+  const rect = (await saved(page)).find((one) => one.id === 'a') as { width: number; height: number }
+  expect(rect.width).toBeGreaterThan(1100)
+  expect(rect.height).toBe(600)
+})
+test('moves an edge by a small grip at the middle of it, its two corners going the same way', async ({ page }) => {
+  await startWith(page)
+  await recordSaves(page)
+  await openEditor(page)
+  await choose(
+    page,
+    () => page.keyboard.press('Control+o'),
+    'edge.adg',
+    drawing({ p: { id: 'p', type: 'polyline', parent: 'page_1', layer: 'layer_1', order: 'a1', points: [{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }] } }),
+  )
+  await objectRows(page).first().click()
+  const at = await drawingOnScreen(page)
+  // The grip at the middle of its first edge, dragged away from the drawing: that edge goes with it,
+  // both of its corners by the same amount, and the upright edge beyond stretches to follow.
+  const [x, y] = at(500, 0)
+  const [toX, toY] = at(500, 400)
+  await drag(page, { x, y }, { x: toX, y: toY })
+  const line = (await saved(page)).find((one) => one.id === 'p') as { points: { x: number; y: number }[] }
+  expect(line.points.map((point) => [Math.round(point.x), Math.round(point.y)])).toEqual([
+    [0, 400],
+    [1000, 400],
+    [1000, 1000],
+  ])
 })

@@ -53,7 +53,7 @@ function moveAim(c: Canvas, g: GestureOf<'displace'>, world: Vec2, e: Keys): { o
 export function finishMove(c: Canvas, g: GestureOf<'displace'>, world: Vec2, e: Keys): void {
   if (preview(g.ops ?? moveAim(c, g, world, e).ops)) commit()
   else cancel()
-  useStore.setState({ drawLocks: {}, drawLive: null, axisLock: null })
+  useStore.setState({ drawLocks: {}, drawLive: null })
   if (copying()) return
   useStore.setState({ copyMode: false })
   c.setGripCursor(null)

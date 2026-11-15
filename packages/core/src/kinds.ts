@@ -104,6 +104,12 @@ export interface NodeKind<N> {
   move(node: N, d: Vec2): Record<string, unknown>
   /** Points the user can drag to reshape the node. A parametric object's depend on its kind, found in `registry`. */
   handles?(node: N, registry?: Registry, doc?: Document): Vec2[]
+  /**
+   * How many of the handles at the end of `handles` are the middles of the node's edges rather than
+   * its own points: dragging one slides the edge it is the middle of. A polyline's and a line's are;
+   * drawn as small rectangles, apart from the round grips of the points.
+   */
+  handleMiddles?(node: N): number
   /** Patch that puts handle `index` at `p`. */
   moveHandle?(node: N, index: number, p: Vec2, registry?: Registry, doc?: Document): Record<string, unknown>
   /** Points other geometry snaps to. Defaults to the vertices of the node's paths. */
@@ -168,6 +174,37 @@ const moveXY = (node: { x: number; y: number }, d: Vec2) => ({ x: node.x + d.x, 
 const moveAB = (node: { a: Vec2; b: Vec2 }, d: Vec2) => ({ a: add(node.a, d), b: add(node.b, d) })
 const handlesAB = (node: { a: Vec2; b: Vec2 }) => [node.a, node.b]
 const moveHandleAB = (_: unknown, index: number, p: Vec2) => (index === 0 ? { a: p } : { b: p })
+
+/**
+ * The straight edges of a polyline, each with the middle that moves it: an edge bowed by a bulge is
+ * a curve, and its middle is where its bow is set, not an edge to move.
+ */
+function edgeMiddles(node: NodeOf<'polyline'>): { edge: number; p: Vec2 }[] {
+  const out: { edge: number; p: Vec2 }[] = []
+  const count = node.closed ? node.points.length : node.points.length - 1
+  for (let edge = 0; edge < count; edge++) {
+    if (node.bulges?.[edge]) continue
+    out.push({ edge, p: mid(node.points[edge], node.points[(edge + 1) % node.points.length]) })
+  }
+  return out
+}
+
+/**
+ * A polyline with the edge `edge` moved so that its middle is under `p`: the edge keeps the way it
+ * goes and its two ends go with it by the same amount, so it moves as one and neither end runs off
+ * on its own (which sliding both along their neighbours did, a little off the way asked for: the
+ * end on the edge nearly parallel to it raced the other). The edges either side stretch or turn to
+ * follow, keeping their far ends where they were.
+ */
+function slideEdge(node: NodeOf<'polyline'>, edge: number, p: Vec2): Vec2[] {
+  const points = [...node.points]
+  const [a, b] = [edge, (edge + 1) % points.length]
+  const delta = sub(p, mid(points[a], points[b]))
+  points[a] = add(points[a], delta)
+  points[b] = add(points[b], delta)
+  return points
+}
+
 
 /** The four corners of a rectangle, turned with it, from its top-left corner round. */
 /** A rectangle's openings, in its own unrotated space, brought into the drawing. */
@@ -883,8 +920,14 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
   line: {
     primitives: (node) => [{ kind: 'path', points: [node.a, node.b] }, ...endMarkers([node.a, node.b], node)],
     move: moveAB,
-    handles: handlesAB,
-    moveHandle: moveHandleAB,
+    // Its two ends, and the middle of it, which carries both ends along with the pointer.
+    handles: (node) => [node.a, node.b, mid(node.a, node.b)],
+    handleMiddles: () => 1,
+    moveHandle: (node, index, p) => {
+      if (index !== 2) return moveHandleAB(node, index, p)
+      const d = sub(p, mid(node.a, node.b))
+      return { a: add(node.a, d), b: add(node.b, d) }
+    },
     transform: (node, t) => ({ ...transformAB(node, t), ...markerSize(node, t) }),
     parallel: (node, distance) => {
       const path = parallelPath([node.a, node.b], false, distance)
@@ -919,8 +962,14 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
   polyline: {
     primitives: (node) => [{ kind: 'path', points: polylinePath(node), closed: node.closed }, ...(node.closed ? [] : endMarkers(node.points, node))],
     move: (node, d) => ({ points: node.points.map((p) => add(p, d)) }),
-    handles: (node) => node.points,
-    moveHandle: (node, index, p) => ({ points: node.points.map((q, i) => (i === index ? p : q)) }),
+    // Its corners, and the middle of each straight edge, which slides that edge along.
+    handles: (node) => [...node.points, ...edgeMiddles(node).map((middle) => middle.p)],
+    handleMiddles: (node) => edgeMiddles(node).length,
+    moveHandle: (node, index, p) => {
+      if (index < node.points.length) return { points: node.points.map((q, i) => (i === index ? p : q)) }
+      const middle = edgeMiddles(node)[index - node.points.length]
+      return { points: middle ? slideEdge(node, middle.edge, p) : [...node.points] }
+    },
     // Its corners are the points to snap to; the points laid along an arc are not.
     snapPoints: (node) => node.points,
     transform: (node, t) => ({
@@ -939,8 +988,9 @@ const KINDS: { [T in NodeType]: NodeKind<NodeOf<T>> } = {
     centre: (node) => (node.closed ? centroid(node.smooth ? smoothPoints(node.points, true) : node.points) : null),
   },
   column: {
-    // A column in plan is the rectangle it stands on.
-    primitives: (node) => [{ kind: 'path', points: rectCorners(node as never), closed: true }],
+    // A column in plan is the rectangle it stands on, filled as a wall is: in its material's fill
+    // and pattern, or the white of the paper when it says none.
+    primitives: (node) => [{ kind: 'path', points: rectCorners(node as never), closed: true, fill: WALL_FILL }],
     move: moveXY,
     snapPoints: (node) => rectCorners(node as never),
     transform: transformBox,
@@ -1579,8 +1629,9 @@ export function nodePrimitives(node: Node, ctx: KindContext): Primitive[] {
   // A room's floor takes the colour and pattern of its material, unless it gives its own.
   const material = node.type === 'room' && node.material ? ctx.doc.materials?.[node.material] : undefined
   const floored = material && { ...(material.fill === undefined ? {} : { fill: material.fill }), ...(material.pattern === undefined ? {} : { pattern: material.pattern }) }
-  // A wall takes the look of its material, or of the default material, unless it gives its own.
-  const made = node.type === 'wall' ? ((node.material ? ctx.doc.materials?.[node.material] : undefined) ?? ctx.doc.materials?.[DEFAULT_MATERIAL]) : undefined
+  // A wall takes the look of its material, or of the default material, unless it gives its own; a
+  // column is drawn in its material's fill and pattern in the same way, having no fill of its own.
+  const made = node.type === 'wall' || node.type === 'column' ? ((node.material ? ctx.doc.materials?.[node.material] : undefined) ?? ctx.doc.materials?.[DEFAULT_MATERIAL]) : undefined
   const walled = made && { ...(made.fill === undefined ? {} : { fill: made.fill }), ...(made.pattern === undefined ? {} : { pattern: made.pattern }) }
   // A dimension takes from its style what the style defines, and keeps what it says for itself.
   const style = node.type === 'dimension' ? styledDimension(ctx.doc, node).style : floored ? { ...floored, ...node.style } : walled ? { ...walled, ...node.style } : node.style

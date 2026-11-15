@@ -696,8 +696,6 @@ export const zh: Record<string, string> = {
   "Snap to existing objects, and line up what is moved with them": "捕捉到现有对象，并将移动的对象与之对齐",
   "A point being placed snaps to the points of objects, the middle of a line, where two lines cross, the foot of a perpendicular, or the line itself. An object being moved lines up with the sides and middles of the others, and keeps equal gaps with its neighbours.": "放置点时会捕捉到对象的点、线的中点、两线的交点、垂足或线本身。移动对象时会与其他对象的边和中线对齐，并与相邻对象保持相等的间距。",
   "holds it upright or level": "保持竖直或水平",
-  "Keep what is being drawn or dragged level": "使正在绘制或拖动的内容保持水平",
-  "Keep what is being drawn or dragged upright": "使正在绘制或拖动的内容保持竖直",
   "Split the wall in two": "将墙一分为二",
   "Close the shape": "闭合图形",
   "Open the shape": "打开图形",
@@ -1197,4 +1195,7 @@ export const zh: Record<string, string> = {
   "Drag: press, drag, release": "拖拽：按住、拖动、松开",
   "Click: click, move, click (AutoCAD)": "点击：点击、移动、再点击（AutoCAD）",
   "Edit the selected group or component": "编辑选中的组或组件",
+  "Ortho": "正交",
+  "On": "开",
+  "Off": "关",
 }

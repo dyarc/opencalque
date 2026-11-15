@@ -4,6 +4,21 @@ What changed in each version of AxioDraw. The app shows this list under About, a
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
+## 1.10.4 — 2026-11-16
+
+### New
+- **The middle of every straight edge has a grip of its own**: a small rectangle, in the same colours as the round grips of the corners (a polyline's, a closed shape's, a line's). Drag it and that edge moves as it is: both of its corners go by exactly the same amount, so a slight stray of the pointer cannot favour one of them, while the edges either side stretch or turn to follow, their far ends staying. A line's middle carries both of its ends. An edge bowed by a bulge keeps its bow and has no such grip, and ortho (F8) and snapping work on it as on any point.
+
+### Improved
+- **Ortho** (**F8**, Tools › Ortho): while it is on, every movement is held to the level or the upright axis — an object being moved, one of its points being dragged, and a wall or line being drawn. Whichever axis the pointer has gone further along is the one it keeps, so the drawing follows the pointer. It is a switch, not a key held down, it stays on across tools and gestures, and it is kept with the drawing's other settings; whether it is on shows beside the pointer reading in the corner.
+- The arrow keys hold nothing while dragging any more: they move the selection by a grid step, as they always did when nothing was being dragged.
+- A column is drawn in the **fill and hatch of its material**, as a wall is: **Fill** is gone from its properties, and **Material** takes its place, with the drawing's own materials to choose from (the default one when it says none).
+
+### Fixed
+- A wall is **cut along a column's own sides**, not square across it: a turned column leaves the shape of its own footprint in the wall, at both of its edges, as it does in the plan.
+- The app's own pointers are taken out for now: the system's pointers are back over the drawing and the panels alike, until a set of the app's own is made that reads better than they do.
+- The loading screen says what it was made from: a thin white rule under its tagline, and "Modified by OpenCalque 1.9.0" under that, the name linked to the project it comes from.
+
 ## 1.10.3 — 2026-11-16
 
 ### Fixed
@@ -12,10 +27,10 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 ## 1.10.2 — 2026-11-15
 
 ### New
-- The drawing area has **pointers of its own**: an arrow for selecting, a crosshair for drawing, an open and a closed hand for panning, four-way arrows for moving, an arrow with a + for copying while moving, the side and corner arrows of a box, and the format painter's eyedropper and brush. They are white with a dark outline, so they read on the light and the dark canvas alike, and they cost nothing: the browser paints them, and they change only when the pointer means something else.
+- The app draws **its own pointers, everywhere**: an arrow (with no tail) for selecting, a crosshair for drawing, an open and a closed hand for panning, four-way arrows for moving, an arrow with a + for copying, the side and corner arrows of a box, the format painter's eyedropper and brush, and a hand for what a click answers — over the drawing and over the panels alike. They are drawn in the **colours of the theme showing**: the theme's highlight colour for the pointer itself, and its text colour for the edge that sets it apart, so switching the theme switches the pointers with it.
+- The format painter shows which half of its work it is at. An object selected before the tool is taken is what it paints with: the pointer is a brush from the start, and the next clicks paint. With nothing selected the pointer is an eyedropper, the click takes that object's look, selects it — so the drawing shows what is being painted with — and the pointer becomes a brush. The hints say the same at each step.
 
 ### Improved
-- **The format painter shows which half of its work it is at.** An object selected before the tool is taken is what it paints with: the pointer is a brush from the start, and the next clicks paint. With nothing selected the pointer is an eyedropper, the click takes that object's look, selects it — so the drawing shows what is being painted with — and the pointer becomes a brush. The hints say the same at each step.
 - **M and Space is the Move tool**, as in AutoCAD; the Measure tool is **DI** (`MEA` works too). `MV` and `Shift+E` still pick Move.
 - A door or a window in a curved wall is measured round the curve: its properties say **Arc length**, and the number typed is the length of wall it takes, worked back into the chord the drawing keeps, so 1500 typed takes 1500 mm of wall rather than spanning a 1500 mm chord. The size written beside it on the plan says the same, its **Shape** is the wall's there: shown as Curved, and not a choice to make, and its **Bow** is gone: the bend is the wall's.
 - **Copied from the keyboard**, what was copied follows the pointer, its middle under it, and a click puts it down; the view can be panned and zoomed meanwhile, and Esc gives it up. Pasted from the right-click menu it still lands where the menu was opened, and Paste in place (`Ctrl+Shift+V`) where it was copied from.
@@ -26,7 +41,8 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A curved door or window is bowed by two handles at the middle of its sides, one on each side, instead of a bow typed in Properties and a little off: dragging a handle to a wall's face snaps the arc to it exactly. Either side bows it, and its two faces stay where they were.
 
 ### Fixed
-- **A column is resized by a frame that turns with it**, as a rectangle is, instead of an upright box around it: its grips stand on its own sides, so a turned column is widened along its own width, and what it cuts out of a wall is what its box shows.
+- **A column is resized by a frame that turns with it**, as a rectangle is, instead of an upright box around it: its grips stand on its own sides, so a turned column is widened along its own width.
+- **A wall is cut along a column's own sides**, not square across it: a turned column leaves the shape of its own footprint in the wall, at both of its edges, as it does in the plan.
 - A command word typed as letters and Space takes the first command it belongs to **that can be used now**: typing R was taken by "turn what is being placed", which does nothing unless something is being placed, so the Rectangle tool was never chosen, and the same for any word two commands share.
 - The curved door and the curved window are no longer objects of their own: the door and the window already have a Shape, so the copies that differed only in that default are gone from the object library. A drawing made with one still opens and draws as it did.
 

@@ -82,7 +82,8 @@ export async function drawingOnScreen(page: Page): Promise<(x: number, y: number
   const box = (await canvas(page).boundingBox())!
   const reading = async (x: number, y: number) => {
     await page.mouse.move(box.x + x, box.y + y)
-    const text = (await page.locator('.status span').textContent())!.replaceAll(String.fromCharCode(0x2212), '-').replace(/[^\d.,-]/g, '')
+    // The pointer reading is the first of what the corner says: the state of ortho follows it.
+  const text = (await page.locator('.status > span').first().textContent())!.replaceAll(String.fromCharCode(0x2212), '-').replace(/[^\d.,-]/g, '')
     const [wx, wy] = text.split(',').map(Number)
     return { x: wx, y: wy }
   }
