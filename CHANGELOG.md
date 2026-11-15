@@ -4,6 +4,11 @@ What changed in each version of AxioDraw. The app shows this list under About, a
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
+## 1.10.3 — 2026-11-16
+
+### Fixed
+- Resizing a shape by its sides or its corners follows the pointer exactly, as the guide and the browser tests now describe it.
+
 ## 1.10.2 — 2026-11-15
 
 ### New
