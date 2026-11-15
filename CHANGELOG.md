@@ -4,6 +4,11 @@ What changed in each version of AxioDraw. The app shows this list under About, a
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
+## 1.10.1 — 2026-11-15
+
+### Fixed
+- The app looks for a new version in the repository its releases are published in, not in the project it was forked from: an installed copy asked a repository whose newest release was older than its own, and said it was the newest version while a newer one was out. A copy installed before this version still asks the old place, so it takes this version once by hand.
+
 ## 1.10.0 — 2026-11-14
 
 ### New

@@ -1,7 +1,7 @@
 {
   "name": "@opencalque/desktop",
   "productName": "AxioDraw",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "private": true,
   "license": "MIT",
   "main": "./out/main/index.js",
@@ -26,7 +26,7 @@
   },
   "description": "Open-source 2D architectural editor: floor plans and layouts.",
   "author": "OpenCalque contributors",
-  "homepage": "https://github.com/laurent512/opencalque",
+  "homepage": "https://github.com/dyarc/opencalque",
   "build": {
     "appId": "com.axiodraw.app",
     "productName": "AxioDraw",
@@ -58,7 +58,7 @@
     "npmRebuild": false,
     "publish": {
       "provider": "github",
-      "owner": "laurent512",
+      "owner": "dyarc",
       "repo": "opencalque"
     },
     "fileAssociations": [

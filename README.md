@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/laurent512/opencalque/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/laurent512/opencalque?color=0d99ff"></a>
+  <a href="https://github.com/dyarc/opencalque/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/dyarc/opencalque?color=0d99ff"></a>
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Runs on Windows, macOS, Linux and the web" src="https://img.shields.io/badge/runs%20on-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux%20%C2%B7%20web-4b5563">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white">
@@ -39,7 +39,7 @@ Both pictures are [`examples/apartment.opencalque`](examples/apartment.opencalqu
 
 ## Download
 
-Installers for each version are on the [releases page](https://github.com/laurent512/opencalque/releases/latest):
+Installers for each version are on the [releases page](https://github.com/dyarc/opencalque/releases/latest):
 
 | System | File |
 | --- | --- |
@@ -64,7 +64,7 @@ Or use it in a browser, with nothing to install: **[opencalque.com](https://open
 Requires [Node](https://nodejs.org) 22 or newer and [pnpm](https://pnpm.io) 9.
 
 ```sh
-git clone https://github.com/laurent512/opencalque.git
+git clone https://github.com/dyarc/opencalque.git
 cd opencalque
 pnpm install
 pnpm dev          # the desktop app, with hot reload

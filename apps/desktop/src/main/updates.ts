@@ -16,7 +16,7 @@ import { isNewer } from './version'
  */
 
 /** Where the releases are published. */
-const REPOSITORY = 'laurent512/opencalque'
+const REPOSITORY = 'dyarc/opencalque'
 
 let state: UpdateState = { status: 'idle' }
 const listeners = new Set<WebContents>()

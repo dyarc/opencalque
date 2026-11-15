@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { expect, test } from 'vitest'
-import { parseChangelog } from './release'
+import { REPOSITORY, parseChangelog } from './release'
 
 const root = resolve(__dirname, '../../..')
 const versionOf = (file: string) => JSON.parse(readFileSync(resolve(root, file), 'utf8')).version
@@ -20,4 +20,14 @@ test('the newest version in the changelog is the version of the app', () => {
   const packages = ['package.json', ...['packages', 'apps'].flatMap((dir) => readdirSync(resolve(root, dir)).map((name) => `${dir}/${name}/package.json`))]
   expect(packages).toContain('apps/desktop/package.json')
   for (const file of packages) expect([file, versionOf(file)]).toEqual([file, releases[0].version])
+})
+
+test('the app looks for its releases where the installers are published', () => {
+  const desktop = JSON.parse(readFileSync(resolve(root, 'apps/desktop/package.json'), 'utf8'))
+  const { owner, repo } = desktop.build.publish
+  // A fork that leaves these as they were asks the project it came from: that repository's
+  // newest release can be older than the version installed, and the app then says it is current.
+  expect(REPOSITORY).toBe(`https://github.com/${owner}/${repo}`)
+  const updates = readFileSync(resolve(root, 'apps/desktop/src/main/updates.ts'), 'utf8')
+  expect(updates).toContain(`const REPOSITORY = '${owner}/${repo}'`)
 })

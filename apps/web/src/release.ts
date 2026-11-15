@@ -34,4 +34,4 @@ export const RELEASES = parseChangelog(changelog)
 /** The version of the app: the newest one in the changelog, which a test keeps equal to the packages'. */
 export const VERSION = RELEASES[0]?.version ?? ''
 
-export const REPOSITORY = 'https://github.com/laurent512/opencalque'
+export const REPOSITORY = 'https://github.com/dyarc/opencalque'
