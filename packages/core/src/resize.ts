@@ -66,7 +66,9 @@ export function resizeFrame(node: Node, registry?: Registry, doc?: Document): Re
     // The frame's left is on the left as it is seen: for a mirrored object, the right of its own box.
     return { origin: applyTransform({ x: node.type === 'parametric' && node.flipX ? right : left, y: top }, parametric.node), rotation: parametric.node.rotation ?? 0, width: right - left, height: bottom - top }
   }
-  if (node.type === 'rect') return { origin: { x: node.x, y: node.y }, rotation: node.rotation ?? 0, width: node.width, height: node.height }
+  // A rectangle and a column both stand on a box that turns about its own top-left corner: a column
+  // is the rectangle it stands on, so its frame turns with it as a rectangle's does.
+  if (node.type === 'rect' || node.type === 'column') return { origin: { x: node.x, y: node.y }, rotation: node.rotation ?? 0, width: node.width, height: node.height }
   if (node.type === 'ellipse') {
     const rotation = node.rotation ?? 0
     // An ellipse turns about its centre: its frame's corner is where that turn takes it.
@@ -150,7 +152,7 @@ export function resizePatch(node: Node, grip: number, p: Vec2, proportional = fa
   }
   const box = { minX: Math.min(left, right), maxX: Math.max(left, right), minY: Math.min(top, bottom), maxY: Math.max(top, bottom) }
   const tidy = (n: number) => Math.round(n * 1000) / 1000 + 0
-  if (node.type === 'rect') {
+  if (node.type === 'rect' || node.type === 'column') {
     const corner = place(frame, { x: box.minX, y: box.minY })
     return { x: tidy(corner.x), y: tidy(corner.y), width: tidy(box.maxX - box.minX), height: tidy(box.maxY - box.minY) }
   }

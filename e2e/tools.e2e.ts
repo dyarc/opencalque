@@ -473,6 +473,31 @@ test('reads a distance and an angle without adding anything', async ({ page }) =
   expect(await saved(page)).toEqual([])
 })
 
+test('resizes a turned column by a frame that turns with it', async ({ page }) => {
+  await startWith(page)
+  await recordSaves(page)
+  await openEditor(page)
+  // A column 400 across and 200 deep, turned a quarter clockwise about its own top-left corner.
+  await choose(
+    page,
+    () => page.keyboard.press('Control+o'),
+    'column.adg',
+    drawing({ c: { id: 'c', type: 'column', parent: 'page_1', layer: 'layer_1', order: 'a1', x: 0, y: 0, width: 400, height: 200, rotation: 90 } }),
+  )
+  await objectRows(page).first().click()
+  const at = await drawingOnScreen(page)
+  // A point of the column's own box, on the drawing: turned with it, then moved from its corner.
+  const point = (x: number, y: number) => {
+    const turn = Math.PI / 2
+    const [px, py] = at(x * Math.cos(turn) - y * Math.sin(turn), x * Math.sin(turn) + y * Math.cos(turn))
+    return { x: px, y: py }
+  }
+  // The middle of its right side, dragged out 100 along its own width: wider, and nothing else moves.
+  await drag(page, point(400, 100), point(500, 100))
+  const column = (await saved(page)).find((n) => n.id === 'c')!
+  expect([column.width, column.height, column.x, column.y, column.rotation]).toEqual([500, 200, 0, 0, 90])
+})
+
 test('the format painter takes its look from what is selected, or from a click, and paints with a brush', async ({ page }) => {
   await startWith(page)
   await recordSaves(page)

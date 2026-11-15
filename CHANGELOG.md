@@ -21,6 +21,7 @@ heading per version, then `### New`, `### Improved` or `### Fixed` with one line
 - A curved door or window is bowed by two handles at the middle of its sides, one on each side, instead of a bow typed in Properties and a little off: dragging a handle to a wall's face snaps the arc to it exactly. Either side bows it, and its two faces stay where they were.
 
 ### Fixed
+- **A column is resized by a frame that turns with it**, as a rectangle is, instead of an upright box around it: its grips stand on its own sides, so a turned column is widened along its own width, and what it cuts out of a wall is what its box shows.
 - A command word typed as letters and Space takes the first command it belongs to **that can be used now**: typing R was taken by "turn what is being placed", which does nothing unless something is being placed, so the Rectangle tool was never chosen, and the same for any word two commands share.
 - The curved door and the curved window are no longer objects of their own: the door and the window already have a Shape, so the copies that differed only in that default are gone from the object library. A drawing made with one still opens and draws as it did.
 

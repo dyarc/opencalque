@@ -3,6 +3,7 @@ import { frameGrips, resizeFrame, resizePatch, type Node } from '../src'
 
 const rect = (extra: Record<string, unknown> = {}) => ({ id: 'r', type: 'rect', parent: 'page_1', order: 'a0', x: 0, y: 0, width: 400, height: 200, ...extra }) as Node
 const ellipse = { id: 'e', type: 'ellipse', parent: 'page_1', order: 'a0', cx: 0, cy: 0, rx: 200, ry: 100 } as Node
+const column = (extra: Record<string, unknown> = {}) => ({ id: 'c', type: 'column', parent: 'page_1', order: 'a0', x: 0, y: 0, width: 400, height: 200, ...extra }) as Node
 
 describe('resizing a box by its frame', () => {
   it('moves one side by the middle of a side, both by a corner, the opposite staying put', () => {
@@ -31,5 +32,15 @@ describe('resizing a box by its frame', () => {
   it('resizes an ellipse about the side that stays', () => {
     // Its right side pulled out by 200: wider by 200, its centre moved by 100.
     expect(resizePatch(ellipse, 5, { x: 400, y: 0 })).toEqual({ cx: 100, cy: 0, rx: 300, ry: 100 })
+  })
+
+  it('turns the frame of a column with it, as a rectangle’s: it stands on a box of its own', () => {
+    const turned = column({ rotation: 90 })
+    expect(resizeFrame(turned)).toEqual({ origin: { x: 0, y: 0 }, rotation: 90, width: 400, height: 200 })
+    // Its w runs down the screen, so the middle of that side is below its corner.
+    const grips = frameGrips(resizeFrame(turned)!)
+    expect(grips[5]).toEqual({ x: expect.closeTo(-100), y: expect.closeTo(400) })
+    expect(resizePatch(turned, 5, { x: -100, y: 500 })).toEqual({ x: 0, y: 0, width: 500, height: 200 })
+    expect(resizePatch(turned, 2, { x: -300, y: 500 })).toEqual({ x: 0, y: 0, width: 500, height: 300 })
   })
 })
