@@ -282,7 +282,7 @@ const STATIC: Command[] = [
   { id: 'view.zoomToFit', title: msg('Zoom to fit'), category: 'View', keys: ['Shift+1'], run: zoomToFit },
   { id: 'view.zoomToSelection', title: msg('Zoom to selection'), short: msg('Zoom to it'), category: 'View', keys: ['Shift+2'], when: selected, run: zoomToSelection },
   { id: 'view.zoomIn', title: msg('Zoom in'), category: 'View', keys: ['+', 'Shift++', 'Mod+='], run: () => zoomBy(1.25) },
-  { id: 'view.axonometric', title: msg('3D view (axonometric)'), category: 'View', keys: ['Shift+3'], run: () => useWindows.setState({ axonometric: true }) },
+  { id: 'view.3d', title: msg('3D view'), short: msg('See the drawing stand up'), category: 'View', keys: ['Shift+3'], run: () => useWindows.setState({ view3d: true }) },
   { id: 'view.toggleTheme', title: msg('Dark theme'), category: 'View', keywords: 'dark light mode appearance colours', checked: () => useTheme.getState().dark, run: toggleTheme },
   { id: 'view.toggleGrid', title: msg('Show grid'), category: 'View', checked: () => prefs().showGrid, run: () => setPrefs({ showGrid: !prefs().showGrid }) },
   {
@@ -558,11 +558,12 @@ const SLIDER_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 
 
 /**
  * Whether a key pressed in a field is for the field rather than a command: every key in a text
- * field or a list, the keys that move a slider, none on a checkbox. So Ctrl+Z still undoes right
- * after a slider was dragged or a box ticked.
+ * field or a list (the system's or the app's), the keys that move a slider, none on a checkbox. So
+ * Ctrl+Z still undoes right after a slider was dragged or a box ticked.
  */
 function forTheField(e: KeyboardEvent): boolean {
-  const field = (e.target as HTMLElement).closest('input, textarea, select')
+  // The app's dropdown (`Select`) is a button, its keys its own as a list's are.
+  const field = (e.target as HTMLElement).closest('input, textarea, select, .select')
   if (!(field instanceof HTMLInputElement)) return field !== null
   if (field.type === 'checkbox' || field.type === 'radio' || field.type === 'button') return false
   return field.type !== 'range' || SLIDER_KEYS.includes(e.key)

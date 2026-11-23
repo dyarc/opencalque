@@ -3,8 +3,11 @@ import type { Op } from './ops'
 import type { Document, DrawingSettings } from './schema'
 import { unitless } from './tables'
 
-/** What each drawing setting is when the drawing does not say: stored, it is left out. */
-const DEFAULTS: Required<DrawingSettings> = { system: 'metric', decimal: '.' }
+/** What each setting of how the drawing writes its numbers is when the drawing does not say: stored, it is left out. */
+const DEFAULTS = { system: 'metric', decimal: '.' } as const
+
+/** The settings of how the drawing writes its numbers; the grid it is shown on is the editor's, set apart (`set_document`). */
+type NumberSetting = keyof typeof DEFAULTS
 
 /**
  * The operations that make a drawing write its numbers as `next` says, and everything in it with
@@ -13,9 +16,9 @@ const DEFAULTS: Required<DrawingSettings> = { system: 'metric', decimal: '.' }
  * to follow the drawing too. Only the settings `next` gives are changed.
  */
 export function drawingSettingsOps(doc: Document, next: DrawingSettings): Op[] {
-  const keys = (Object.keys(next) as (keyof DrawingSettings)[]).filter((key) => next[key] !== undefined)
+  const keys = (['system', 'decimal'] as NumberSetting[]).filter((key) => next[key] !== undefined)
   if (keys.length === 0) return []
-  const settings = Object.fromEntries(keys.map((key) => [key, next[key] === DEFAULTS[key] ? null : next[key]]))
+  const settings: NonNullable<Extract<Op, { op: 'set_document' }>['settings']> = Object.fromEntries(keys.map((key) => [key, next[key] === DEFAULTS[key] ? null : next[key]]))
   const ops: Op[] = [{ op: 'set_document', settings }]
   const system = settingsOf(doc).system
   for (const node of Object.values(doc.nodes)) {

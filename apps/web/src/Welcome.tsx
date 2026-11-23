@@ -7,6 +7,7 @@ import { platform } from './platform'
 import { setPrefs, usePrefs } from './prefs'
 import { forget, recoverable, restore, type Kept } from './recovery'
 import { VERSION } from './release'
+import { Select } from './Select'
 import { isDirty, useStore } from './store'
 import { IconButton } from './ui'
 import { UNITS } from './units'
@@ -130,24 +131,11 @@ export function Welcome() {
         <div className="welcome-settings">
           <label>
             <span>{t('Language')}</span>
-            <select value={chosenLanguage} onChange={(e) => setPrefs({ language: e.target.value })}>
-              <option value="auto">{t('Same as the system')}</option>
-              {LANGUAGES.map(([code, name]) => (
-                <option key={code} value={code}>
-                  {name}
-                </option>
-              ))}
-            </select>
+            <Select value={chosenLanguage} onChange={(language) => setPrefs({ language })} options={[{ value: 'auto', label: t('Same as the system') }, ...LANGUAGES.map(([code, name]) => ({ value: code, label: name }))]} />
           </label>
           <label>
             <span>{t('Unit')}</span>
-            <select value={chosenUnit} onChange={(e) => setPrefs({ unit: e.target.value as typeof chosenUnit })}>
-              {UNITS.map(([code, name]) => (
-                <option key={code} value={code}>
-                  {t(name)}
-                </option>
-              ))}
-            </select>
+            <Select value={chosenUnit} onChange={(unit) => setPrefs({ unit: unit as typeof chosenUnit })} options={UNITS.map(([code, name]) => ({ value: code, label: t(name) }))} />
           </label>
         </div>
         <footer>

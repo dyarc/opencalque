@@ -4,9 +4,37 @@ What changed in each version of AxioDraw. The app shows this list under About, a
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
+## 1.10.5 — 2026-11-23
+
+### New
+- A **fireplace** under Heating, against the wall by its back, in two styles: a cassette, a closed insert behind glass set in its chimney breast, or an open hearth, its firebox open to the room and its slab on the floor in front (Hearth). Elevations draw it from in front.
+- A **banquette** among the dining furniture: a bench built along the wall, its back against it, as long as it is pulled, with a seat for about every 60 cm. Its back is of cushions, a panel or none (Back, and its Height); its base is closed, has a drawer under each place, or stands on legs (Base); a panel can close either end (End panels). Elevations draw all of it from in front and from the side.
+- Three more **sliding doors** under Door › Type: a single one hung in front of the wall that slides along it, a double one whose two leaves part, and a pocket door that slides into the wall. On the plan each is drawn shut with, dashed, where it slides to and an arrow; Slides to says which way the single one and the pocket door go.
+- **A door can start above the floor**, as a window does: its Sill height (in its properties, 0 by default) raises it, for a threshold or the room a floor's finish needs under it. Elevations and sections draw it from there, and dragging it up or down in them sets it.
+- **A grid of the drawing's own**: in File › Drawing settings, set Grid › Spacing to "Always the same", then give how far apart its main lines are and into how many parts finer lines divide them (910 mm divided into 2 for the Japanese module, with lines every 455 mm). Drawing, moving and snapping go by the finer lines at every zoom; zoomed far out, only the main lines show. The grid is saved with the drawing, and "Changes with the zoom" brings back the usual one.
+
+### Improved
+- **A mouse and a trackpad need no setting apart**: two fingers move the view and a pinch zooms, as on a trackpad; a mouse wheel zooms about the pointer and Shift with it moves the view sideways. Which sends the events is told from the events themselves (small, fractional or sideways steps are a trackpad's), so Preferences no longer asks which one is scrolled with.
+- **Elevations draw what stands in a room as it looks**, not as an empty box: a kind may now say how its object is seen from the side (`side`) and from behind (`back`), beside its front, and the view picks the one it looks at (front, side or back, by how far the object faces away from it). A fireplace, a banquette, a washbasin are drawn so.
+- Every list to choose from (Preferences, the drawing settings, exporting, the assistant, the object library, the welcome window) opens **the app's own list**, drawn as its menus are with what is chosen ticked, instead of the system's; arrows, Home, End, Enter, Escape and a first letter work in it as before.
+- **Keeping proportions is one setting everywhere**: the link in the Properties panel, which keeps W and D in proportion, now also governs resizing from a corner on the drawing, a shifted drag doing the opposite; and parametric objects, furniture included, keep their proportions from a corner too.
+- A row of small pictures (the ends of a line, its dashes, the joint of a wall) becomes a **dropdown when the panel has no room for it**, the chosen one drawn on it, so that a narrow panel keeps every choice reachable.
+- The panels, the windows and the Preferences keep **the room of their scrollbar**: one appearing as a panel grows short, or as a page is longer than the last, no longer moves what is in them sideways.
+- In the **Materials panel**, a click anywhere on a material opens its fill and pattern, not only a click on its small swatch; a double-click on its name still renames it.
+- A floor plan imported to trace over, from a PDF or a picture, is kept **twice as sharp**: up to 8192 pixels on its longer side instead of 4096, so that small writing and thin lines on a large sheet stay readable (an A1 PDF comes in at about 250 dpi). A drawing holding a large scan is a few megabytes heavier for it.
+- With the **Select tool**, what the pointer is on is outlined in thin blue as it passes over it, however many groups it is in: the lines of a wall, a door, a piece of furniture, the box of a component or a text. When it is in a group, the group a click would select instead is shown by a faint dashed box around it.
+- A **double-click** on something in a group goes straight to it, however many groups it is in: inside the group that holds it, with it selected.
+- A click picks **what is under the pointer** rather than what is drawn over it a few pixels away: a wall next to the words of a note, a door at the tip of an arrow, are no longer passed over for them.
+- A door or a window can be **selected by clicking anywhere in the gap it makes in its wall**, so a door set to Opening only, drawn as nothing but the hole, is no longer nearly impossible to pick; a rectangle drawn across the gap catches it too.
+- A door shows only what means something for its type: **Hinge** for a single door, **Open angle** for a hinged one, neither for a sliding one, and **Slides to** for those that slide one way. The sliding door that was there is now "Sliding patio door" (玻璃推拉门), drawn as before.
+
+### Fixed
+- A door or a window put where another wall meets its wall **slides along it to the nearest place clear of that wall**, rather than opening onto it with the wall standing in its doorway.
+
 ## 1.10.4 — 2026-11-16
 
 ### New
+- **A 3D view of the drawing, drawn with three.js, in place of the axonometric one**: **Shift+3** (View › 3D view) stands the plan up as the room it makes — the walls with their doors and windows really cut through them, the glass in them, the slabs, columns and beams, and the floors of the rooms, under the shadow of a sun — and from there it is turned by dragging, moved by dragging with the right button, drawn nearer with the wheel, put on any of six set views, looked at in perspective or flat, drawn as lines only, and cut through at a height as a plan cuts it. Read-only, as the axonometric view was: the plan stays the only thing edited, and the solids are worked out from it each time.
 - **The middle of every straight edge has a grip of its own**: a small rectangle, in the same colours as the round grips of the corners (a polyline's, a closed shape's, a line's). Drag it and that edge moves as it is: both of its corners go by exactly the same amount, so a slight stray of the pointer cannot favour one of them, while the edges either side stretch or turn to follow, their far ends staying. A line's middle carries both of its ends. An edge bowed by a bulge keeps its bow and has no such grip, and ortho (F8) and snapping work on it as on any point.
 
 ### Improved

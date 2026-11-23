@@ -12,7 +12,7 @@ import { surroundings } from '../surroundings'
 import { apply, commit, preview, select, setTool, useStore } from '../store'
 import { useTheme } from '../theme'
 import { formatLength, formatNumber, unitSuffix } from '../units'
-import { toWorld, wheelNavigation } from '../view'
+import { toWorld, zoomedAbout } from '../view'
 import { trackedPoints } from './aim'
 import { DARK_AROUND_CANVAS, DARK_CANVAS, drawScene, LIGHT_CANVAS, MAX_LINKED_WALLS, onPictureReady, onRepaint, type Overlay, type SizeLabel, type WallLinks } from './draw'
 import { drawing } from './drawing'
@@ -23,9 +23,10 @@ import { finishOffset } from './gestures/offset'
 import { finishMove } from './gestures/move'
 import { finishTurn } from './gestures/turn'
 import { shownClearances, useClearances, type ScreenBox } from './clearances'
-import { lockedAmong, titleAt } from './picking'
+import { lockedAmong, pointedAt, titleAt } from './picking'
 import { get, local, reset, syncStep, type Canvas, type Move, type Release, type Shown } from './runtime'
 import { boxLabels, paperLabel, polyline, roomsOnly, sizes, snapName, wallOps } from './shapes'
+import { wheelMove, type WheelStream } from './wheel'
 
 /**
  * The drawing area. It works out what to show from the store, paints it (`draw.ts`), and hands
@@ -303,7 +304,7 @@ export function CanvasView() {
       canvas.height = viewport.height * dpr
     }
     // The words being typed are shown by their editor instead; the rest of the object stays drawn.
-    drawScene(canvas.getContext('2d')!, { ...viewport, dpr }, view, drawnScene, selection, drawnHandles, { ...overlay, middles, inViews, viewLines, viewWords: { start: t('Start'), end: t('End') }, labels: overlay.labels ?? selectionLabels, titles, frames, corner, grips: tool === 'select' && !roomsOnly(doc, selection) && !lockedAmong(doc, selection), boxless: roomsOnly(doc, selection), frame: frame && { grips: frame.grips, up: frame.up }, box: overlay.box ?? ownBox, edgeHover: edgeLines, wallLinks, clearances: clearanceLines }, showGrid, palette, around)
+    drawScene(canvas.getContext('2d')!, { ...viewport, dpr }, view, drawnScene, selection, drawnHandles, { ...overlay, middles, inViews, viewLines, viewWords: { start: t('Start'), end: t('End') }, labels: overlay.labels ?? selectionLabels, titles, frames, corner, grips: tool === 'select' && !roomsOnly(doc, selection) && !lockedAmong(doc, selection), boxless: roomsOnly(doc, selection), frame: frame && { grips: frame.grips, up: frame.up }, box: overlay.box ?? ownBox, edgeHover: edgeLines, wallLinks, clearances: clearanceLines }, showGrid, palette, around, doc.settings?.grid)
   }, [drawnScene, around, view, viewport, selection, handles, middles, frame, ownBox, selectionLabels, titles, frames, corner, overlay, showGrid, palette, pictures, tool, edgeLines, wallLinks, clearanceLines, inViews, viewLines, drawnHandles])
 
   // Lets the quick bar finish the shape in progress with the sizes typed there.
@@ -382,7 +383,7 @@ export function CanvasView() {
     // A finished measurement stays on screen until the next one starts.
     const { marker } = out
     const tracked = trackedPoints(c)
-    setOverlay((o) => ({ tracked: tracked.length > 0 ? tracked : undefined, cut: out.cut, trim: out.trim, lit: out.lit, face: out.face, wallGhost: out.wallGhost, box: out.turning, marker: marker && { ...marker, label: snapName(marker.kind) }, smart: out.smart ?? (marker?.guides ? { lines: marker.guides, gaps: [], dashed: marker.kind === 'extension' } : undefined), link: out.link, labels: out.labels, angle: out.angle, axis: out.axis, guide: out.guide, ghosts: out.ghosts, marquee: out.marquee, moved: out.moved, clearanceHover: out.clearanceHover, measure: out.measure ?? o.measure, angleReading: out.angleReading ?? o.angleReading }))
+    setOverlay((o) => ({ tracked: tracked.length > 0 ? tracked : undefined, cut: out.cut, trim: out.trim, lit: out.lit, hovered: out.hovered, face: out.face, wallGhost: out.wallGhost, box: out.turning, marker: marker && { ...marker, label: snapName(marker.kind) }, smart: out.smart ?? (marker?.guides ? { lines: marker.guides, gaps: [], dashed: marker.kind === 'extension' } : undefined), link: out.link, labels: out.labels, angle: out.angle, axis: out.axis, guide: out.guide, ghosts: out.ghosts, marquee: out.marquee, moved: out.moved, clearanceHover: out.clearanceHover, measure: out.measure ?? o.measure, angleReading: out.angleReading ?? o.angleReading }))
     // A failed preview has put its reason in the status bar; keep it there.
     if (out.previewed) useStore.setState({ status: out.status, drawLive: out.live })
   }
@@ -445,8 +446,17 @@ export function CanvasView() {
       const whole = run.every((id) => s.selection.includes(id)) && s.selection.length === run.length
       select(whole ? connectedWalls(s.doc, hit.node, true) : run)
     } else if (hit?.node.type === 'instance') editComponent(hit.node.component, hit.node)
-    else if (hit?.node.type === 'group') editComponent(hit.id)
-    else if (hit?.node.type === 'text' || hit?.node.type === 'annotation') useStore.setState({ editingText: { id: hit.id } })
+    else if (hit?.node.type === 'group') {
+      // Into the innermost group there, with what was double-clicked in it selected: a door seen
+      // through groups in groups is picked up in one double-click, and Escape climbs out a group at
+      // a time, the one left selected. It stops at a component's placement, which a second
+      // double-click goes into: changing a component changes it everywhere it is placed.
+      // It is the thing the pointer outlines (`pointedAt`).
+      const thing = pointedAt(c, local(c, e), toWorld(local(c, e), s.view))?.thing
+      if (!thing || thing.id === hit.id || !thing.node.parent) return editComponent(hit.id)
+      editComponent(thing.node.parent)
+      select([thing.id])
+    } else if (hit?.node.type === 'text' || hit?.node.type === 'annotation') useStore.setState({ editingText: { id: hit.id } })
     else if (hit?.node.type === 'gridline') {
       // Its label is typed in the bubble nearest where it was double-clicked; with no bubble it has nowhere to be typed.
       const at = toWorld(local(c, e), s.view)
@@ -458,10 +468,15 @@ export function CanvasView() {
 
   useEffect(() => {
     const canvas = canvasRef.current!
+    // A pinch or Ctrl zooms; a trackpad's two fingers move the view, a mouse wheel zooms (wheel.ts).
+    let stream: WheelStream | null = null
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       const { view, viewport } = get()
-      useStore.setState({ view: wheelNavigation(view, local(c, e), e, viewport.height, usePrefs.getState().zoomSpeed, usePrefs.getState().wheelMode) })
+      const step = wheelMove(e, stream, performance.now(), viewport.height)
+      stream = step.stream
+      if ('pan' in step.move) return useStore.setState({ view: { ...view, x: view.x + step.move.pan.x, y: view.y + step.move.pan.y } })
+      useStore.setState({ view: zoomedAbout(view, local(c, e), Math.pow(step.move.zoom, usePrefs.getState().zoomSpeed)) })
     }
     canvas.addEventListener('wheel', onWheel, { passive: false })
     return () => canvas.removeEventListener('wheel', onWheel)
@@ -551,7 +566,8 @@ export function CanvasView() {
       onPointerMove={queueMove}
       onPointerUp={(e) => (onPointerUp(e), syncStep(c))}
       onPointerLeave={() => {
-        // A face pointed at is no longer once the pointer has gone, to the panels or elsewhere.
+        // A face or a thing pointed at is no longer once the pointer has gone, to the panels or elsewhere.
+        setOverlay((o) => (o.hovered ? { ...o, hovered: undefined } : o))
         if (c.gesture.kind !== 'idle' || !get().wallFace) return
         useStore.setState({ wallFace: null })
         setOverlay((o) => ({ ...o, face: undefined }))

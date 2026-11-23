@@ -8,6 +8,7 @@ import { platform } from './platform'
 import { CLAUDE_MODELS, setAiPrefs, setPrefs, usePrefs } from './prefs'
 import { BUILT_IN_EXTENSION } from './extensions'
 import { REPOSITORY } from './release'
+import { Select } from './Select'
 import { useStore } from './store'
 import { toast, useWindows } from './windows'
 import { FRACTIONS, UNITS } from './units'
@@ -108,15 +109,17 @@ function AssistantSettings() {
   return (
     <>
       <Setting label={t('Provider')} hint={t('When you use the assistant, your drawing is sent to the provider you chose. Imported pictures are left out unless the assistant asks to look at one.')}>
-        <select value={ai.provider} onChange={(e) => setAiPrefs({ provider: e.target.value as typeof ai.provider })}>
-          <option value="anthropic">{t('Claude, with an API key')}</option>
-          {/* Starting a program is something only the desktop app can do. */}
-          <option value="claude-cli" disabled={!platform.claudeCli}>
-            {platform.claudeCli ? t('Claude, through the Claude Code CLI on this computer') : t('Claude Code CLI (desktop app only)')}
-          </option>
-          <option value="ollama">{t('Local model, through Ollama')}</option>
-          <option value="compatible">{t('Other (OpenAI-compatible)')}</option>
-        </select>
+        <Select
+          value={ai.provider}
+          onChange={(provider) => setAiPrefs({ provider: provider as typeof ai.provider })}
+          options={[
+            { value: 'anthropic', label: t('Claude, with an API key') },
+            // Starting a program is something only the desktop app can do.
+            { value: 'claude-cli', disabled: !platform.claudeCli, label: platform.claudeCli ? t('Claude, through the Claude Code CLI on this computer') : t('Claude Code CLI (desktop app only)') },
+            { value: 'ollama', label: t('Local model, through Ollama') },
+            { value: 'compatible', label: t('Other (OpenAI-compatible)') },
+          ]}
+        />
       </Setting>
 
       {ai.provider === 'anthropic' && (
@@ -135,14 +138,11 @@ function AssistantSettings() {
             }
           />
           <Setting label={t('Model')}>
-            <select value={custom ? '' : ai.anthropic.model} onChange={(e) => setAiPrefs({ anthropic: { ...ai.anthropic, model: e.target.value } })}>
-              {CLAUDE_MODELS.map(([id, label]) => (
-                <option key={id} value={id}>
-                  {t(label)}
-                </option>
-              ))}
-              {custom && <option value="">{ai.anthropic.model}</option>}
-            </select>
+            <Select
+              value={custom ? '' : ai.anthropic.model}
+              onChange={(model) => setAiPrefs({ anthropic: { ...ai.anthropic, model } })}
+              options={[...CLAUDE_MODELS.map(([id, label]) => ({ value: id, label: t(label) })), ...(custom ? [{ value: '', label: ai.anthropic.model }] : [])]}
+            />
           </Setting>
         </>
       )}
@@ -251,27 +251,24 @@ function GeneralSettings() {
     <>
       <Section title={t('Language and appearance')}>
         <Setting label={t('Language')}>
-          <select value={prefs.language} onChange={(e) => setPrefs({ language: e.target.value })}>
-            <option value="auto">{t('Same as the system')}</option>
-            {LANGUAGES.map(([code, name]) => (
-              <option key={code} value={code}>
-                {name}
-              </option>
-            ))}
-          </select>
+          <Select value={prefs.language} onChange={(language) => setPrefs({ language })} options={[{ value: 'auto', label: t('Same as the system') }, ...LANGUAGES.map(([code, name]) => ({ value: code, label: name }))]} />
         </Setting>
         <Setting label={t('Theme')}>
-          <select value={prefs.theme} onChange={(e) => setPrefs({ theme: e.target.value as typeof prefs.theme })}>
-            <option value="system">{t('Same as the system')}</option>
-            <option value="light">{t('Light')}</option>
-            <option value="dark">{t('Dark')}</option>
-            <option value="graphite">{t('Graphite')}</option>
-            <option value="paper">{t('Paper')}</option>
-            <option value="blueprint">{t('Blueprint')}</option>
-            <option value="sage">{t('Sage')}</option>
-            <option value="solarized">{t('Solarized')}</option>
-            <option value="ink">{t('Ink (high contrast)')}</option>
-          </select>
+          <Select
+            value={prefs.theme}
+            onChange={(theme) => setPrefs({ theme: theme as typeof prefs.theme })}
+            options={[
+              { value: 'system', label: t('Same as the system') },
+              { value: 'light', label: t('Light') },
+              { value: 'dark', label: t('Dark') },
+              { value: 'graphite', label: t('Graphite') },
+              { value: 'paper', label: t('Paper') },
+              { value: 'blueprint', label: t('Blueprint') },
+              { value: 'sage', label: t('Sage') },
+              { value: 'solarized', label: t('Solarized') },
+              { value: 'ink', label: t('Ink (high contrast)') },
+            ]}
+          />
         </Setting>
         {prefs.theme !== 'light' && (
           <Toggle
@@ -289,31 +286,23 @@ function GeneralSettings() {
       </Section>
       <Section title={t('Units')}>
         <Setting label={t('Unit')} hint={t('Lengths are shown and typed in this unit. A different unit can always be typed after a number, such as 350 cm.')}>
-          <select value={prefs.unit} onChange={(e) => setPrefs({ unit: e.target.value as typeof prefs.unit })}>
-            {UNITS.map(([code, name]) => (
-              <option key={code} value={code}>
-                {t(name)}
-              </option>
-            ))}
-          </select>
+          <Select value={prefs.unit} onChange={(unit) => setPrefs({ unit: unit as typeof prefs.unit })} options={UNITS.map(([code, name]) => ({ value: code, label: t(name) }))} />
         </Setting>
         {prefs.unit === 'ft-in' && (
           <Setting label={t('To the nearest')}>
-            <select value={prefs.fraction} onChange={(e) => setPrefs({ fraction: Number(e.target.value) })}>
-              {FRACTIONS.map((under) => (
-                <option key={under} value={under}>
-                  1/{under}"
-                </option>
-              ))}
-            </select>
+            <Select value={String(prefs.fraction)} onChange={(fraction) => setPrefs({ fraction: Number(fraction) })} options={FRACTIONS.map((under) => ({ value: String(under), label: `1/${under}"` }))} />
           </Setting>
         )}
         <Setting label={t('Decimal mark')} hint={t('Numbers in the panels are shown with it, and new drawings write theirs with it; a drawing’s own is in File › Drawing settings. Either mark can be typed.')}>
-          <select value={prefs.decimal} onChange={(e) => setPrefs({ decimal: e.target.value as typeof prefs.decimal })}>
-            <option value="auto">{t('As the language writes it')}</option>
-            <option value=".">{t('With a point: 1.5')}</option>
-            <option value=",">{t('With a comma: 1,5')}</option>
-          </select>
+          <Select
+            value={prefs.decimal}
+            onChange={(decimal) => setPrefs({ decimal: decimal as typeof prefs.decimal })}
+            options={[
+              { value: 'auto', label: t('As the language writes it') },
+              { value: '.', label: t('With a point: 1.5') },
+              { value: ',', label: t('With a comma: 1,5') },
+            ]}
+          />
         </Setting>
       </Section>
       <Section title={t('Starting and saving')}>
@@ -411,36 +400,42 @@ function DrawingSettings() {
         <Setting label={t('Zoom speed')} hint={t('How fast pinching or Ctrl-wheel zooms the drawing. 1 is the default, and 2 zooms twice as fast.')}>
           <ZoomSpeed />
         </Setting>
-        <Setting label={t('Wheel and trackpad')} hint={t('Choose how the wheel moves the drawing. A trackpad scrolls the drawing and pinches to zoom; a mouse wheel zooms about the pointer, as it did before.')}>
-          <select value={prefs.wheelMode} onChange={(e) => setPrefs({ wheelMode: e.target.value as typeof prefs.wheelMode })}>
-            <option value="trackpad">{t('Trackpad: two fingers pan, a pinch zooms')}</option>
-            <option value="mouse">{t('Mouse: the wheel zooms')}</option>
-          </select>
-        </Setting>
       </Section>
       <Section title={t('Selection')}>
         <Setting label={t('Selection box')} hint={t('How a box selects: drag from the first corner to the second, or click the first corner, move, and click the second, as in AutoCAD.')}>
-          <select value={prefs.selectionMode} onChange={(e) => setPrefs({ selectionMode: e.target.value as typeof prefs.selectionMode })}>
-            <option value="drag">{t('Drag: press, drag, release')}</option>
-            <option value="click">{t('Click: click, move, click (AutoCAD)')}</option>
-          </select>
+          <Select
+            value={prefs.selectionMode}
+            onChange={(selectionMode) => setPrefs({ selectionMode: selectionMode as typeof prefs.selectionMode })}
+            options={[
+              { value: 'drag', label: t('Drag: press, drag, release') },
+              { value: 'click', label: t('Click: click, move, click (AutoCAD)') },
+            ]}
+          />
         </Setting>
       </Section>
       <Section title={t('Groups and components')}>
         <Setting label={t('Editing inside a group')}>
-          <select value={prefs.editGroups} onChange={(e) => setPrefs({ editGroups: e.target.value as typeof prefs.editGroups })}>
-            <option value="faded">{t('Show the rest of the drawing faded')}</option>
-            <option value="alone">{t('Show the group alone')}</option>
-          </select>
+          <Select
+            value={prefs.editGroups}
+            onChange={(editGroups) => setPrefs({ editGroups: editGroups as typeof prefs.editGroups })}
+            options={[
+              { value: 'faded', label: t('Show the rest of the drawing faded') },
+              { value: 'alone', label: t('Show the group alone') },
+            ]}
+          />
         </Setting>
         <Setting
           label={t('Editing a component')}
           hint={t('Faded, the rest of the drawing can be snapped to but not selected. A component opened from the Components panel or the object library, or placed both stretched and turned, is always shown alone.')}
         >
-          <select value={prefs.editComponents} onChange={(e) => setPrefs({ editComponents: e.target.value as typeof prefs.editComponents })}>
-            <option value="faded">{t('Show the rest of the drawing faded')}</option>
-            <option value="alone">{t('Show the component alone')}</option>
-          </select>
+          <Select
+            value={prefs.editComponents}
+            onChange={(editComponents) => setPrefs({ editComponents: editComponents as typeof prefs.editComponents })}
+            options={[
+              { value: 'faded', label: t('Show the rest of the drawing faded') },
+              { value: 'alone', label: t('Show the component alone') },
+            ]}
+          />
         </Setting>
       </Section>
     </>

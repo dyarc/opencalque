@@ -55,6 +55,9 @@ const PLATE = 80
 const STANDING_WEIGHT = 0.6
 const FLOOR_WEIGHT = 2
 
+/** What stands on the floor is drawn lighter than the walls: its kind's lines given no weight of their own. */
+const standingWeight = (p: Primitive): Primitive => ((p.kind === 'path' || p.kind === 'ellipse') && p.strokeWidth === undefined ? { ...p, strokeWidth: STANDING_WEIGHT } : p)
+
 export type Elevation = NodeOf<'elevation'>
 export type ViewLine = NodeOf<'viewline'>
 type Face = 'left' | 'right'
@@ -88,6 +91,16 @@ export function keepViewsOps(doc: Document, line: ViewLine, patch: Record<string
 
 /** The way to the right of a line from `a` to `b`, which is where a view along it is seen from. */
 const viewer = (a: Vec2, b: Vec2) => perp(norm(sub(b, a)))
+
+/**
+ * Seen from in front, the side or behind: as the way an object faces (`facing`) turns from the way
+ * to the viewer (`viewer`), by less than 45°, more than 135°, or in between.
+ */
+export function seenFrom(facing: Vec2, viewer: Vec2): 'front' | 'side' | 'back' {
+  const length = Math.hypot(facing.x, facing.y)
+  const c = length < 1e-9 ? 1 : dot(facing, viewer) / length
+  return c >= Math.SQRT1_2 - 1e-9 ? 'front' : c <= -Math.SQRT1_2 + 1e-9 ? 'back' : 'side'
+}
 
 /** How far beyond its line a view sees, in mm. */
 export const depthOf = (node: Pick<ViewLine, 'depth'>) => node.depth ?? DEFAULT_DEPTH
@@ -342,7 +355,7 @@ export function elevationWall(doc: Document, node: ViewLine): { wall: Wall; face
  * Where an opening is, up the wall: from the floor, or from its sill when its kind says one
  * (`sill`), up to its `height` parameter, never above the wall; the whole wall without one.
  */
-function heightsOf(kind: ParametricKind, props: Record<string, any>, wall: number): [number, number] {
+export function openingHeights(kind: ParametricKind, props: Record<string, any>, wall: number): [number, number] {
   const bottom = kind.sill ? Math.max(0, Number(props[kind.sill]) || 0) : 0
   const tall = typeof props.height === 'number' && props.height > 0 ? props.height : wall - bottom
   return [Math.min(bottom, wall), Math.min(bottom + tall, wall)]
@@ -620,6 +633,27 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
     return shapes.map((p) => transformPrimitive(p, { x: node.x + s, y: node.y - h, flipX: mirrored }))
   }
 
+  /**
+   * What a kind draws of an object as the view sees it, put at `h` above the floor: its front, its
+   * side or its back, as the way it faces turns from the viewer by less than 45°, by more than
+   * 135°, or in between (`seenFrom`). Null when its kind draws nothing for that, for the caller to
+   * draw something else.
+   */
+  const seenAs = (object: NodeOf<'parametric'>, props: Record<string, any>, h: number): Primitive[] | null => {
+    const kind = registry.parametric.get(object.kind)
+    if (!kind) return null
+    const origin = applyTransform({ x: 0, y: 0 }, object)
+    const ownX = sub(applyTransform({ x: 1, y: 0 }, object), origin)
+    const ownY = sub(applyTransform({ x: 0, y: 1 }, object), origin)
+    const facing = mountOf(object, registry)?.out === 'up' ? { x: -ownY.x, y: -ownY.y } : ownY
+    const from = seenFrom(facing, front)
+    const shapes = from === 'front' ? kind.front?.(props) : from === 'side' ? kind.side?.(props) : kind.back?.(props)
+    if (!shapes) return null
+    // A side is drawn along the way it faces, from its own Y = 0; a front or a back along its own X.
+    const mirrored = dot(from === 'side' ? facing : ownX, d) < 0
+    return shapes.map((p) => transformPrimitive(p, { x: node.x + along(origin), y: node.y - h, flipX: mirrored }))
+  }
+
   const items: ElevationItem[] = []
   // The first thing each item draws, to know in which layer it is painted.
   const drawnFirst = new Map<ElevationItem, Primitive>()
@@ -766,7 +800,7 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
       const span = openingSpan(opening, registry)
       if (!span || !span.some((p) => within(along(p)) && between(p, wall.thickness))) continue
       const own = kind.front?.(props)
-      const [bottom, top] = heightsOf(kind, props, height)
+      const [bottom, top] = openingHeights(kind, props, height)
       const [s0, s1] = span.map(along)
       faces.push(...shown(opening, 'opening', own ? placed(opening, own, 0) : [{ kind: 'path', points: box(Math.min(s0, s1), Math.max(s0, s1), bottom, top), closed: true }]))
     }
@@ -837,7 +871,7 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
       inWay.push({ wall, from: taken[0], to: taken[1], depth: () => 0, height })
       continue
     }
-    const [bottom, top] = heightsOf(kind, registry.resolveProps(kind, through!.node.props), height)
+    const [bottom, top] = openingHeights(kind, registry.resolveProps(kind, through!.node.props), height)
     for (const [h0, h1] of ([[0, bottom], [top, height]] as [number, number][]).filter(([h0, h1]) => h1 - h0 > 1)) {
       layers.push({ from: taken[0], to: taken[1], depth: () => 0, prims: [{ kind: 'path', points: box(taken[0], taken[1], h0, h1), closed: true, fill: WALL_GREY, own: true }] })
     }
@@ -855,9 +889,13 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
     if (leaf.type !== 'instance' && leaf.type !== 'parametric') continue
     if (leaf.type === 'parametric' && (mountOf(leaf, registry)?.on === 'wall' || openingSpan(leaf, registry))) continue
     let tall: number | undefined
+    let looks: Primitive[] | null = null
     if (leaf.type === 'parametric') {
       const kind = registry.parametric.get(leaf.kind)
-      tall = kind?.height?.(registry.resolveProps(kind, leaf.props))
+      const props = kind ? registry.resolveProps(kind, leaf.props) : {}
+      tall = kind?.height?.(props)
+      // Drawn as its kind draws it from where it is seen, lighter than the walls; else as its box.
+      looks = kind ? seenAs(leaf, props, heightAboveFloor(leaf, registry) ?? 0) : null
     } else {
       const component = doc.nodes[leaf.component]
       tall = component?.type === 'component' && component.height ? component.height * (leaf.scale ?? 1) : undefined
@@ -872,7 +910,10 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
     const from = Math.max(0, Math.min(...ss))
     const to = Math.min(length, Math.max(...ss))
     if (to - from < 1) continue
-    layers.push({ from, to, depth: depthOn(seenOf(points)), prims: shown(leaf, 'standing', [{ kind: 'path', points: box(from, to, 0, tall), closed: true, strokeWidth: STANDING_WEIGHT, own: true }]) })
+    // What its kind draws seen from where it is looked at — a fireplace's breast and hearth, a
+    // washbasin's bowl — lighter than the walls; else a box of the width it takes and its height.
+    const prims: Primitive[] = looks ? looks.map(standingWeight) : [{ kind: 'path', points: box(from, to, 0, tall), closed: true, strokeWidth: STANDING_WEIGHT, own: true }]
+    layers.push({ from, to, depth: depthOn(seenOf(points)), prims: shown(leaf, 'standing', prims) })
   }
 
   // What is made to be fixed on a wall but stands in view on no face the view draws (a wall cabinet
@@ -889,9 +930,9 @@ function layout(view: Elevation, doc: Document, registry: Registry, measure: Mea
     const ss = points.map(along)
     if (Math.max(...ss) < 0 || Math.min(...ss) > length) continue
     const kind = registry.parametric.get(leaf.kind)
-    const own = kind?.front?.(registry.resolveProps(kind, leaf.props))
+    const own = kind ? seenAs(leaf, registry.resolveProps(kind, leaf.props), heightAboveFloor(leaf, registry) ?? 0) : null
     const half = PLATE / 2
-    const prims = shown(leaf, 'fixed', placed(leaf, own ?? [{ kind: 'path', points: [{ x: -half, y: -half }, { x: half, y: -half }, { x: half, y: half }, { x: -half, y: half }], closed: true }], heightAboveFloor(leaf, registry) ?? 0))
+    const prims = shown(leaf, 'fixed', own ?? placed(leaf, [{ kind: 'path', points: [{ x: -half, y: -half }, { x: half, y: -half }, { x: half, y: half }, { x: -half, y: half }], closed: true }], heightAboveFloor(leaf, registry) ?? 0))
     layers.push({ from: Math.max(0, Math.min(...ss)), to: Math.min(length, Math.max(...ss)), depth: depthOn(seenOf(points)), prims })
   }
 

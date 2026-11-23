@@ -29,14 +29,51 @@ describe('doors and windows seen from in front', () => {
     expect([lines(1), lines(2), lines(3)]).toEqual([0, 1, 2])
   })
 
-  it('a door stands on the floor, its leaves split down the middle when it has two', () => {
+  it('a door stands on the floor, or on its sill height when it is raised, as high as it is', () => {
     expect(extent(door.front!(registry.resolveProps(door, {})))).toEqual({ left: 0, right: 900, top: -2040, bottom: 0 })
+    // Raised: a threshold, or the room a floor's finish needs under it.
+    expect(extent(door.front!(registry.resolveProps(door, { sillHeight: 300, height: 2000, width: 800 })))).toEqual({ left: 0, right: 800, top: -2300, bottom: -300 })
     const middle = (type: string) => door.front!(registry.resolveProps(door, { type })).some((p) => p.kind === 'path' && p.points.every((q) => q.x === 450))
     expect([middle('Single'), middle('Double'), middle('Sliding'), middle('Opening only')]).toEqual([false, true, true, false])
   })
 
+  it('a door whose sill height is not a number stands on the floor rather than failing', () => {
+    expect(extent(door.front!(registry.resolveProps(door, { sillHeight: 'high' as never }))).bottom).toBe(0)
+  })
+
   it('a window with a sill height that is not a number stands at the usual one rather than failing', () => {
     expect(extent(window.front!(registry.resolveProps(window, { sillHeight: 'high' as never }))).bottom).toBe(-900)
+  })
+})
+
+describe('a sliding door', () => {
+  const built = (type: string, slide = 'Right') => door.build(registry.resolveProps(door, { width: 900, type, slide }), { wallThickness: 200 })
+  /** The rectangles in its drawing: the leaf and where it slides to. */
+  const boxes = (type: string, slide = 'Right') => built(type, slide).filter((p) => p.kind === 'path' && p.closed && p.points.length === 4)
+  const span = (prim: { points: { x: number }[] }) => [Math.min(...prim.points.map((p) => p.x)), Math.max(...prim.points.map((p) => p.x))]
+
+  it('hangs one leaf in front of the wall, or two that part, and shows where they slide to', () => {
+    const one = boxes('Sliding on wall')
+    expect(one).toHaveLength(2)
+    expect(one[0].dash).toBeUndefined()
+    expect(one[1].dash).toEqual([40, 25])
+    expect(boxes('Double sliding on wall')).toHaveLength(4)
+  })
+
+  it('draws a pocket door shut, dashed past its end, inside the wall it slides into', () => {
+    const pocket = boxes('Pocket')
+    expect(pocket).toHaveLength(2)
+    expect(span(pocket[0] as { points: { x: number }[] })).toEqual([0, 900])
+    expect(span(pocket[1] as { points: { x: number }[] })).toEqual([900, 1800])
+  })
+
+  it('slides the other way when asked, and shows only what means something for its type', () => {
+    expect(span(boxes('Sliding on wall', 'Left')[1] as { points: { x: number }[] })).toEqual([-950, 50])
+    const shown = (type: string) => Object.fromEntries(door.params.filter((p) => p.shown).map((p) => [p.key, p.shown!({ type })]))
+    expect(shown('Single')).toEqual({ hinge: true, angle: true, slide: false })
+    expect(shown('Double')).toEqual({ hinge: false, angle: true, slide: false })
+    expect(shown('Sliding on wall')).toEqual({ hinge: false, angle: false, slide: true })
+    expect(shown('Pocket')).toEqual({ hinge: false, angle: false, slide: true })
   })
 })
 

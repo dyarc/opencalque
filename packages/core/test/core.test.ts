@@ -199,6 +199,18 @@ describe('scene', () => {
     expect(hitTest(scene, { x: -500, y: -400 }, 1)?.id).toBe('frame')
   })
 
+  it('takes the nearest thing under the pointer, and the topmost of those as near', () => {
+    const doc = applyOps(createDocument(), [
+      { op: 'add_node', node: { type: 'line', id: 'under', parent: 'page_1', a: { x: 0, y: 3 }, b: { x: 1000, y: 3 } } },
+      { op: 'add_node', node: { type: 'line', id: 'over', parent: 'page_1', a: { x: 0, y: 0 }, b: { x: 1000, y: 0 } } },
+    ])
+    const scene = buildScene(doc, 'page_1', registry)
+    // 1 mm away wins over 4 mm away, though it is drawn under.
+    expect(hitTest(scene, { x: 500, y: 4 }, 5)?.id).toBe('under')
+    // As near, the one on top is taken.
+    expect(hitTest(scene, { x: 500, y: 1.5 }, 5)?.id).toBe('over')
+  })
+
   it('draws parametric objects from extensions and keeps unknown kinds as placeholders', () => {
     const doc = applyOps(createDocument(), [
       { op: 'add_node', node: { type: 'parametric', id: 's', parent: 'page_1', kind: 'test.box', props: {}, x: 50, y: 0, rotation: 90 } },

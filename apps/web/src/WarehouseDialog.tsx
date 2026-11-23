@@ -10,6 +10,7 @@ import { language, msg, t, tn } from './i18n'
 import { platform } from './platform'
 import { setPrefs, usePrefs } from './prefs'
 import { ALWAYS_ON, BUILT_IN_EXTENSION, loadExtensions, registry, useExtensions } from './extensions'
+import { Select } from './Select'
 import { applyOrThrow, setTool, useStore } from './store'
 import { toast, useWindows } from './windows'
 import { IconButton } from './ui'
@@ -316,18 +317,16 @@ function Components({ libraries }: { libraries: Library[] }) {
           }}
         />
         {/* The sections as a list to pick from, where the window is too narrow to show them beside what they hold. */}
-        <select className="warehouse-section-picker" aria-label={t('Sections')} value={filter} onChange={(e) => choose(e.target.value)}>
-          <option value="all">{t('All')}</option>
-          {lists.map(({ heading, ids }) => (
-            <optgroup key={heading} label={t(heading)}>
-              {ids.map((id) => (
-                <option key={id} value={id}>
-                  {nameOf(id)}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        <Select
+          className="warehouse-section-picker"
+          aria-label={t('Sections')}
+          value={filter}
+          onChange={(value) => choose(value)}
+          options={[
+            { value: 'all', label: t('All') },
+            ...lists.map(({ heading, ids }) => ({ group: t(heading), options: ids.map((id) => ({ value: id, label: nameOf(id) })) })),
+          ]}
+        />
       </div>
       <div className="warehouse-body">
         <nav className="warehouse-sections" aria-label={t('Sections')}>

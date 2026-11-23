@@ -96,6 +96,7 @@ export interface Shown {
   cut?: Overlay['cut']
   trim?: Overlay['trim']
   lit?: Overlay['lit']
+  hovered?: Overlay['hovered']
   angleReading?: Overlay['angleReading']
   face?: Overlay['face']
   wallGhost?: Overlay['wallGhost']

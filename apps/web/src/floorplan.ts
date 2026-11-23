@@ -8,8 +8,8 @@ import { apply, layerHere, select, setTool, useStore } from './store'
 import { visibleArea } from './view'
 import { toast } from './windows'
 
-/** Largest side, in pixels, of the picture kept in the drawing. Bigger scans are scaled down. */
-const MAX_PIXELS = 4096
+/** Largest side, in pixels, of the picture kept in the drawing. Bigger scans are scaled down: 8192 keeps the small writing of an A1 sheet at about 250 dpi. */
+const MAX_PIXELS = 8192
 
 interface Picture {
   canvas: HTMLCanvasElement

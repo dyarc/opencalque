@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyEdit, applyOps, createDocument, elevationItemAt, elevationMovePatch, elevationPrimitives, FORMAT_VERSION, NewerFormatError, parseDocument, Registry, serializeDocument, shownInElevations, splitWallOps, transformOps, wallFaceAt, type Document, type NodeOf, type Op, type Primitive } from '../src'
+import { applyEdit, applyOps, createDocument, elevationItemAt, elevationMovePatch, elevationPrimitives, FORMAT_VERSION, seenFrom, NewerFormatError, parseDocument, Registry, serializeDocument, shownInElevations, splitWallOps, transformOps, wallFaceAt, type Document, type NodeOf, type Op, type Primitive } from '../src'
 import { viewNodes, viewOps, type ViewSpec } from './view-nodes'
 
 /*
@@ -336,5 +336,14 @@ describe('elevations look at the face as it is drawn', () => {
       { op: 'update_node', id: 'w', patch: { a: { x: 500, y: 0 } } },
     ])
     expect(line(moved)).toEqual([[600, 1100], [6000, 1100]])
+  })
+})
+describe('what a view sees of an object', () => {
+  it('is its front, its side or its back, as the way it faces turns from the viewer', () => {
+    const facing = { x: 0, y: 1 }
+    expect([seenFrom(facing, { x: 0, y: 1 }), seenFrom(facing, { x: 0, y: -1 }), seenFrom(facing, { x: 1, y: 0 }), seenFrom(facing, { x: -1, y: 0 })]).toEqual(['front', 'back', 'side', 'side'])
+    // An object at 30 degrees is still seen from in front or behind; one at 60, from its side.
+    const at = (degrees: number) => ({ x: Math.sin((degrees * Math.PI) / 180), y: Math.cos((degrees * Math.PI) / 180) })
+    expect([seenFrom(facing, at(30)), seenFrom(facing, at(150)), seenFrom(facing, at(60)), seenFrom(facing, at(120))]).toEqual(['front', 'back', 'side', 'side'])
   })
 })

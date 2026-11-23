@@ -624,10 +624,20 @@ export const NodeSchema = z
   ])
   .describe('All coordinates and lengths are millimetres. X grows to the right, Y grows downward.')
 
+/** The most parts the drawing's grid divides its main squares into (`settings.grid.divisions`). */
+export const GRID_DIVISIONS = 100
+
 /** How a whole drawing writes its numbers. What is placed in it follows, unless it says otherwise itself. */
 export const DrawingSettingsSchema = z.object({
   system: z.enum(['metric', 'imperial']).optional().describe("'imperial': areas in square feet, and the lengths, volumes and thicknesses of tables of quantities in feet and inches. Defaults to 'metric' (square metres, metres)."),
   decimal: z.enum(['.', ',']).optional().describe("The decimal separator of the areas, tables and dimensions. Defaults to '.'."),
+  grid: z
+    .object({
+      spacing: z.number().positive().describe('How far apart the main lines of the grid are, in mm: 910 for the Japanese module.'),
+      divisions: z.number().int().min(1).max(GRID_DIVISIONS).optional().describe('Into how many parts the finer lines divide each square of the main ones: 2 gives lines every 455 mm between those every 910 mm. Defaults to 1, no finer lines.'),
+    })
+    .optional()
+    .describe('The grid the editor shows and snaps to, from the origin. Left out, the grid changes with the zoom (1, 5, 10, 50, 100 mm…), every tenth line darker. It is never printed or exported.'),
 })
 
 export const DocumentSchema = z
@@ -649,7 +659,7 @@ export const DocumentSchema = z
       .object({ project: z.string().optional(), client: z.string().optional(), address: z.string().optional(), author: z.string().optional() })
       .optional()
       .describe('What the drawing says about itself, shown in the title block of every sheet: the project (the document name when not given), the client, the address of the site (lines separated by a line break), the author.'),
-    settings: DrawingSettingsSchema.optional().describe('How the drawing writes its numbers: the floor areas of its rooms, its tables of quantities, its dimensions. Left out, in metric with a decimal point.'),
+    settings: DrawingSettingsSchema.optional().describe('How the drawing writes its numbers — the floor areas of its rooms, its tables of quantities, its dimensions — and the grid the editor shows. Left out, in metric with a decimal point, on a grid that changes with the zoom.'),
     meta: z.record(z.string(), z.unknown()).optional(),
   })
   .describe('An OpenCalque document (.opencalque file).')

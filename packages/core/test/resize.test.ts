@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { frameGrips, resizeFrame, resizePatch, type Node } from '../src'
+import { architecture } from '../../ext-architecture/src'
+import { frameGrips, Registry, resizeFrame, resizePatch, type Node } from '../src'
 
 const rect = (extra: Record<string, unknown> = {}) => ({ id: 'r', type: 'rect', parent: 'page_1', order: 'a0', x: 0, y: 0, width: 400, height: 200, ...extra }) as Node
 const ellipse = { id: 'e', type: 'ellipse', parent: 'page_1', order: 'a0', cx: 0, cy: 0, rx: 200, ry: 100 } as Node
@@ -42,5 +43,18 @@ describe('resizing a box by its frame', () => {
     expect(grips[5]).toEqual({ x: expect.closeTo(-100), y: expect.closeTo(400) })
     expect(resizePatch(turned, 5, { x: -100, y: 500 })).toEqual({ x: 0, y: 0, width: 500, height: 200 })
     expect(resizePatch(turned, 2, { x: -300, y: 500 })).toEqual({ x: 0, y: 0, width: 500, height: 300 })
+  })
+})
+describe('resizing a parametric object by its frame', () => {
+  const registry = new Registry().use(architecture)
+  /** A banquette, 1.80 m by 50 cm, its back against the wall at its own Y = 0. */
+  const banquette = { id: 'b', type: 'parametric', parent: 'page_1', order: 'a0', kind: 'arch.banquette', props: {}, x: 0, y: 0 } as Node
+
+  it('sets its sizes apart by a corner, or keeps its proportions when asked', () => {
+    expect(resizePatch(banquette, 2, { x: 2700, y: 500 }, false, registry)).toMatchObject({ props: { width: 2700, depth: 500 } })
+    // The larger change (1.5 times wider) sets both: 2.70 m by 75 cm.
+    expect(resizePatch(banquette, 2, { x: 2700, y: 500 }, true, registry)).toMatchObject({ props: { width: 2700, depth: 750 } })
+    // A side pulled out alone is that side, whatever the proportions.
+    expect(resizePatch(banquette, 5, { x: 900, y: 0 }, true, registry)).toMatchObject({ props: { width: 900 } })
   })
 })

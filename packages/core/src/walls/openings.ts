@@ -189,6 +189,47 @@ export function openingArc(doc: Document, node: Node, registry: Registry): WallA
  * within `reach` of `p`. `step` is the grid the opening's edges are rounded to along the wall.
  * Pass `keepRotation` when moving an existing opening, so it stays on the side it already faces.
  */
+/**
+ * Where an opening of width `width`, starting `from` along `wall`, goes so that it covers no end of
+ * a wall meeting `wall` along its length (a partition at a T): a door there would open onto that
+ * wall, drawn standing in its doorway. It slides to the nearer side that clears it (the side of the
+ * pointer, `pointer`, when both are as near), staying on the wall; where no place clears every such
+ * wall, as on a wall too short, it stays at `from`. The corners at the wall's own ends are left as
+ * they were, and so is every opening already placed: this is where an opening is put, not a rule of
+ * the drawing.
+ */
+function clearOfMeetingWalls(doc: Document, containerId: string, wall: Wall, from: number, width: number, pointer: number): number {
+  const course = courseOf(wall)
+  const length = course.length
+  const half = width / 2
+  const blocked: [number, number][] = []
+  for (const other of wallsIn(doc, containerId)) {
+    if (other.id === wall.id) continue
+    for (const end of [other.a, other.b]) {
+      if (distToBody(end, wall) > 1) continue
+      const along = course.project(end).along
+      if (along <= 1 || along >= length - 1) continue
+      // As wide as the meeting wall is along this one: wider when it meets it at a slant.
+      const own = sub(other.b, other.a)
+      const ownLength = Math.hypot(own.x, own.y) || 1
+      const d = course.dir(along)
+      const sine = Math.abs(d.x * own.y - d.y * own.x) / ownLength
+      const size = Math.min(other.thickness / Math.max(sine, 1 / 3), 3 * other.thickness)
+      blocked.push([along - size / 2, along + size / 2])
+    }
+  }
+  const clear = (centre: number) => (length < 2 * half || (centre >= half - 1e-6 && centre <= length - half + 1e-6)) && blocked.every(([a, b]) => centre + half <= a + 1e-6 || centre - half >= b - 1e-6)
+  const centre = from + half
+  if (clear(centre)) return from
+  const candidates = blocked.flatMap(([a, b]) => [a - half, b + half]).filter(clear)
+  if (candidates.length === 0) return from
+  const best = candidates.reduce((best, c) => {
+    const [db, dc] = [Math.abs(best - centre), Math.abs(c - centre)]
+    return dc < db - 1e-6 || (Math.abs(dc - db) <= 1e-6 && Math.abs(c - pointer) < Math.abs(best - pointer)) ? c : best
+  })
+  return best - half
+}
+
 export function snapOpeningToWall(
   doc: Document,
   containerId: string,
@@ -220,6 +261,7 @@ export function snapOpeningToWall(
   const taken = arc ? arcLengthOfChord(arc.radius, width) : width
   let from = Math.round((course.project(p).along - taken / 2) / step) * step
   from = Math.max(0, Math.min(Math.max(0, length - taken), from))
+  from = clearOfMeetingWalls(doc, containerId, wall, from, taken, course.project(p).along)
   const to = Math.min(length, from + taken)
   // Both ends on the line the wall is drawn by, the opening laid from one to the other.
   const start = course.offset(from, middleAcross(wall))

@@ -41,3 +41,45 @@ describe('a radiator', () => {
     expect(() => radiator.build(registry.resolveProps(radiator, node.props), {})).not.toThrow()
   })
 })
+
+const fireplace = registry.parametric.get('arch.fireplace')!
+const built = (props: Record<string, unknown> = {}) => fireplace.build(registry.resolveProps(fireplace, props), {})
+const front = (props: Record<string, unknown> = {}) => fireplace.front!(registry.resolveProps(fireplace, props))
+const box = (prims: Primitive[]) => {
+  const points = prims.flatMap((p): { x: number; y: number }[] => (p.kind === 'path' ? p.points : []))
+  return { left: Math.min(...points.map((q) => q.x)), right: Math.max(...points.map((q) => q.x)), top: Math.min(...points.map((q) => q.y)), bottom: Math.max(...points.map((q) => q.y)) }
+}
+
+describe('a fireplace', () => {
+  it('is under Heating, its breast against the wall by its back, a metre wide and 2.5 m tall', () => {
+    expect(fireplace.category).toBe('heating')
+    expect(box(built())).toMatchObject({ left: 0, right: 1000, bottom: 500 })
+    expect(box(front())).toEqual({ left: 0, right: 1000, top: -2500, bottom: 0 })
+  })
+
+  it('has a cassette set flush in the breast, its glass along the front', () => {
+    const prims = built()
+    const [outer, inner] = prims.filter((p): p is Path => p.kind === 'path' && !!p.closed)
+    expect(outer.points).toEqual([{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 500 }, { x: 0, y: 500 }])
+    // 15 % of the width in from each side, from a quarter of the depth to the front.
+    expect(box([inner])).toEqual({ left: 150, right: 850, bottom: 500, top: 125 })
+    // Its frame, 450 mm above the floor, a metre high and 1.05 m wide.
+    expect(box(front({ style: 'Cassette' }))).toMatchObject({ left: 0, right: 1000, top: -2500 })
+    const frames = front().filter((p): p is Path => p.kind === 'path' && !!p.closed)
+    expect(box([frames[1]])).toEqual({ left: 150, right: 850, top: -1050, bottom: -450 })
+  })
+
+  it('has an open hearth with its slab on the floor in front, under a mantel and a hood', () => {
+    const open = { style: 'Open hearth', hearth: 400 }
+    expect(box(built(open))).toMatchObject({ bottom: 900 })
+    // The mantel at 1.2 m, wider than the breast by 30 mm each side, and the hood above it.
+    expect(box(front(open))).toMatchObject({ left: -30, right: 1030, top: -2500 })
+    expect(front(open).some((p) => p.kind === 'path' && p.closed && p.points.every((q) => q.y <= -1200))).toBe(true)
+  })
+
+  it('is made wider or deeper by its frame, never under 40 × 25 cm', () => {
+    const props = registry.resolveProps(fireplace, {})
+    expect(fireplace.box!.resize(props, { width: 1234.4, height: 600 })).toEqual({ width: 1234, depth: 600 })
+    expect(fireplace.box!.resize(props, { width: 50, height: 10 })).toEqual({ width: 400, depth: 250 })
+  })
+})

@@ -26,6 +26,34 @@ const BOW = {
   },
 }
 
+/*
+ * The kinds of door. Hinged: 'Single', 'Double'. Sliding: 'Sliding on wall', a leaf hung in front
+ * of the wall's +Y face that slides along it; 'Double sliding on wall', two that part; 'Pocket', a
+ * leaf that slides into the wall; and 'Sliding', the glazed door of an outside wall, its leaves on
+ * rails in its frame (the only sliding door before, and what the value still means).
+ */
+const HINGED = ['Single', 'Double']
+/** Those that slide one way, which `slide` says. */
+const ONE_WAY = ['Sliding on wall', 'Pocket']
+/** How far a hung leaf stands in front of the face: its inner and outer lines, in mm. */
+const HUNG = [10, 50]
+/** A dash for what shows where something goes rather than where it is. */
+const OPEN = [40, 25]
+
+/** A rectangle, dashed when it shows where something goes rather than where it is. */
+const box = (x0: number, y0: number, x1: number, y1: number, dash?: number[]): Primitive => ({
+  kind: 'path',
+  points: [pt(x0, y0), pt(x1, y0), pt(x1, y1), pt(x0, y1)],
+  closed: true,
+  ...(dash ? { dash, ...THIN } : {}),
+})
+
+/** An arrow along +X from `x0` to `x1`, at `y`. */
+const arrow = (x0: number, x1: number, y: number): Primitive[] => {
+  const head = Math.min(60, Math.abs(x1 - x0) / 3) * Math.sign(x1 - x0)
+  return [line([pt(x0, y), pt(x1, y)], THIN), line([pt(x1 - head, y - Math.abs(head) / 2), pt(x1, y), pt(x1 - head, y + Math.abs(head) / 2)], THIN)]
+}
+
 export const door: ParametricKind = {
   kind: 'arch.door',
   category: 'architecture',
@@ -34,22 +62,37 @@ export const door: ParametricKind = {
   params: [
     WIDTH,
     HEIGHT(2040),
-    { key: 'type', label: 'Type', type: 'string', default: 'Single', options: ['Single', 'Double', 'Sliding', 'Opening only'] },
+    // A door can start above the floor, as a window does: a raised threshold, or room under it for a floor's finish.
+    { key: 'sillHeight', label: 'Sill height', type: 'number', default: 0, unit: 'length' },
+    { key: 'type', label: 'Type', type: 'string', default: 'Single', options: ['Single', 'Double', 'Sliding on wall', 'Double sliding on wall', 'Pocket', 'Sliding', 'Opening only'] },
     { key: 'shape', label: 'Shape', type: 'string', default: 'Straight', options: ['Straight', 'Curved'] },
     { key: 'bow', label: 'Bow', type: 'number', default: 120, unit: 'length' },
-    { key: 'hinge', label: 'Hinge', type: 'string', default: 'Left', options: ['Left', 'Right'] },
-    { key: 'angle', label: 'Open angle', type: 'number', default: 90, unit: 'angle' },
+    // A door shows only what means something for its type: a hinge and an open angle for a hinged
+    // one, and which way a sliding one slides.
+    { key: 'hinge', label: 'Hinge', type: 'string', default: 'Left', options: ['Left', 'Right'], shown: ({ type }) => type === 'Single' },
+    { key: 'angle', label: 'Open angle', type: 'number', default: 90, unit: 'angle', shown: ({ type }) => HINGED.includes(type) },
+    { key: 'slide', label: 'Slides to', type: 'string', default: 'Right', options: ['Left', 'Right'], shown: ({ type }) => ONE_WAY.includes(type) },
     OTHER_SIDE,
   ],
   opening: ({ width }) => ({ from: 0, to: atLeast(1, width) }),
   size: { x: 'width' },
   bow: BOW,
-  build({ width, type, hinge, angle, flip, shape, bow }, env) {
+  sill: 'sillHeight',
+  build({ width, type, hinge, angle, slide, flip, shape, bow }, env) {
     const w = atLeast(1, width)
     const h = (env.wallThickness ?? LOOSE_WALL) / 2
     // In a curved wall it is curved by the wall; off one, by its own shape and bow.
     const curve = env.wallCurve ?? (shape === 'Curved' ? curveOf(w, bow) : undefined)
     const open = clamp(angle, 5, 180)
+    // A leaf hung in front of the +Y face over `x0`-`x1`, a little wider than what it closes, drawn
+    // shut, then dashed where it slides to (by `by`), an arrow saying which way.
+    const hung = (x0: number, x1: number, by: number): Primitive[] => {
+      const over = Math.min(50, w / 10)
+      const [a, b] = [x0 === 0 ? -over : x0, x1 === w ? w + over : x1]
+      const [near, far] = [h + HUNG[0], h + HUNG[1]]
+      const mid = (a + b) / 2
+      return [box(a, near, b, far), box(a + by, near, b + by, far, OPEN), ...arrow(mid, mid + by * 0.6, far + 60)]
+    }
     // A leaf hinged on the +Y face. `dir` is +1 when it closes towards +X, -1 towards -X.
     const leaf = (hingeX: number, length: number, dir: 1 | -1): Primitive[] => {
       const hingePoint = curvePoint(hingeX, h, curve)
@@ -75,20 +118,29 @@ export const door: ParametricKind = {
     let prims: Primitive[] = [curveLine(0, w, -h, curve, THIN), curveLine(0, w, h, curve, THIN)]
     if (type === 'Single') prims.push(...leaf(0, w, 1))
     else if (type === 'Double') prims.push(...leaf(0, w / 2, 1), ...leaf(w, w / 2, -1))
-    else if (type === 'Sliding') {
+    else if (type === 'Sliding on wall') prims.push(...hung(0, w, w))
+    else if (type === 'Double sliding on wall') prims.push(...hung(0, w / 2, -w / 2), ...hung(w / 2, w, w / 2))
+    else if (type === 'Pocket') {
+      // In the middle of the wall: shut across the opening, and dashed in the wall where it goes.
+      const t = Math.min(20, h / 2)
+      prims.push(box(0, -t, w, t), box(w, -t, 2 * w, t, OPEN), ...arrow(w * 0.3, w * 0.7, h + 60))
+    } else if (type === 'Sliding') {
       const offset = h * 0.3
       prims.push(curveLine(0, w * 0.55, -offset, curve, HEAVY), curveLine(w * 0.45, w, offset, curve, HEAVY))
     }
-    if (hinge === 'Right') prims = mirrorAlong(prims, w)
+    if (type === 'Single' && hinge === 'Right') prims = mirrorAlong(prims, w)
+    if (ONE_WAY.includes(type) && slide === 'Left') prims = mirrorAlong(prims, w)
     return flip ? mirrorAcross(prims) : prims
   },
-  // Seen from in front: its frame from the floor to its height, the leaves, and a handle on the side that opens.
-  front({ width, height, type, hinge }) {
+  // Seen from in front: its frame from its sill (the floor, unless it is raised) to its height, the
+  // leaves, and a handle on the side that opens.
+  front({ width, height, type, hinge, sillHeight }) {
     const w = atLeast(1, width)
-    const top = -atLeast(1, height)
-    const prims: Primitive[] = [outline([pt(0, 0), pt(w, 0), pt(w, top), pt(0, top)])]
-    if (type === 'Double' || type === 'Sliding') prims.push(line([pt(w / 2, 0), pt(w / 2, top)], THIN))
-    const handle = (x: number, toward: 1 | -1) => line([pt(x, -1000), pt(x + toward * 100, -1000)], HEAVY)
+    const bottom = -Math.max(0, Number(sillHeight) || 0) || 0
+    const top = bottom - atLeast(1, height)
+    const prims: Primitive[] = [outline([pt(0, bottom), pt(w, bottom), pt(w, top), pt(0, top)])]
+    if (type === 'Double' || type === 'Double sliding on wall' || type === 'Sliding') prims.push(line([pt(w / 2, bottom), pt(w / 2, top)], THIN))
+    const handle = (x: number, toward: 1 | -1) => line([pt(x, bottom - 1000), pt(x + toward * 100, bottom - 1000)], HEAVY)
     if (type === 'Single') prims.push(hinge === 'Right' ? handle(80, 1) : handle(w - 80, -1))
     else if (type === 'Double') prims.push(handle(w / 2 - 80, -1), handle(w / 2 + 80, 1))
     return prims

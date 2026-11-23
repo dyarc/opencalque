@@ -79,7 +79,7 @@ export interface Target {
 
 /**
  * The point `t` along the way `dir` from `from`, the way gone tidied rather than the point: held
- * level, it keeps the y of `from` exactly, upright its x, and at 45° goes as far across as down,
+ * level, it keeps the y of `from` exactly, upright its x, and at 45掳 goes as far across as down,
  * whatever decimals `from` has (a traced plan's do). Tidying the point itself left it a hair off.
  */
 const stepFrom = (from: Vec2, dir: Vec2, t: number): Vec2 => ({ x: from.x + round(dir.x * t), y: from.y + round(dir.y * t) })
@@ -89,7 +89,7 @@ const stepFrom = (from: Vec2, dir: Vec2, t: number): Vec2 => ({ x: from.x + roun
  * crossing, the foot of a perpendicular from `from`, a place upright from one point and level with
  * another, of those the pointer rested on and `from`, a line ending at one of those carried on past
  * it, or `carried`, the line itself, or upright or level with one of them), else on the grid.
- * Shift holds it to 45° steps from `from`, where it still lines up with what is drawn
+ * Shift holds it to 45掳 steps from `from`, where it still lines up with what is drawn
  * (`heldLine`); Alt turns snapping off. `extra` is what to snap to besides what is drawn: the lines
  * of a wall a drag has cut away, shown as a ghost.
  */
@@ -101,7 +101,7 @@ export function snap(c: Canvas, world: Vec2, e: Keys, exclude: string[], from?: 
   // point near a corner would give a length that is not the drawing's, with nothing to show it.
   const measuring = MEASURING.includes(get().tool)
   const onGrid = snapToGrid && !measuring
-  const step = gridStep(zoom)
+  const step = gridStep(zoom, get().doc.settings?.grid)
   if (e.shiftKey && from) {
     const d = sub(world, from)
     const angle = Math.round(Math.atan2(d.y, d.x) / (Math.PI / 4)) * (Math.PI / 4)
@@ -124,7 +124,7 @@ export function snap(c: Canvas, world: Vec2, e: Keys, exclude: string[], from?: 
 
 /**
  * Where a measured point goes while Shift holds its direction from `from` (`angle`, a multiple
- * of 45°): on that line, at what the pointer meets there. A point pointed at elsewhere (a corner,
+ * of 45掳): on that line, at what the pointer meets there. A point pointed at elsewhere (a corner,
  * a middle, a crossing) brings it level with that point, with a link to show what it was taken
  * from; otherwise it stops where the line crosses a drawn line near the pointer (the face of a
  * wall, the side of a rectangle), which is what a dimension measures to; otherwise it is where
@@ -185,7 +185,7 @@ function heldMeasure(c: Canvas, world: Vec2, from: Vec2, angle: number, exclude:
 export function alongLine(c: Canvas, world: Vec2, from: Vec2, angle: number, exclude: string[], forward = false): Target {
   const { zoom } = get().view
   const { snapToGrid, snapToObjects } = usePrefs.getState()
-  const step = gridStep(zoom)
+  const step = gridStep(zoom, get().doc.settings?.grid)
   const dir = { x: Math.cos(angle), y: Math.sin(angle) }
   const pointed = (world.x - from.x) * dir.x + (world.y - from.y) * dir.y
   let length = snapToGrid ? Math.round(pointed / step) * step : pointed
@@ -242,12 +242,12 @@ export interface Held {
   angle: number
 }
 
-/** The lines through a point level, upright and at 45°. */
+/** The lines through a point level, upright and at 45掳. */
 export const squareFrom = (at: Vec2): Held[] => [0, 1, 2, 3].map((k) => ({ at, angle: (k * Math.PI) / 4 }))
 
 /**
  * Of the lines a point may be held to, the one nearest the pointer, and where the point goes on it
- * (`alongLine`): Shift keeps an end on its own line, or brings it level, upright or at 45° with
+ * (`alongLine`): Shift keeps an end on its own line, or brings it level, upright or at 45掳 with
  * the point it is measured from, whichever the pointer is nearer.
  */
 export function heldNearest(c: Canvas, world: Vec2, lines: Held[], exclude: string[]): { line: Held; target: Target } {

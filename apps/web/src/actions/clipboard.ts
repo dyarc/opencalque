@@ -128,7 +128,7 @@ export const paste = (inPlace = false) => {
     if (from && to) clip = relocateClip(clip, from, to, registry)
     const { doc, scope, activeLayer, view, viewport } = get()
     // A step that shows at any zoom (two grid steps are at least 16 pixels) and keeps the grid.
-    const offset = at && !inPlace ? pasteOffset(doc, clip, scope, registry, { visible: visibleArea(view, viewport), step: 2 * gridStep(view.zoom), at }) : { x: 0, y: 0 }
+    const offset = at && !inPlace ? pasteOffset(doc, clip, scope, registry, { visible: visibleArea(view, viewport), step: 2 * gridStep(view.zoom, doc.settings?.grid), at }) : { x: 0, y: 0 }
     const result = pasteNodes(doc, clip, scope, offset, activeLayer)
     // Chosen from the menu where it was opened, or put down at once where it was copied: there is
     // nothing left for the pointer to say.

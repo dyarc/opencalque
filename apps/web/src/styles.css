@@ -187,7 +187,7 @@
   color-scheme: dark;
 }
 
-/* The axonometric 3D view: a window over the editor, with its own canvas. */
+/* The 3D view: a window over the editor, with its own canvas. */
 .axo-backdrop {
   position: fixed;
   inset: 0;
@@ -245,6 +245,37 @@
 
 .axo-bar button:hover {
   background: var(--hover);
+}
+
+/* A button of the 3D view with a word on it rather than an icon: as wide as the word. */
+.axo-bar button.axo-text {
+  width: auto;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.axo-bar button[aria-pressed='true'] {
+  background: var(--hover);
+}
+
+/* How high the drawing is cut through, and what that is. */
+.axo-cut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.axo-cut input {
+  width: 92px;
+}
+
+.axo-cut span {
+  width: 34px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .axo-frame {
@@ -648,6 +679,7 @@ html.dock-dragging .tab-more {
 }
 
 .panel-body {
+  scrollbar-gutter: stable;
   flex: 1;
   overflow-y: auto;
 }
@@ -1742,6 +1774,7 @@ button.crumb.ahead:hover {
 /* Preferences */
 
 .dialog {
+  scrollbar-gutter: stable both-edges;
   width: min(520px, calc(100vw - 32px));
   max-height: 76vh;
   overflow-y: auto;
@@ -1842,6 +1875,7 @@ button.crumb.ahead:hover {
 }
 
 .prefs-content {
+  scrollbar-gutter: stable;
   flex: 1;
   min-height: 0;
   padding: 12px 24px 20px;
@@ -2431,6 +2465,7 @@ button.crumb.ahead:hover {
 }
 
 .warehouse-sections {
+  scrollbar-gutter: stable;
   display: flex;
   flex: none;
   flex-direction: column;
@@ -2602,6 +2637,7 @@ button.crumb.ahead:hover {
 }
 
 .warehouse-grid {
+  scrollbar-gutter: stable;
   display: grid;
   flex: 1;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -2702,6 +2738,7 @@ button.crumb.ahead:hover {
 }
 
 .warehouse-list {
+  scrollbar-gutter: stable;
   flex: 1;
   padding: 0 16px;
   overflow-y: auto;
@@ -3094,6 +3131,7 @@ button.crumb.ahead:hover {
 }
 
 .about-notes {
+  scrollbar-gutter: stable;
   flex: 1;
   min-height: 0;
   padding: 6px 24px 20px;
@@ -3694,6 +3732,7 @@ button.crumb.ahead:hover {
 /* A material: its swatch, which a click changes, its name, how many things are made of it */
 .row.material {
   gap: 8px;
+  cursor: pointer;
 }
 
 .row.material .uses {
@@ -4679,4 +4718,140 @@ select.faint-choice,
   border-color: var(--danger);
   background: var(--danger);
   color: #ffffff;
+}
+
+/* The app's dropdown (Select.tsx): what is chosen, a chevron at its end, and the list it opens,
+   drawn as the menus are. Where it sits says its size and its box (.field, .pref-field…). */
+.select {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--hover);
+  text-align: left;
+  cursor: pointer;
+  outline: 0;
+}
+
+.select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.select:focus-visible,
+.select[aria-expanded='true'] {
+  border-color: var(--accent);
+}
+
+.select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-chevron {
+  flex: none;
+  color: var(--muted);
+}
+
+.select-list {
+  position: fixed;
+  z-index: 200;
+  max-width: calc(100vw - 16px);
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 16%);
+  user-select: none;
+}
+
+.select-group {
+  margin: 8px 8px 2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 0 12px 0 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.select-option.active {
+  background: var(--hover);
+}
+
+.select-option.disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.select-tick {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  width: 16px;
+  color: var(--accent);
+}
+
+/* A row of pictures to pick from, or, without room for them all, a dropdown (`PictureRow`). */
+.picture-row {
+  display: flex;
+  flex: 1;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.picture-row > .select {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--hover);
+}
+
+/* A small drawing in a dropdown: on its button for the one chosen, before each name in its list. */
+.select-picture {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  color: var(--text);
+}
+
+.select-value.select-picture {
+  flex: 1;
+  min-width: 0;
+}
+
+.select-option > .select-picture {
+  width: 30px;
+  margin-right: 6px;
+}
+
+.select-picture svg {
+  max-width: 28px;
+  height: auto;
+}
+
+.icon-button.on {
+  color: var(--text);
 }

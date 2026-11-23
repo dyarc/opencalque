@@ -12,6 +12,12 @@ export interface ParamDef {
   options?: string[]
   /** Set on a number that is a length in mm, so editors can show and take it in the user's unit; or an angle, in degrees, so they can say so. */
   unit?: 'length' | 'angle'
+  /**
+   * Whether editors show the parameter, given every value of the object (defaults filled in): a
+   * door's open angle means nothing once it slides. Hidden, it keeps its value. Only kinds written
+   * in code have it; with none, it is always shown.
+   */
+  shown?: (props: Record<string, any>) => boolean
 }
 
 /**
@@ -138,9 +144,17 @@ export interface ParametricKind {
    */
   front?(props: Record<string, any>): Primitive[]
   /**
+   * How it looks in an elevation that sees its side, in its own coordinates: X along the way it
+   * faces (its own Y, from 0 at its back), Y down from the floor. Seen from the side of an object
+   * that has one, an elevation draws this; left out, it draws nothing for it.
+   */
+  side?(props: Record<string, any>): Primitive[]
+  /** How it looks in an elevation that sees its back, in its own coordinates: as `front`, mirrored. Left out, nothing is drawn for it. */
+  back?(props: Record<string, any>): Primitive[]
+  /**
    * How tall it stands on the floor, in mm: furniture, appliances. An elevation draws what stands
-   * in front of the face it looks at as a box of its width and this height (or by its `front`).
-   * Left out, it is not drawn there.
+   * in front of the face it looks at as a box of its width and this height, or as `front`, `side`
+   * or `back` says. Left out, it is not drawn there.
    */
   height?(props: Record<string, any>): number
 }

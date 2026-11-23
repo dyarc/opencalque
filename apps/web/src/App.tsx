@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { About } from './About'
-import { AxonometricView } from './AxonometricView'
 import { DrawingSettingsWindow } from './DrawingSettingsWindow'
 import { startUp } from './actions'
 import { startAutosave } from './autosave'
@@ -18,6 +17,7 @@ import { Preferences } from './Preferences'
 import { QuestionWindow } from './QuestionWindow'
 import { isDirty, useStore } from './store'
 import { watchScrubKey } from './ui'
+import { View3D } from './View3D'
 import { Welcome } from './Welcome'
 import { Warehouse } from './WarehouseDialog'
 
@@ -118,7 +118,7 @@ export function App() {
       <ExportDialog />
       <DrawingSettingsWindow />
       <About />
-      <AxonometricView />
+      <View3D />
       <QuestionWindow />
       <DropTarget />
     </div>

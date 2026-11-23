@@ -59,7 +59,7 @@ import { gridStep } from '../../view'
 import { formatLength, formatNumber } from '../../units'
 import { heldNearest, heldOrtho, lineEnd, ortho, orthoAxis, snap, squareFrom, type Target } from '../aim'
 import { ALIGN_REACH, MOUNT_REACH, SNAP_REACH, type GestureOf } from '../gesture'
-import { clearanceAt, cornerAt, endAt, faceAt, looseEndAt, frameCornerAt, frameCursor, frameGripAt, gripAt, gripBox, handleAt, lineUp, titleAt, viewEdgeAt, viewLineHandleAt } from '../picking'
+import { clearanceAt, cornerAt, endAt, faceAt, looseEndAt, frameCornerAt, frameCursor, frameGripAt, gripAt, gripBox, handleAt, lineUp, pointedAt, titleAt, viewEdgeAt, viewLineHandleAt } from '../picking'
 import { get, type Canvas, type Move, type Press, type Release } from '../runtime'
 import { faceAcross, faceOf, paperLabel, resizeCursor, round, sizes, thicknessLabel, thicknessStep, wallNormal } from '../shapes'
 
@@ -410,7 +410,8 @@ export const cropMove: Move<'crop'> = (c, g, e, _at, world, out) => {
 
 export const resizeMove: Move<'resize'> = (c, g, e, _at, world, out) => {
   const s = get()
-  // The grip follows the pointer, snapped as a point would be; Shift keeps the proportions from a corner.
+  // The grip follows the pointer, snapped as a point would be. From a corner the proportions are
+  // kept as the Properties panel keeps them (`keepProportions`), and Shift does the other.
   // Ortho holds it to the axis the pointer has gone further along from where the grip was, so a box
   // grows one way at a time.
   const frame = resizeFrame(g.node, registry, s.base ?? s.doc)
@@ -420,7 +421,8 @@ export const resizeMove: Move<'resize'> = (c, g, e, _at, world, out) => {
   out.marker = target.marker
   out.link = target.link
   if (held && gripStart) out.guide = { at: gripStart, angle: orthoAxis(gripStart, world) === 'x' ? 0 : Math.PI / 2 }
-  const patch = resizePatch(g.node, g.grip, target.p, e.shiftKey, registry, s.base ?? s.doc)
+  const keep = e.shiftKey !== usePrefs.getState().keepProportions
+  const patch = resizePatch(g.node, g.grip, target.p, keep, registry, s.base ?? s.doc)
   if (patch) {
     out.previewed = preview([{ op: 'update_node', id: g.node.id, patch }])
     // The box as it now is, rounded as the object rounds it (a stair to whole steps).
@@ -559,6 +561,12 @@ export const hover: Move<'idle'> = (c, _g, _e, at, world, out) => {
   if (shown !== c.gripCursor) c.setGripCursor(shown)
   const over = ending ? 'end hover' : faced ? 'hover' : null
   if (s.wallFace !== over) useStore.setState({ wallFace: over })
+  // What a click would pick up is outlined, so that it shows before it is taken: not over a grip or
+  // a face, where a press does something else, nor while words are typed in place.
+  if (s.tool === 'select' && shown === null && !s.editingText) {
+    const pointed = pointedAt(c, at, world)
+    if (pointed) out.hovered = { thing: pointed.thing, ...(pointed.thing !== pointed.item ? { group: { id: pointed.item.id, bounds: pointed.item.bounds } } : {}) }
+  }
 }
 
 export const pressUp: Release<'press'> = (c, g) => {

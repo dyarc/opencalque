@@ -1,4 +1,4 @@
-import type { Bounds, Vec2 } from '@opencalque/core'
+import { GRID_DIVISIONS, type Bounds, type Vec2 } from '@opencalque/core'
 
 /** How far the view zooms out and in, in screen pixels per millimetre. */
 export const MIN_ZOOM = 0.002
@@ -22,48 +22,17 @@ export function visibleArea(view: View, viewport: { width: number; height: numbe
   return { minX: -view.x / view.zoom, minY: -view.y / view.zoom, maxX: (viewport.width - view.x) / view.zoom, maxY: (viewport.height - view.y) / view.zoom }
 }
 
-/** The part of a `WheelEvent` that decides how it moves the view. */
-export interface WheelInput {
-  deltaX: number
-  deltaY: number
-  /** 0 for pixels, 1 for lines, 2 for pages (DOM_DELTA_*). */
-  deltaMode: number
-  ctrlKey: boolean
-  metaKey: boolean
-}
-
-/** Pixels a line of a line-based wheel event is taken as. */
-const WHEEL_LINE = 16
-/** How fast a pinch or a Ctrl-wheel zooms: the factor is e to the power of minus the pixels times this. */
-const WHEEL_ZOOM = 0.01
-
 /**
- * The view a wheel event leaves, as a trackpad is used on a Mac and a mouse wheel elsewhere: a
- * two-finger scroll pans the drawing by the distance scrolled, and a pinch — which browsers send as
- * a wheel event with Ctrl held — zooms about the pointer, as Ctrl-wheel (⌘-wheel) does for a mouse.
- * Ctrl and ⌘ are taken alike, so either zooms without the other's system shortcut getting in the way.
- * @param view - the view to move.
- * @param at - the pointer's place in the drawing area, in CSS pixels.
- * @param input - the wheel event.
- * @param viewportHeight - the drawing area's height, for a page-based event.
- * @param speed - how fast a zoom goes, as a multiple of the usual speed (Preferences › Zoom speed).
- * @param mode - what the wheel does: 'trackpad' scrolls and pinches, 'mouse' zooms on the wheel.
- * @returns the view to show.
+ * The view zoomed by `factor` about a point of the screen, which stays over the same place of the
+ * drawing, within the limits the view bar has: what a wheel, a pinch or a Ctrl-wheel asks for, the
+ * wheel itself saying what it does (`canvas/wheel.ts`).
  */
-export function wheelNavigation(view: View, at: Vec2, input: WheelInput, viewportHeight: number, speed = 1, mode: 'trackpad' | 'mouse' = 'trackpad'): View {
-  const unit = input.deltaMode === 1 ? WHEEL_LINE : input.deltaMode === 2 ? viewportHeight : 1
-  const dx = input.deltaX * unit
-  const dy = input.deltaY * unit
-  if (mode === 'mouse' || input.ctrlKey || input.metaKey) {
-    const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom * Math.exp(-dy * WHEEL_ZOOM * Math.max(0.05, speed))))
-    // The world point under the pointer stays under it.
-    return { zoom, x: at.x - ((at.x - view.x) / view.zoom) * zoom, y: at.y - ((at.y - view.y) / view.zoom) * zoom }
-  }
-  // The drawing follows the fingers: what is scrolled to the left is seen further left.
-  return { ...view, x: view.x - dx, y: view.y - dy }
+export function zoomedAbout(view: View, at: Vec2, factor: number): View {
+  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom * factor))
+  const world = toWorld(at, view)
+  return { zoom, x: at.x - world.x * zoom, y: at.y - world.y * zoom }
 }
 
-/** The grid step, in mm, for a zoom: the finest whose squares are at least 8 pixels on screen. */
 /** CSS pixels in a millimetre of screen: 96 to the inch. */
 const PX_PER_MM = 96 / 25.4
 
@@ -78,7 +47,42 @@ export function screenScale(zoom: number): string {
   return `${Math.round(10 / n) / 10}:1`
 }
 
-export function gridStep(zoom: number): number {
-  for (const step of [1, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000]) if (step * zoom >= 8) return step
-  return 100000
+/** The drawing's own grid (`settings.grid`): main lines `spacing` mm apart, each square divided into `divisions`. */
+export type GridSetting = { spacing: number; divisions?: number }
+
+/** How small, in pixels on screen, the squares of the grid may get before their lines are left out. */
+const GRID_MIN_PX = 8
+/** The automatic grid's steps, in mm. */
+const AUTOMATIC = [1, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000]
+/** How many times ten times the main lines a grid shows, zoomed far out: past that the drawing is a dot. */
+const MAIN_LEVELS = 6
+
+/**
+ * The grid's lines for a zoom, in mm: the finer ones (`minor`, also the step that snapping and
+ * moving go by) and the darker ones over them (`major`). Without a grid of the drawing's, the
+ * finest automatic step whose squares are at least 8 pixels on screen, every tenth line darker.
+ * With one, its finer lines and its main ones; zoomed out until the finer lines would crowd, the
+ * main lines become the finer ones and every tenth of them is darker, and so on. Zoomed in, the
+ * grid stays at its finer lines: Alt, or the grid's snapping switched off, gives anything between.
+ */
+export function gridLevels(zoom: number, grid?: GridSetting): { minor: number; major: number } {
+  const own = grid && grid.spacing > 0 && Number.isFinite(grid.spacing) ? grid : undefined
+  const steps = own ? ownSteps(own) : AUTOMATIC
+  const i = steps.findIndex((step) => step * zoom >= GRID_MIN_PX)
+  if (!own) {
+    const minor = i < 0 ? steps[steps.length - 1] : steps[i]
+    return { minor, major: minor * 10 }
+  }
+  const at = i < 0 ? steps.length - 1 : i
+  return { minor: steps[at], major: steps[at + 1] ?? steps[at] * 10 }
 }
+
+/** The steps of a grid of the drawing's, finest first: its finer lines (when it has any), its main ones, then ten times them, a hundred times… */
+function ownSteps(grid: GridSetting): number[] {
+  const divisions = Math.min(GRID_DIVISIONS, Math.max(1, Math.round(grid.divisions ?? 1)))
+  const main = Array.from({ length: MAIN_LEVELS }, (_, k) => grid.spacing * 10 ** k)
+  return divisions > 1 ? [grid.spacing / divisions, ...main] : main
+}
+
+/** The step, in mm, that snapping, moving and nudging go by at a zoom: the grid's finer lines as shown (`gridLevels`). */
+export const gridStep = (zoom: number, grid?: GridSetting): number => gridLevels(zoom, grid).minor

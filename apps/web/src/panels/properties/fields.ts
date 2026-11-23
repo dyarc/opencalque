@@ -464,7 +464,7 @@ export function fieldsOf(node: Node, doc: Document): FieldSpec[] {
         { path: 'showHeight', label: msg('Height on plan'), type: 'boolean', fallback: false },
       ]
     : []
-  const own = params.filter((p) => !(arc !== null && p.key === bow)).map((p): FieldSpec => {
+  const own = params.filter((p) => !(arc !== null && p.key === bow) && (kind ? (p.shown?.(registry.resolveProps(kind, node.props)) ?? true) : true)).map((p): FieldSpec => {
     const roundTheCurve = arc !== null && p.key === size
     // The shape a curved wall gives it, which it then cannot be given another of.
     const bentByWall = arc !== null && p.key === shape ? kind?.bow?.curved : undefined

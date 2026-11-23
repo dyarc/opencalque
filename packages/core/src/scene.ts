@@ -1,10 +1,11 @@
-import { childrenOf, isLocked, isVisible } from './document'
-import { boundsContain, boundsContainPoint, boundsTouch, unionBounds, type Bounds, type Vec2 } from './geometry'
+import { childrenOf, isLocked, isVisible, leavesOf } from './document'
+import { applyTransform, boundsContain, boundsContainPoint, boundsOfPoints, boundsTouch, pointInPolygon, unionBounds, type Bounds, type Vec2 } from './geometry'
 import { drawnSolid, kindOf, nodePrimitives, objectBacking, PAPER_EDGE, PAPER_FILL } from './kinds'
 import { mergedOutlines } from './merge'
 import { distToPrimitive, insidePrimitive, primitiveBounds, primitiveTouches, type Primitive } from './primitives'
 import type { Registry } from './registry'
 import type { Document, Node } from './schema'
+import { hostWall } from './walls/openings'
 
 /** One visible child of the container being shown, ready to paint and hit-test. */
 export interface SceneItem {
@@ -13,6 +14,43 @@ export interface SceneItem {
   prims: Primitive[]
   bounds: Bounds | null
   locked: boolean
+  /**
+   * Outlines where it is picked up although nothing may be drawn there, never painted: the gap a
+   * door or window cuts in its wall (`openingArea`), which an opening drawn as nothing but the
+   * hole would otherwise leave impossible to click.
+   */
+  area?: Vec2[][]
+}
+
+/**
+ * One visible node as an item of the scene. A group is picked up wherever what it holds is, so it
+ * takes the gaps of the doors and windows in it, however deeply grouped (their points are the
+ * drawing's: a group moves nothing).
+ */
+function itemOf(node: Node, doc: Document, registry: Registry, prims: Primitive[]): SceneItem {
+  const held = node.type === 'group' ? leavesOf(doc, node.id).filter((leaf) => isVisible(doc, leaf)) : [node]
+  const area = held.flatMap((leaf) => openingArea(doc, leaf, registry) ?? [])
+  const bounds = area.reduce((b, outline) => unionBounds(b, boundsOfPoints(outline)), boundsOf(prims))
+  return { id: node.id, node, prims, bounds, locked: isLocked(doc, node), ...(area.length > 0 ? { area } : {}) }
+}
+
+/** The gap a door or window cuts in the wall it is set in, as world points; none for any other node, or an opening in no wall. */
+export function openingArea(doc: Document, node: Node, registry: Registry): [Vec2[]] | null {
+  if (node.type !== 'parametric') return null
+  const kind = registry.parametric.get(node.kind)
+  const span = kind?.opening?.(registry.resolveProps(kind, node.props))
+  if (!span) return null
+  const host = hostWall(doc, node, registry)
+  if (!host) return null
+  // An opening sits in the middle of its wall's thickness.
+  const half = host.thickness / 2
+  const corners = [
+    { x: span.from, y: -half },
+    { x: span.to, y: -half },
+    { x: span.to, y: half },
+    { x: span.from, y: half },
+  ]
+  return [corners.map((p) => applyTransform(p, node))]
 }
 
 /** The kinds whose drawing never looks at another node: moving one leaves the others as they were. */
@@ -91,8 +129,7 @@ export function buildScene(doc: Document, containerId: string, registry: Registr
           (INDEPENDENT.has(node.type) && !dirty.has(node.id)) ||
           (!dependentChanged && !dirty.has(node.id)))
       if (reuse) return old
-      const prims = nodePrimitives(node, ctx)
-      return { id: node.id, node, prims, bounds: boundsOf(prims), locked: isLocked(doc, node) }
+      return itemOf(node, doc, registry, nodePrimitives(node, ctx))
     })
   sceneCaches.set(containerId, {
     nodes: doc.nodes,
@@ -136,8 +173,7 @@ export function heldItems(doc: Document, groupId: string, registry: Registry): S
       .filter((node) => isVisible(doc, node))
       .flatMap((node) => {
         if (node.type === 'group') return walk(node.id)
-        const prims = nodePrimitives(node, ctx)
-        return [{ id: node.id, node, prims, bounds: boundsOf(prims), locked: isLocked(doc, node) }]
+        return [itemOf(node, doc, registry, nodePrimitives(node, ctx))]
       })
   return walk(groupId)
 }
@@ -174,17 +210,40 @@ export function sceneBounds(scene: SceneItem[]): Bounds | null {
 /** A component or an object is a thing, not a set of lines: inside one of its closed shapes is on it. */
 const isSolid = (item: SceneItem) => item.node.type === 'instance' || item.node.type === 'parametric'
 
-/** The topmost unlocked item within `tolerance` of the point. */
+/** How far an item is from a point, as a click finds it: 0 on it or inside what it fills. */
+function distToItem(item: SceneItem, p: Vec2): number {
+  if (item.area?.some((outline) => pointInPolygon(p, outline))) return 0
+  const solid = isSolid(item)
+  let best = Infinity
+  for (const prim of item.prims) {
+    if (solid && insidePrimitive(prim, p)) return 0
+    best = Math.min(best, distToPrimitive(prim, p))
+    if (best === 0) return 0
+  }
+  return best
+}
+
+/**
+ * The unlocked item within `tolerance` of the point that is nearest it, the topmost of those as
+ * near: a wall the pointer is on, not the words of a note a few pixels off, which are drawn over
+ * it. What lies under must be nearer by a fifth of the tolerance to win, so that of two things
+ * seen in the same place, the one on top is taken. A guide has no size to test the point against:
+ * its line is looked at directly.
+ */
 export function hitTest(scene: SceneItem[], p: Vec2, tolerance: number): SceneItem | null {
-  for (let i = scene.length - 1; i >= 0; i--) {
+  let best: SceneItem | null = null
+  let nearest = Infinity
+  for (let i = scene.length - 1; i >= 0 && nearest > 0; i--) {
     const item = scene[i]
-    // A guide has no size to test the point against: its line is looked at directly.
     const guide = item.prims.some((prim) => prim.guide)
     if (item.locked || (!guide && (!item.bounds || !boundsContainPoint(item.bounds, p, tolerance)))) continue
-    const solid = isSolid(item)
-    if (item.prims.some((prim) => distToPrimitive(prim, p) <= tolerance || (solid && insidePrimitive(prim, p)))) return item
+    const off = distToItem(item, p)
+    if (off <= tolerance && (best === null || off < nearest - tolerance / 5)) {
+      best = item
+      nearest = off
+    }
   }
-  return null
+  return best
 }
 
 /** Unlocked items lying entirely inside the rectangle. */
@@ -199,13 +258,14 @@ export function itemsInside(scene: SceneItem[], rect: Bounds): SceneItem[] {
  */
 export function itemsTouching(scene: SceneItem[], rect: Bounds): SceneItem[] {
   const corner = { x: rect.minX, y: rect.minY }
+  const touches = (prim: Primitive, solid: boolean) => primitiveTouches(prim, rect) || (solid && insidePrimitive(prim, corner))
   return scene.filter(
     (item) =>
       !item.locked &&
       // A construction line has no bounds to fit or frame (it is endless), but a crossing box can
       // still touch its line: the box goes by what the primitive itself covers.
       (item.bounds ? boundsTouch(rect, item.bounds) : true) &&
-      item.prims.some((prim) => primitiveTouches(prim, rect) || (isSolid(item) && insidePrimitive(prim, corner))),
+      (item.prims.some((prim) => touches(prim, isSolid(item))) || (item.area ?? []).some((points) => touches({ kind: 'path', points, closed: true }, true))),
   )
 }
 

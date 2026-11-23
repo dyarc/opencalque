@@ -22,8 +22,8 @@ export function createDocument(name = 'Untitled'): Document {
   }
 }
 
-/** How a drawing writes its numbers, what it leaves out filled in: metric, with a decimal point. */
-export const settingsOf = (doc: Pick<Document, 'settings'>): Required<DrawingSettings> => ({ system: doc.settings?.system ?? 'metric', decimal: doc.settings?.decimal ?? '.' })
+/** How a drawing writes its numbers, what it leaves out filled in: metric, with a decimal point. The grid it is shown on is the editor's (`settings.grid`). */
+export const settingsOf = (doc: Pick<Document, 'settings'>): Required<Pick<DrawingSettings, 'system' | 'decimal'>> => ({ system: doc.settings?.system ?? 'metric', decimal: doc.settings?.decimal ?? '.' })
 
 export const isContainer = (node: Node): node is ContainerNode => node.type === 'page' || node.type === 'component'
 

@@ -1,8 +1,8 @@
 import type { Extension, Op, ParametricKind } from '@opencalque/core'
 import { bathtub, washbasin } from './bathroom'
 import { compass } from './compass'
-import { cornerSofa } from './furniture'
-import { radiator } from './heating'
+import { banquette, cornerSofa } from './furniture'
+import { radiator, fireplace } from './heating'
 import { fridge, hob, sink, wallCabinet } from './kitchen'
 import { curvedDoor, curvedWindow, door, windowKind } from './openings'
 import { pt } from './shared'
@@ -39,7 +39,11 @@ export const architecture: Extension = {
     api.registerParametric(wallCabinet)
     // Against two walls, which a snap to one cannot put it against.
     api.registerParametric(tall(cornerSofa, 850, false))
+    // The bench along the wall, with its own height and cushions: pulled longer, it takes a place for every 60 cm.
+    api.registerParametric(banquette)
     api.registerParametric(tall(radiator, 600))
+    // Its breast against the wall, as tall as it is told: a cassette or an open hearth.
+    api.registerParametric(fireplace)
     api.registerParametric(compass)
 
     api.registerCommand({
