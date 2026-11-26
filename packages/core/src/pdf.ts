@@ -1,5 +1,7 @@
 import { parseColor } from './colors'
+import { isVisible, leavesOf, rootOf } from './document'
 import { rotate, type Vec2 } from './geometry'
+import { nodePrimitives } from './kinds'
 import { decodePng } from './png'
 import { PRINT_MM_PER_PIXEL, type Primitive } from './primitives'
 import type { Registry } from './registry'
@@ -270,11 +272,23 @@ function pageContent(doc: Document, paper: Paper, registry: Registry, resources:
   return { width: paper.width * perMm, height, commands: out.join('\n') }
 }
 
-/** What is on a sheet, without the sheets themselves: the page is the paper. */
-const sheetPrimitives = (doc: Document, paper: Paper, registry: Registry): Primitive[] =>
-  buildScene(doc, paper.parent!, registry).flatMap((item) =>
-    item.node.type === 'paper' && item.id !== paper.id ? [] : item.prims.filter((p) => p.backdrop !== true && !p.guide),
-  )
+/**
+ * What is on a sheet, without the other sheets: the page is the paper. All that is on its page is
+ * taken, the paper being in a group or not; a group that holds papers draws them, so what it holds
+ * is taken one by one, without the papers but this one.
+ */
+function sheetPrimitives(doc: Document, paper: Paper, registry: Registry): Primitive[] {
+  const page = rootOf(doc, paper.parent)?.id ?? paper.parent!
+  const ctx = { doc, registry, depth: 0 }
+  const shown = (prims: Primitive[]) => prims.filter((p) => p.backdrop !== true && !p.guide)
+  return buildScene(doc, page, registry).flatMap((item) => {
+    if (item.node.type === 'paper') return item.id === paper.id ? shown(item.prims) : []
+    if (item.node.type !== 'group') return shown(item.prims)
+    const held = leavesOf(doc, item.id).filter((leaf) => isVisible(doc, leaf))
+    if (!held.some((leaf) => leaf.type === 'paper')) return shown(item.prims)
+    return held.flatMap((leaf) => (leaf.type === 'paper' && leaf.id !== paper.id ? [] : shown(nodePrimitives(leaf, ctx))))
+  })
+}
 
 /** The papers to export: those given, in that order, or every paper of the document, page by page. */
 function papersOf(doc: Document, paperIds?: string[]): Paper[] {

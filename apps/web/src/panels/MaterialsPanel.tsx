@@ -6,7 +6,8 @@ import { t, tn } from '../i18n'
 import { addCommon } from '../materials'
 import { MoreMenu } from '../MoreMenu'
 import { apply, useStore } from '../store'
-import { EditableText, IconButton, Section } from '../ui'
+import { EditableText, IconButton } from '../ui'
+import { PanelActions } from '../panelHead'
 import { ask } from '../windows'
 
 /*
@@ -119,7 +120,8 @@ export function Materials() {
     </span>
   )
   return (
-    <Section title={t('Materials')} action={actions}>
+    <section className="section untitled">
+      <PanelActions>{actions}</PanelActions>
       <DefaultRow />
       {materials.length === 0 && (
         <>
@@ -132,6 +134,6 @@ export function Materials() {
       {materials.map((material) => (
         <MaterialRow key={material.id} material={material} />
       ))}
-    </Section>
+    </section>
   )
 }

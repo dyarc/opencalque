@@ -55,6 +55,7 @@ import {
   browseSelectedInstances,
   stepInstance,
   guarded,
+  addPage,
 } from './actions'
 import { registry } from './extensions'
 import { editComponent, showPage } from './navigation'
@@ -379,7 +380,7 @@ const STATIC: Command[] = [
 
   { id: 'warehouse.components', title: msg('Object library…'), category: 'Insert', global: true, run: () => useWindows.setState({ warehouse: 'components' }) },
   { id: 'warehouse.extensions', title: msg('Extensions…'), category: 'General', global: true, run: () => useWindows.setState({ preferencesOpen: true, preferencesPage: 'extensions' }) },
-  { id: 'page.add', title: msg('Add page'), category: 'Pages', run: () => apply([{ op: 'add_node', node: { type: 'page', name: t('Page {n}', { n: pagesOf(get().doc).length + 1 }) } }]) },
+  { id: 'page.add', title: msg('Add page'), category: 'Pages', run: addPage },
   { id: 'layer.add', title: msg('Add layer'), category: 'Layers', run: () => apply([{ op: 'add_layer', layer: { name: t('Layer {n}', { n: Object.keys(get().doc.layers).length + 1 }) } }]) },
 ]
 

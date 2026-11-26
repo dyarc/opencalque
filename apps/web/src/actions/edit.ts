@@ -18,6 +18,8 @@ import {
   groupNodes,
   modifierKind,
   moveOps,
+  newId,
+  pagesOf,
   orderAfter,
   orderBefore,
   ordersAt,
@@ -170,6 +172,13 @@ export const canStraightenPolylines = () => selectedPolylines().some((n) => n.sm
 /** Closes or opens the selected polylines, or curves or straightens them; null takes the property away. */
 export function setPolylines(patch: { closed?: true | null; smooth?: true | null }): void {
   apply(selectedPolylines().map((n): Op => ({ op: 'update_node', id: n.id, patch })))
+}
+
+/** Adds an empty page after the others and shows it. */
+export function addPage(): void {
+  const id = newId('page')
+  const name = t('Page {n}', { n: pagesOf(get().doc).length + 1 })
+  if (apply([{ op: 'add_node', node: { id, type: 'page', name } }])) showPage(id)
 }
 
 /** Makes a copy of a page, with what is on it, and shows the copy. */

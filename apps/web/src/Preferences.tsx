@@ -1,4 +1,5 @@
 import { searchable } from './search'
+import { PAPER_SERIES, type PaperSeries } from '@opencalque/core'
 import { useEffect, useMemo, useState } from 'react'
 import { Bot, Keyboard, PencilRuler, Puzzle, Settings2, type LucideIcon } from 'lucide-react'
 import { allCommands, eventKey, executeById, formatKey, isCustomised, keysOf, RESERVED_KEYS, resetShortcut, setShortcut, useCommands, type Command } from './commands'
@@ -293,6 +294,9 @@ function GeneralSettings() {
             <Select value={String(prefs.fraction)} onChange={(fraction) => setPrefs({ fraction: Number(fraction) })} options={FRACTIONS.map((under) => ({ value: String(under), label: `1/${under}"` }))} />
           </Setting>
         )}
+        <Setting label={t('Sheet sizes')} hint={t('The standard sheets a paper is drawn to: ISO (A4, A3…), or the ARCH and ANSI sizes used in the United States. Any of them can be given to a paper in its properties.')}>
+          <Select value={prefs.paperSeries} onChange={(series) => setPrefs({ paperSeries: series as PaperSeries })} options={PAPER_SERIES.map((series) => ({ value: series, label: series }))} />
+        </Setting>
         <Setting label={t('Decimal mark')} hint={t('Numbers in the panels are shown with it, and new drawings write theirs with it; a drawing’s own is in File › Drawing settings. Either mark can be typed.')}>
           <Select
             value={prefs.decimal}

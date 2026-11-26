@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { FileText, Image as Picture, LoaderCircle, PenTool, Ruler, Table2, type LucideIcon } from 'lucide-react'
-import { pagesOf, pdfFontCharacters } from '@opencalque/core'
+import { pagesOf, pdfFontCharacters, rootOf } from '@opencalque/core'
 import { exportDxf, exportPdf, exportPng, exportQuantities, exportSvg, PNG_SIZES, type PdfExportStage } from './actions'
 import { language, msg, t } from './i18n'
 import { preparePdfFonts } from './pdfFonts'
@@ -46,7 +46,7 @@ export function ExportDialog() {
   const box = useRef<HTMLDivElement>(null)
 
   const pages = pagesOf(doc)
-  const papers = pages.flatMap((p) => Object.values(doc.nodes).filter((node) => node.type === 'paper' && node.parent === p.id))
+  const papers = pages.flatMap((p) => Object.values(doc.nodes).filter((node) => node.type === 'paper' && rootOf(doc, node.parent)?.id === p.id))
   // Opened afresh each time: the papers that are selected, or all of them, and the page in view.
   useEffect(() => {
     if (!open) return
@@ -143,7 +143,7 @@ export function ExportDialog() {
                     {labelOf(doc, paper)}
                     <span className="faint">
                       1:{paper.type === 'paper' ? (paper.scale ?? 100) : ''}
-                      {pages.length > 1 && paper.parent ? ` · ${labelOf(doc, doc.nodes[paper.parent])}` : ''}
+                      {pages.length > 1 && rootOf(doc, paper.parent) ? ` · ${labelOf(doc, rootOf(doc, paper.parent)!)}` : ''}
                     </span>
                   </label>
                 ))}

@@ -2,7 +2,7 @@ import { searchable } from '../search'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { ChevronDown, ChevronRight, Eye, EyeOff, LayoutGrid, List, Lock, LockOpen, Pencil, Plus, Replace, ScanEye, Trash2, Copy } from 'lucide-react'
 import { childrenOf, componentPlacements, componentsOf, layersOf, pagesOf, toSVG, type Document, type Node, type Op, type Variant, colorsOf, colorUses } from '@opencalque/core'
-import { browseInstances, deleteEntry, deleteUnusedComponents, editModel, moveInOrder, duplicatePage, openComponent, placeIn, replaceInstances, stopBrowsing } from '../actions'
+import { addPage, browseInstances, deleteEntry, deleteUnusedComponents, editModel, moveInOrder, duplicatePage, openComponent, placeIn, replaceInstances, stopBrowsing } from '../actions'
 import { EntryChoice } from '../EntryChoice'
 import { entryName, entryOf, modelEntry, modelsOf } from '../entries'
 import { parametricPicture } from '../pictures'
@@ -14,7 +14,8 @@ import { MoreMenu } from '../MoreMenu'
 import { editComponent, showPage } from '../navigation'
 import { setPrefs, usePrefs } from '../prefs'
 import { apply, select, setTool, useStore } from '../store'
-import { EditableText, IconButton, labelOf, Section, TypeIcon } from '../ui'
+import { EditableText, IconButton, labelOf, TypeIcon } from '../ui'
+import { PanelActions } from '../panelHead'
 import { useWindows } from '../windows'
 
 const rename = (id: string) => (name: string) => apply([{ op: 'update_node', id, patch: { name } }])
@@ -28,7 +29,12 @@ export function Colors() {
   const update = (id: string, patch: Record<string, unknown>) => apply([{ op: 'update_color', id, patch }])
   const add = () => apply([{ op: 'add_color', color: { name: t('Colour {n}', { n: colors.length + 1 }), value: '#0d99ff' } }])
   return (
-    <Section title={t('Shared colours')} action={<IconButton title={t('Add a shared colour')} onClick={add}><Plus size={14} /></IconButton>}>
+    <section className="section untitled">
+      <PanelActions>
+        <IconButton title={t('Add a shared colour')} onClick={add}>
+          <Plus size={14} />
+        </IconButton>
+      </PanelActions>
       {colors.length === 0 && <p className="hint">{t('A shared colour is used by reference: link objects to it from any colour in their properties, then change it here and they all follow.')}</p>}
       {colors.map((color) => {
         const uses = colorUses(doc, color.id)
@@ -46,7 +52,7 @@ export function Colors() {
           </div>
         )
       })}
-    </Section>
+    </section>
   )
 }
 
@@ -133,13 +139,17 @@ function PageRow({ id, count }: { id: string; count: number }) {
 export function Pages() {
   const doc = useStore((s) => s.doc)
   const pages = pagesOf(doc)
-  const add = () => apply([{ op: 'add_node', node: { type: 'page', name: t('Page {n}', { n: pages.length + 1 }) } }])
   return (
-    <Section title={t('Pages')} action={<IconButton title={t('Add page')} onClick={add}><Plus size={14} /></IconButton>}>
+    <section className="section untitled">
+      <PanelActions>
+        <IconButton title={t('Add page')} onClick={addPage}>
+          <Plus size={14} />
+        </IconButton>
+      </PanelActions>
       {pages.map((page) => (
         <PageRow key={page.id} id={page.id} count={pages.length} />
       ))}
-    </Section>
+    </section>
   )
 }
 
@@ -150,7 +160,12 @@ export function Layers() {
   const update = (id: string, patch: Record<string, unknown>) => apply([{ op: 'update_layer', id, patch }])
   const add = () => apply([{ op: 'add_layer', layer: { name: t('Layer {n}', { n: layers.length + 1 }) } }])
   return (
-    <Section title={t('Layers')} action={<IconButton title={t('Add layer')} onClick={add}><Plus size={14} /></IconButton>}>
+    <section className="section untitled">
+      <PanelActions>
+        <IconButton title={t('Add layer')} onClick={add}>
+          <Plus size={14} />
+        </IconButton>
+      </PanelActions>
       {layers.map((layer) => (
         <div
           key={layer.id}
@@ -180,7 +195,7 @@ export function Layers() {
           </IconButton>
         </div>
       ))}
-    </Section>
+    </section>
   )
 }
 
@@ -306,7 +321,8 @@ export function Components() {
   }
   const any = components.length + models.length > 0
   return (
-    <Section title={t('Components')} action={action}>
+    <section className="section untitled">
+      <PanelActions>{action}</PanelActions>
       {!any && <p className="hint">{t('This drawing has no component yet. Select objects and choose Object › Make into a component.')}</p>}
       {any && (
         <input
@@ -321,7 +337,7 @@ export function Components() {
       )}
       {any && listed.length === 0 && <p className="hint">{t('Nothing matches.')}</p>}
       {view === 'list' ? listed.map(row) : <div className="component-grid">{listed.map(row)}</div>}
-    </Section>
+    </section>
   )
 }
 

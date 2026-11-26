@@ -4,6 +4,24 @@ What changed in each version of AxioDraw. The app shows this list under About, a
 a version becomes the description of its release on GitHub. Newest first; one `## version — date`
 heading per version, then `### New`, `### Improved` or `### Fixed` with one line per change.
 
+## 1.10.6 — 2026-11-27
+
+### New
+- **The sheet sizes US plans are printed on**: **ARCH A to E**, with **E1** (9 × 12 to 36 × 48 inches, 24 × 36 being ARCH D), and **ANSI A to E** (Letter, 11 × 17 and up), upright or lying, beside the ISO A5–A0 sizes. The properties of a paper list the formats by series, and the Paper tool offers the series chosen in Preferences › Units (ISO until another is chosen); a paper at one of these sizes names it in its title block, where it gave its size in millimetres. Printed to the PDF at its size in inches.
+- **A title block down the right edge of the sheet**, as US sheets have it, for every sheet of the drawing: File › Drawing settings › Title block › Down the right edge. Each entry is under its caption, in the language of the app when it was chosen: the project, client and address at the top, then the sheet's **revisions** (one per line in its properties, `mark | date | description`, drawn as a table), who drew it and the date; the sheet title, its scale and format and the sheet number, in large letters, at the bottom. The block in the corner stays the default and is unchanged.
+- Pulling the corner of a US sheet keeps it at the scales US plans are drawn at: 1/4" = 1'-0" (1:48) goes to 1/8" (1:96) or 1" = 10' (1:120), where it went to 1:50 or 1:95. An ISO sheet at 1:50 or 1:100 keeps to those round scales.
+
+### Improved
+- **The panels are laid out as OpenCalque 2's**: panels sharing a place are icons in a rail down its side, and a panel alone shows its icon and name in a row at its top, with its buttons and its cross; no panel says its name twice, no row of tabs hides behind a "···", and no line runs under a panel's name. By default the drawing's panels (Layers, Pages, Components, Colours, Materials, Dimension styles) share the left rail and Structure stands alone under them.
+- **Moving a panel**: a blue line shows where it will land — along a group's edge, or down the edge of the window for a column there; dropped in the middle of a group it joins it, a panel at the window's edge makes a column of its own, and Escape gives the drag up. A panel keeps its size when it lands in a place of its own, and the drawing takes the difference when a column is resized or closed.
+- **A thin scrollbar** lies over the right edge of each panel, shown while the pointer is over it or it scrolls, instead of a strip of the panel kept for the system's; every row of a panel stays on one line, a name too long cut with "…" and shown whole on hover, and a row of small pictures becomes a dropdown when the panel is narrow.
+- **Icon buttons look the same everywhere**: rounded by 6 px whatever their size, light until the pointer comes over them, dark when switched on, in the accent colour while in use; what a click does something to shows the hand.
+- **A paper's properties are in sections**: its sheet (format, direction and scale) with the rest of its geometry, then its title block, then what is on every sheet.
+- **Adding a page** (the + of the Pages panel, or the Add page command) shows the new, empty page, as duplicating one does.
+
+### Fixed
+- **A paper inside a group is exported as PDF**: the export window lists it, and its sheet holds all that is on its page, not only what is in its group, without the other papers of the group.
+
 ## 1.10.5 — 2026-11-23
 
 ### New

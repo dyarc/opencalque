@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { SecretStore } from './platform'
-import type { DeclarativeExtension } from '@opencalque/core'
+import type { DeclarativeExtension, PaperSeries } from '@opencalque/core'
 import { msg } from './i18n'
 import type { Surroundings } from './surroundings'
 
@@ -19,6 +19,8 @@ export interface Prefs {
   unit: 'mm' | 'cm' | 'm' | 'in' | 'ft' | 'ft-in'
   /** With feet and inches: the fraction of an inch lengths are rounded to, as its lower number (16 for sixteenths). */
   fraction: number
+  /** The series of standard sheet sizes the Paper tool offers: ISO (A4, A3…), or the ARCH and ANSI sizes used in the United States. */
+  paperSeries: PaperSeries
   /** The mark between the whole and the decimals of a number: 'auto' writes it as the language does (a comma in French, a point in English). */
   decimal: 'auto' | '.' | ','
   /** Save a drawing to its file by itself a moment after each change. */
@@ -95,6 +97,7 @@ const DEFAULTS: Prefs = {
   darkCanvas: true,
   unit: usualUnit(),
   fraction: 16,
+  paperSeries: 'ISO',
   decimal: 'auto',
   autosave: true,
   showWelcome: true,

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { applyOps, createDocument, Registry, toPDF, type Op } from '@opencalque/core'
+import { applyOps, createDocument, paperSize, Registry, toPDF, type Op } from '@opencalque/core'
 import { architecture } from '@opencalque/ext-architecture'
 // The same reader the app uses to import PDFs, here to check that what is exported is a real one.
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs'
@@ -34,6 +34,53 @@ describe('PDF export', () => {
     expect([Math.round((a3.width * 25.4) / 72), Math.round((a3.height * 25.4) / 72)]).toEqual([420, 297])
     const a4 = (await pdf.getPage(2)).getViewport({ scale: 1 })
     expect([Math.round((a4.width * 25.4) / 72), Math.round((a4.height * 25.4) / 72)]).toEqual([210, 297])
+  })
+
+  it('prints the US sheets at their size in inches, and names them in the title block', async () => {
+    // An ARCH D lying at 1:48 (1/4" = 1'-0") and an ANSI B upright at 1:96: 36 × 24 and 11 × 17 inches, 72 points to the inch.
+    const us = applyOps(createDocument('House'), [
+      add({ type: 'paper', id: 'archD', name: 'Floor plan', x: 0, y: 0, ...paperSize('ARCH D', true, 48), scale: 48, titleBlock: {} }),
+      add({ type: 'paper', id: 'ansiB', name: 'Site', x: 60000, y: 0, ...paperSize('ANSI B', false, 96), scale: 96, titleBlock: {} }),
+    ])
+    const pdf = await open(toPDF(us, registry))
+    const inches = async (number: number) => {
+      const page = (await pdf.getPage(number)).getViewport({ scale: 1 })
+      return [page.width / 72, page.height / 72].map((n) => Math.round(n * 1000) / 1000)
+    }
+    expect(await inches(1)).toEqual([36, 24])
+    expect(await inches(2)).toEqual([11, 17])
+    const words = (await (await pdf.getPage(1)).getTextContent()).items.map((item: any) => item.str)
+    for (const expected of ['Floor plan', '1:48', 'ARCH D']) expect(words).toContain(expected)
+  })
+
+  it('prints the title block down the right edge with its captions and revisions', async () => {
+    // A 36 × 24 inch sheet at 1:48 in a drawing whose blocks are strips, with the revisions of the sheet.
+    const sheet = applyOps(createDocument('House'), [
+      { op: 'set_document', info: { project: 'House on Elm St', author: 'KL' }, settings: { titleBlock: { layout: 'strip' } } },
+      add({ type: 'paper', id: 'p', name: 'Floor plan', x: 0, y: 0, width: 36 * 25.4 * 48, height: 24 * 25.4 * 48, scale: 48, titleBlock: { number: 'A-101', revisions: '1 | 2026-10-02 | Issued for review\n2 | 2026-11-17 | Issued for permit' } }),
+    ])
+    const page = await (await open(toPDF(sheet, registry))).getPage(1)
+    const words = (await page.getTextContent()).items.map((item: any) => item.str)
+    for (const expected of ['Project', 'House on Elm St', 'Revisions', '2026-11-17', 'Issued for permit', 'Drawn by', 'KL', 'Sheet title', 'Floor plan', 'Scale', '1:48', 'Sheet no.', 'A-101']) expect(words).toContain(expected)
+  })
+
+  it('prints a paper in a group with all that is on its page, and none of the other papers of its group', async () => {
+    const grouped = applyOps(createDocument('House'), [
+      add({ type: 'group', id: 'sheets' }),
+      add({ type: 'paper', id: 'first', parent: 'sheets', name: 'First sheet', x: 0, y: 0, width: 21000, height: 14850, scale: 50, titleBlock: {} }),
+      add({ type: 'paper', id: 'second', parent: 'sheets', name: 'Second sheet', x: 0, y: 0, width: 21000, height: 14850, scale: 50, titleBlock: {} }),
+      add({ type: 'text', parent: 'sheets', x: 3000, y: 3000, text: 'In the group', size: 300 }),
+      add({ type: 'text', x: 3000, y: 6000, text: 'On the page', size: 300 }),
+    ])
+    const words = async (id: string) => (await (await (await open(toPDF(grouped, registry, [id]))).getPage(1)).getTextContent()).items.map((item: any) => item.str)
+    const first = await words('first')
+    expect(first).toContain('On the page')
+    expect(first).toContain('In the group')
+    expect(first).toContain('First sheet')
+    expect(first).not.toContain('Second sheet')
+    expect(await words('second')).toContain('Second sheet')
+    // Every paper of the drawing, in groups too, when none is given.
+    expect((await open(toPDF(grouped, registry))).numPages).toBe(2)
   })
 
   it('draws to scale: 6 m of wall at 1:50 is 120 mm on the sheet', async () => {

@@ -1,4 +1,4 @@
-import { drawingSettingsOps, GRID_DIVISIONS, settingsOf, type DrawingSettings } from '@opencalque/core'
+import { drawingSettingsOps, GRID_DIVISIONS, settingsOf, TITLE_FIELDS, type DrawingSettings, type TitleField } from '@opencalque/core'
 import { msg, t } from './i18n'
 import { usePrefs } from './prefs'
 import { Select } from './Select'
@@ -16,6 +16,24 @@ const INFO: [field: 'project' | 'client' | 'address' | 'author', label: string][
   ['address', msg('Address')],
   ['author', msg('Author')],
 ]
+
+/** What the strip down the right edge calls each entry on the sheet, in the usual words of US sheets: "Drawn by" for the author. */
+const STRIP_CAPTIONS: Record<TitleField, string> = {
+  project: msg('Project'),
+  client: msg('Client'),
+  address: msg('Address'),
+  sheet: msg('Sheet title'),
+  page: msg('Page'),
+  author: msg('Drawn by'),
+  scale: msg('Scale'),
+  format: msg('Format'),
+  date: msg('Date'),
+  number: msg('Sheet no.'),
+  revisions: msg('Revisions'),
+}
+
+/** The captions the strip is given when it is chosen, in the language in use: the drawing keeps them, as a table keeps its words. */
+const stripLabels = (): Record<string, string> => Object.fromEntries(TITLE_FIELDS.map((field) => [field, t(STRIP_CAPTIONS[field])]))
 
 /** The grid a drawing is given when its spacing is first fixed: a metre in tenths, or a foot in inches. */
 const firstGrid = (): GridSetting => (imperialUnit() ? { spacing: 304.8, divisions: 12 } : { spacing: 1000, divisions: 10 })
@@ -155,6 +173,17 @@ export function DrawingSettingsWindow() {
               )}
             </label>
           ))}
+          <label className="pref-field">
+            <span>{t('Title block')}</span>
+            <Select
+              value={doc.settings?.titleBlock?.layout ?? 'corner'}
+              onChange={(layout) => set({ titleBlock: layout === 'strip' ? { layout: 'strip', labels: stripLabels() } : {} })}
+              options={[
+                { value: 'corner', label: t('In the bottom right corner') },
+                { value: 'strip', label: t('Down the right edge, with captions') },
+              ]}
+            />
+          </label>
           <p className="hint">{t('Shown in the title block of every sheet, and where a text says {project}, {client}, {address} or {author}.')}</p>
         </section>
         <GridSettings key={doc.id} grid={doc.settings?.grid} />

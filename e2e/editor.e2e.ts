@@ -1664,54 +1664,29 @@ test('shows every value of a dimension style whole, in the narrow side panel', a
   expect((await font.boundingBox())!.width).toBeGreaterThan(180)
 })
 
-test('leaves out whole the tabs a narrow column has no room for, lists them behind a "···", and brings one chosen there into the row', async ({ page }) => {
+test('keeps the panels as icons in a rail, each name said once, and brings a chosen one in front', async ({ page }) => {
   await startWith(page)
   await openEditor(page)
-  const all = ['Structure', 'Colours', 'Materials', 'Dimension styles']
-  const header = page.locator('.dv-tabs-and-actions-container', { has: page.locator('.dv-tab', { hasText: 'Structure' }) })
-  const row = header.locator('.dv-tabs-container')
-  const shown = row.locator('.dv-tab:visible')
-  const more = header.getByRole('button', { name: 'More tabs' })
-  await expect(row.locator('.dv-tab')).toHaveText(all)
-  // In a column of about 300 px, some of the five tabs are left out; those shown are whole.
-  await expect(more).toBeVisible()
-  const names = await shown.allInnerTexts()
-  expect(names.length).toBeLessThan(all.length)
-  expect(names).toContain('Structure')
-  const edge = (await row.boundingBox())!
-  for (const tab of await shown.all()) {
-    const box = (await tab.boundingBox())!
-    expect(box.x + box.width).toBeLessThanOrEqual(edge.x + edge.width + 0.5)
-  }
-  expect(await row.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(0)
-
-  // The "···" lists exactly those left out; the last, chosen, comes in front and into the row.
-  await more.click()
-  const items = page.getByRole('menu').getByRole('menuitem')
-  const left = all.filter((name) => !names.includes(name))
-  await expect(items).toHaveText(left)
-  await items.last().click()
-  await expect(page.getByRole('menu')).toHaveCount(0)
-  await expect(row.locator('.dv-tab.dv-active-tab')).toHaveText(left[left.length - 1])
-  await expect(shown.filter({ hasText: left[left.length - 1] })).toBeVisible()
-  await expect(page.locator('[data-panel="dimensionStyles"]')).toBeVisible()
-
-  // Tabs are dragged into another order, a bar showing where one would land; none where it would stay.
-  const top = page.locator('.dv-tabs-and-actions-container', { has: page.locator('.dv-tab', { hasText: 'Pages' }) })
-  const pages = top.locator('.dv-tab')
-  const marks = top.locator('.dv-drop-target-selection')
-  const a = (await pages.nth(0).boundingBox())!
-  const b = (await pages.nth(1).boundingBox())!
-  const y = a.y + a.height / 2
-  await page.mouse.move(a.x + a.width / 2, y)
-  await page.mouse.down()
-  await page.mouse.move(a.x + a.width / 2 + 10, y, { steps: 2 })
-  await page.mouse.move(b.x + 8, y, { steps: 6 })
-  await expect(marks).toHaveCount(0)
-  await page.mouse.move(b.x + b.width - 8, y, { steps: 4 })
-  await expect(marks).toHaveCount(1)
-  await page.mouse.up()
-  await expect(pages).toHaveText(['Pages', 'Layers', 'Components'])
+  // The drawing's panels share a rail of icons down its side, each with its name as a tooltip.
+  const rail = page.locator('.dv-tabs-container-vertical').first()
+  await expect(rail.locator('.dv-tab')).toHaveCount(6)
+  await expect(rail.locator('.rail-tab').first()).toHaveAttribute('aria-label', 'Layers')
+  // The panel in front says its name once, in the row at its top, with its buttons and its cross.
+  await expect(page.locator('[data-panel="layers"] .panel-head .panel-title')).toHaveText('Layers')
+  // Structure is alone under them: its name is in the group's header and it has no row of its own.
+  const structure = page.locator('[data-panel="objects"]')
+  await expect(structure.locator('.panel-head')).toHaveCount(0)
+  await expect(page.locator('.dv-groupview', { has: structure }).locator('.dv-tabs-container').first()).toContainText('Structure')
+  // Another icon brings its panel in front, in a row naming it.
+  await rail.locator('.dv-tab').nth(2).click()
+  await expect(page.locator('[data-panel="components"] .panel-head .panel-title')).toHaveText('Components')
+  // Closed by its cross, it comes back from the command list, behind its partner.
+  await page.locator('[data-panel="components"] .panel-head .icon-button').last().click()
+  await expect(page.locator('[data-panel="components"]')).toHaveCount(0)
+  await page.keyboard.press('Control+k')
+  await page.keyboard.type('Components')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('[data-panel="components"]')).toBeVisible()
 })
 
 test('resizes a column by its line away from the drawing: the columns between keep their width, the drawing takes the difference', async ({ page }) => {

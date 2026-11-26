@@ -3,7 +3,8 @@ import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { newDimensionStyle, newId, type DimensionStyle, type Node } from '@opencalque/core'
 import { msg, t } from '../i18n'
 import { apply, useStore } from '../store'
-import { EditableText, IconButton, Section } from '../ui'
+import { EditableText, IconButton } from '../ui'
+import { PanelActions } from '../panelHead'
 import { unit } from '../units'
 import { FieldRow, patchFor, read, type Update } from './properties/FieldRow'
 import { DIMENSION, type FieldSpec } from './properties/fields'
@@ -115,7 +116,12 @@ export function DimensionStyles() {
     if (apply([{ op: 'add_dimension_style', dimensionStyle: { id, name: t('Dimension style {n}', { n: styles.length + 1 }), ...newDimensionStyle({ unit: unit() }) } }])) setOpened({ ...opened, [id]: true })
   }
   return (
-    <Section title={t('Dimension styles')} action={<IconButton title={t('Add a dimension style')} onClick={add}><Plus size={14} /></IconButton>}>
+    <section className="section untitled">
+      <PanelActions>
+        <IconButton title={t('Add a dimension style')} onClick={add}>
+          <Plus size={14} />
+        </IconButton>
+      </PanelActions>
       {styles.length === 0 && <p className="hint">{t('A dimension style is a way of drawing dimensions. It defines what you tick: the ends, the text, the unit, the colours. Give it to dimensions in their properties or to the dimension tool, then change it here and they all follow.')}</p>}
       {styles.map((style) => (
         <StyleCard
@@ -127,6 +133,6 @@ export function DimensionStyles() {
         />
       ))}
       {styles.length > 0 && <p className="hint">{t('A dimension can still differ from its style: a value set in its own properties wins.')}</p>}
-    </Section>
+    </section>
   )
 }

@@ -19,7 +19,7 @@ import { Sections, type Update } from './FieldRow'
 import { AnnotationTool, DimensionTool, GridlineTool, SelectedDimensionStyle } from './dimensions'
 import { commonFields, FIELD_NAMES, fieldsOf, SHEET_FIELDS } from './fields'
 import { ModifierStack } from './modifiers'
-import { PaperSheet } from './paper'
+import { EverySheet, PaperFormat, PaperTitleBlock } from './paper'
 import { CornerPanel, WallCurve, WallEnds, WallLine, WallMaterial, WallToolMaterial } from './walls'
 import { TableSettings } from './tables'
 
@@ -150,7 +150,7 @@ function Selection({ nodes }: { nodes: Node[] }) {
         {single && node.type === 'wall' && <WallEnds wall={node} />}
         {single && node.type === 'wall' && <WallCurve wall={node} />}
         {single && node.type === 'table' && <TableSettings node={node} />}
-        {single && node.type === 'paper' && <PaperSheet node={node} update={update} />}
+        {single && node.type === 'paper' && <PaperFormat node={node} update={update} />}
         {single && node.type === 'room' && <RoomFacts node={node} />}
         {single && node.type === 'image' && (
           <>
@@ -186,6 +186,16 @@ function Selection({ nodes }: { nodes: Node[] }) {
           </>
         )}
       </Section>
+      {single && node.type === 'paper' && (
+        <Section title={t('Title block')}>
+          <PaperTitleBlock node={node} update={update} />
+        </Section>
+      )}
+      {single && node.type === 'paper' && (
+        <Section title={t('On every sheet')}>
+          <EverySheet node={node} update={update} />
+        </Section>
+      )}
       {single && (node.type === 'text' || node.type === 'annotation') && (
         <Section title={t('Fields')}>
           <label className="field">
@@ -302,12 +312,12 @@ export function Properties() {
             <p className="hint">{t('Click two points to read the distance between them. Nothing is added to the drawing. Use the Dimension tool to annotate.')}</p>
           </Section>
         ) : (
-          <Section title={t('Properties')}>
+          <section className="section untitled">
             <p className="hint">{t('Select an object to edit it. Lengths are in {unit}; the unit is set in Preferences.', { unit: unit() })}</p>
             <p className="hint">
               {t('Scroll to zoom, drag with the middle button or hold Space to pan; a tap on Space goes back to selecting. Shift constrains angles, Alt turns snapping off, Esc finishes.')}
             </p>
-          </Section>
+          </section>
         )}
       </FoldingSections.Provider>
     </div>

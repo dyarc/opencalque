@@ -17,8 +17,10 @@ type NumberSetting = keyof typeof DEFAULTS
  */
 export function drawingSettingsOps(doc: Document, next: DrawingSettings): Op[] {
   const keys = (['system', 'decimal'] as NumberSetting[]).filter((key) => next[key] !== undefined)
-  if (keys.length === 0) return []
   const settings: NonNullable<Extract<Op, { op: 'set_document' }>['settings']> = Object.fromEntries(keys.map((key) => [key, next[key] === DEFAULTS[key] ? null : next[key]]))
+  // The title blocks: in the corner, the default, the drawing says nothing of them, captions included.
+  if (next.titleBlock !== undefined) settings.titleBlock = next.titleBlock.layout === 'strip' ? next.titleBlock : null
+  if (Object.keys(settings).length === 0) return []
   const ops: Op[] = [{ op: 'set_document', settings }]
   const system = settingsOf(doc).system
   for (const node of Object.values(doc.nodes)) {
